@@ -1,0 +1,144 @@
+import { useEffect, useMemo, useState } from "react";
+
+function isExternalLink(link) {
+  return typeof link === "string" && /^https?:\/\//.test(link);
+}
+
+export default function StaggeredMenu({
+  position = "right",
+  items = [],
+  socialItems = [],
+  displaySocials = true,
+  displayItemNumbering = true,
+  menuButtonColor = "#ffffff",
+  openMenuButtonColor = "#ffffff",
+  changeMenuColorOnOpen = true,
+  colors = ["#ff8d66", "#ff5d8f"],
+  logoUrl,
+  accentColor = "#ff5d8f",
+  onMenuOpen,
+  onMenuClose,
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen) {
+      onMenuOpen?.();
+      return;
+    }
+
+    onMenuClose?.();
+  }, [isOpen, onMenuClose, onMenuOpen]);
+
+  const inlineStyles = useMemo(
+    () => ({
+      "--menu-accent": accentColor,
+      "--menu-button-color":
+        isOpen && changeMenuColorOnOpen ? openMenuButtonColor : menuButtonColor,
+      "--menu-gradient-start": colors[0] ?? "#ff8d66",
+      "--menu-gradient-end": colors[1] ?? "#ff5d8f",
+    }),
+    [
+      accentColor,
+      changeMenuColorOnOpen,
+      colors,
+      isOpen,
+      menuButtonColor,
+      openMenuButtonColor,
+    ],
+  );
+
+  function closeMenu() {
+    setIsOpen(false);
+  }
+
+  return (
+    <div
+      className={`staggered-menu-root ${position === "left" ? "is-left" : "is-right"}`}
+      style={inlineStyles}
+    >
+      <button
+        className={`menu-toggle ${isOpen ? "is-open" : ""}`}
+        type="button"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Close menu" : "Open menu"}
+        onClick={() => setIsOpen((currentValue) => !currentValue)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <div className={`menu-overlay ${isOpen ? "is-visible" : ""}`} onClick={closeMenu} />
+
+      <aside className={`menu-panel ${isOpen ? "is-open" : ""}`} aria-hidden={!isOpen}>
+        <div className="menu-panel-inner">
+          <div className="menu-brand">
+            {logoUrl ? <img src={logoUrl} alt="Logo" className="menu-logo" /> : null}
+            <div>
+              <p className="menu-kicker">Quiz navigation</p>
+              <h2>KPOP Quiz</h2>
+            </div>
+          </div>
+
+          <nav className="menu-nav" aria-label="Sidebar navigation">
+            {items.map((item, index) => {
+              const itemStyle = { transitionDelay: `${120 + index * 75}ms` };
+              const itemNumber = String(index + 1).padStart(2, "0");
+
+              return (
+                <a
+                  key={`${item.label}-${index}`}
+                  className={`menu-link ${isOpen ? "is-open" : ""}`}
+                  href={item.link}
+                  aria-label={item.ariaLabel}
+                  style={itemStyle}
+                  onClick={closeMenu}
+                >
+                  {displayItemNumbering ? (
+                    <span className="menu-link-number">{itemNumber}</span>
+                  ) : null}
+                  <span>{item.label}</span>
+                </a>
+              );
+            })}
+          </nav>
+
+          {displaySocials ? (
+            <div className="menu-socials">
+              <p className="menu-kicker">Quick links</p>
+              <div className="menu-social-list">
+                {socialItems.map((item, index) => (
+                  <a
+                    key={`${item.label}-${index}`}
+                    href={item.link}
+                    className={`menu-social-link ${isOpen ? "is-open" : ""}`}
+                    style={{ transitionDelay: `${360 + index * 70}ms` }}
+                    target={isExternalLink(item.link) ? "_blank" : undefined}
+                    rel={isExternalLink(item.link) ? "noreferrer" : undefined}
+                    onClick={closeMenu}
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </aside>
+    </div>
+  );
+}

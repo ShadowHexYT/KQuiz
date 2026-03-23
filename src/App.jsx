@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import AnimatedContent from "./components/AnimatedContent";
+import AnimatedList from "./components/AnimatedList";
+import StaggeredMenu from "./components/StaggeredMenu";
 
 const starterPlayers = [
   {
@@ -55,14 +58,63 @@ const mainModes = [
 ];
 
 const groupQuizzes = [
-  "BTS",
-  "BLACKPINK",
-  "TWICE",
-  "Stray Kids",
-  "SEVENTEEN",
-  "NewJeans",
-  "IVE",
-  "ATEEZ",
+  {
+    label: "BTS",
+    description: "Hits, eras, members, and iconic performance moments.",
+  },
+  {
+    label: "BLACKPINK",
+    description: "Music videos, solos, fashion moments, and major live stages.",
+  },
+  {
+    label: "TWICE",
+    description: "Title tracks, choreography highlights, and member trivia.",
+  },
+  {
+    label: "Stray Kids",
+    description: "Unit songs, album eras, rap lines, and performance energy.",
+  },
+  {
+    label: "SEVENTEEN",
+    description: "Subunits, variety moments, choreo details, and discography.",
+  },
+  {
+    label: "NewJeans",
+    description: "Debut-era details, visuals, styling, and song recognition.",
+  },
+  {
+    label: "IVE",
+    description: "Concepts, catchy hooks, member facts, and comeback rounds.",
+  },
+  {
+    label: "ATEEZ",
+    description: "Stage power, lore-inspired questions, and song intros.",
+  },
+];
+
+const menuItems = [
+  { label: "Home", ariaLabel: "Jump to the top of the page", link: "#top" },
+  {
+    label: "Players",
+    ariaLabel: "Jump to players and scores",
+    link: "#players",
+  },
+  {
+    label: "Main Modes",
+    ariaLabel: "Jump to main quiz modes",
+    link: "#modes",
+  },
+  {
+    label: "Groups",
+    ariaLabel: "Jump to group specific quizzes",
+    link: "#groups",
+  },
+];
+
+const socialItems = [
+  { label: "Host View", link: "#players" },
+  { label: "Random Group", link: "#groups" },
+  { label: "Top Modes", link: "#modes" },
 ];
 
 function scoreTotal(scores) {
@@ -73,6 +125,8 @@ export default function App() {
   const [players, setPlayers] = useState(starterPlayers);
   const [playerName, setPlayerName] = useState("");
   const [hostId, setHostId] = useState(starterPlayers[0]?.id ?? null);
+  const [selectedGroup, setSelectedGroup] = useState(groupQuizzes[0]);
+  const [launchMessage, setLaunchMessage] = useState("");
 
   const sortedPlayers = useMemo(
     () =>
@@ -105,70 +159,127 @@ export default function App() {
     setPlayerName("");
   }
 
+  function startGroupQuiz(group) {
+    setSelectedGroup(group);
+    setLaunchMessage(`Ready to start the ${group.label} quiz.`);
+  }
+
   return (
-    <div className="page-shell">
+    <div className="page-shell" id="top">
       <div className="background-orb background-orb-left" />
       <div className="background-orb background-orb-right" />
+      <StaggeredMenu
+        position="right"
+        items={menuItems}
+        socialItems={socialItems}
+        displaySocials
+        displayItemNumbering
+        menuButtonColor="#fff8ef"
+        openMenuButtonColor="#fff8ef"
+        changeMenuColorOnOpen
+        colors={["#ff8d66", "#ff5d8f"]}
+        accentColor="#ff5d8f"
+        onMenuOpen={() => console.log("Menu opened")}
+        onMenuClose={() => console.log("Menu closed")}
+      />
 
       <main className="app-frame">
         <section className="hero-card">
-          <div className="hero-copy">
-            <p className="eyebrow">Family K-pop game night</p>
-            <h1>KPOP Quiz Studio</h1>
-            <p className="hero-text">
-              A playful home screen for your quiz nights with shared players,
-              host controls, scoreboard snapshots, and dedicated group quiz
-              categories.
-            </p>
+          <AnimatedContent
+            distance={100}
+            direction="vertical"
+            reverse={false}
+            duration={0.8}
+            ease="cubic-bezier(0.22, 1, 0.36, 1)"
+            initialOpacity={0}
+            animateOpacity
+            scale={0.98}
+            threshold={0.1}
+            delay={0}
+          >
+            <div className="hero-copy">
+              <p className="eyebrow">Family K-pop game night</p>
+              <h1>KPOP Quiz Studio</h1>
+              <p className="hero-text">
+                A playful home screen for your quiz nights with shared players,
+                host controls, scoreboard snapshots, and dedicated group quiz
+                categories.
+              </p>
 
-            <div className="hero-badges">
-              <span>UI only</span>
-              <span>Host ready</span>
-              <span>Cross-platform React</span>
-            </div>
-          </div>
-
-          <aside className="host-panel">
-            <div className="host-panel-header">
-              <div>
-                <p className="panel-label">Players</p>
-                <h2>Party setup</h2>
+              <div className="hero-badges">
+                <span>UI only</span>
+                <span>Host ready</span>
+                <span>Cross-platform React</span>
               </div>
-              <span className="player-count">{players.length} joined</span>
             </div>
+          </AnimatedContent>
 
-            <form className="player-form" onSubmit={addPlayer}>
-              <label htmlFor="playerName">Add player</label>
-              <div className="player-form-row">
-                <input
-                  id="playerName"
-                  type="text"
-                  placeholder="Enter a name"
-                  value={playerName}
-                  onChange={(event) => setPlayerName(event.target.value)}
-                />
-                <button type="submit">Add</button>
+          <AnimatedContent
+            distance={100}
+            direction="vertical"
+            reverse
+            duration={0.9}
+            ease="cubic-bezier(0.22, 1, 0.36, 1)"
+            initialOpacity={0}
+            animateOpacity
+            scale={0.98}
+            threshold={0.1}
+            delay={0.12}
+          >
+            <aside className="host-panel">
+              <div className="host-panel-header">
+                <div>
+                  <p className="panel-label">Players</p>
+                  <h2>Party setup</h2>
+                </div>
+                <span className="player-count">{players.length} joined</span>
               </div>
-            </form>
 
-            <div className="host-select-wrap">
-              <label htmlFor="hostSelect">Current host</label>
-              <select
-                id="hostSelect"
-                value={hostId ?? ""}
-                onChange={(event) => setHostId(Number(event.target.value))}
-              >
-                {players.map((player) => (
-                  <option key={player.id} value={player.id}>
-                    {player.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </aside>
+              <form className="player-form" onSubmit={addPlayer}>
+                <label htmlFor="playerName">Add player</label>
+                <div className="player-form-row">
+                  <input
+                    id="playerName"
+                    type="text"
+                    placeholder="Enter a name"
+                    value={playerName}
+                    onChange={(event) => setPlayerName(event.target.value)}
+                  />
+                  <button type="submit">Add</button>
+                </div>
+              </form>
+
+              <div className="host-select-wrap">
+                <label htmlFor="hostSelect">Current host</label>
+                <select
+                  id="hostSelect"
+                  value={hostId ?? ""}
+                  onChange={(event) => setHostId(Number(event.target.value))}
+                >
+                  {players.map((player) => (
+                    <option key={player.id} value={player.id}>
+                      {player.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </aside>
+          </AnimatedContent>
         </section>
 
-        <section className="scoreboard-section">
+        <AnimatedContent
+          distance={80}
+          direction="vertical"
+          reverse={false}
+          duration={0.8}
+          ease="cubic-bezier(0.22, 1, 0.36, 1)"
+          initialOpacity={0}
+          animateOpacity
+          scale={0.99}
+          threshold={0.1}
+          delay={0.05}
+        >
+          <section className="scoreboard-section" id="players">
           <div className="section-heading">
             <div>
               <p className="section-kicker">Top right controls + live overview</p>
@@ -222,9 +333,22 @@ export default function App() {
               );
             })}
           </div>
-        </section>
+          </section>
+        </AnimatedContent>
 
-        <section className="mode-section">
+        <AnimatedContent
+          distance={80}
+          direction="vertical"
+          reverse={false}
+          duration={0.8}
+          ease="cubic-bezier(0.22, 1, 0.36, 1)"
+          initialOpacity={0}
+          animateOpacity
+          scale={0.99}
+          threshold={0.1}
+          delay={0.1}
+        >
+          <section className="mode-section" id="modes">
           <div className="section-heading">
             <div>
               <p className="section-kicker">Featured area</p>
@@ -237,18 +361,45 @@ export default function App() {
           </div>
 
           <div className="mode-grid">
-            {mainModes.map((mode) => (
-              <article className="mode-card" key={mode.title}>
-                <span className="mode-label">{mode.label}</span>
-                <h3>{mode.title}</h3>
-                <p>{mode.description}</p>
-                <footer>{mode.status}</footer>
-              </article>
+            {mainModes.map((mode, index) => (
+              <AnimatedContent
+                key={mode.title}
+                distance={60}
+                direction="vertical"
+                reverse={false}
+                duration={0.75}
+                ease="cubic-bezier(0.22, 1, 0.36, 1)"
+                initialOpacity={0}
+                animateOpacity
+                scale={0.98}
+                threshold={0.1}
+                delay={0.08 * index}
+              >
+                <article className="mode-card">
+                  <span className="mode-label">{mode.label}</span>
+                  <h3>{mode.title}</h3>
+                  <p>{mode.description}</p>
+                  <footer>{mode.status}</footer>
+                </article>
+              </AnimatedContent>
             ))}
           </div>
-        </section>
+          </section>
+        </AnimatedContent>
 
-        <section className="group-section">
+        <AnimatedContent
+          distance={80}
+          direction="vertical"
+          reverse={false}
+          duration={0.8}
+          ease="cubic-bezier(0.22, 1, 0.36, 1)"
+          initialOpacity={0}
+          animateOpacity
+          scale={0.99}
+          threshold={0.1}
+          delay={0.15}
+        >
+          <section className="group-section" id="groups">
           <div className="section-heading">
             <div>
               <p className="section-kicker">Bottom category</p>
@@ -259,16 +410,33 @@ export default function App() {
             </p>
           </div>
 
-          <div className="group-grid">
-            {groupQuizzes.map((groupName) => (
-              <button className="group-tile" key={groupName} type="button">
-                <span className="group-tag">Group quiz</span>
-                <strong>{groupName}</strong>
-                <small>Open this group's dedicated quiz screen later</small>
+          <div className="group-showcase">
+            <div className="group-feature-card">
+              <p className="panel-label">Selected group</p>
+              <h3>{selectedGroup.label}</h3>
+              <p>{selectedGroup.description}</p>
+              <button
+                className="group-start-button"
+                onClick={() => startGroupQuiz(selectedGroup)}
+                type="button"
+              >
+                Start {selectedGroup.label} Quiz
               </button>
-            ))}
+              {launchMessage ? (
+                <p className="group-launch-note">{launchMessage}</p>
+              ) : null}
+            </div>
+
+            <AnimatedList
+              items={groupQuizzes}
+              onItemSelect={(item) => startGroupQuiz(item)}
+              showGradients
+              enableArrowNavigation
+              displayScrollbar={false}
+            />
           </div>
-        </section>
+          </section>
+        </AnimatedContent>
       </main>
     </div>
   );
