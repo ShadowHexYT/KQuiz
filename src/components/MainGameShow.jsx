@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
+import Counter from "./Counter";
 import GameSetupModal from "./GameSetupModal";
 import { mainQuizRounds } from "../data/mainQuizRounds";
 
@@ -69,6 +70,7 @@ export default function MainGameShow({
   const [poppingOption, setPoppingOption] = useState(null);
   const [isResultsOpen, setIsResultsOpen] = useState(false);
   const [isSampleOpen, setIsSampleOpen] = useState(false);
+  const [scoreRefreshTick, setScoreRefreshTick] = useState(0);
   const longPressRef = useRef({ timer: null, triggered: false });
   const audioContextRef = useRef(null);
   const popResetTimerRef = useRef(null);
@@ -284,9 +286,12 @@ export default function MainGameShow({
     });
   }
 
-  function openRevealResults() {
+  function revealCurrentAnswer() {
     autoAwardCorrectGuesses();
     setRevealAnswers(true);
+  }
+
+  function openResults() {
     setIsResultsOpen(true);
   }
 
@@ -458,11 +463,6 @@ export default function MainGameShow({
                 </button>
               </div>
 
-              <div className="results-answer-card">
-                <p className="section-kicker">Correct answer</p>
-                <h3>{currentStep.answer}</h3>
-              </div>
-
               <div className="results-player-list">
                 {players.map((player) => {
                   const canScore = playerCanScore(player, hostId, hostGetsScore);
@@ -604,7 +604,34 @@ export default function MainGameShow({
             <div className="score-strip-header">
               <div>
                 <p className="panel-label">Live scores</p>
-                <h2>Visible while you play</h2>
+                <div className="score-strip-title-row">
+                  <h2>Visible while you play</h2>
+                  <button
+                    aria-label="Refresh score tally"
+                    className="score-refresh-button"
+                    onClick={() => setScoreRefreshTick((value) => value + 1)}
+                    type="button"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M20 12a8 8 0 1 1-2.34-5.66"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M20 4v6h-6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
               <span className="player-count">
                 Group {currentRoundIndex + 1} / {mainQuizRounds.length}
@@ -628,9 +655,18 @@ export default function MainGameShow({
                           : "Player"}
                       </p>
                     </div>
-                    <span className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
-                      {player.scores.mainShow}
-                    </span>
+                    <div className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
+                      <Counter
+                        digitPlaceHolders={false}
+                        fontSize={34}
+                        gap={2}
+                        padding={0}
+                        places={[100, 10, 1]}
+                        textColor={!isScoring ? "rgba(255, 248, 239, 0.56)" : "#ffd978"}
+                        trigger={scoreRefreshTick}
+                        value={player.scores.mainShow}
+                      />
+                    </div>
                   </div>
                 );
               })}
@@ -803,14 +839,16 @@ export default function MainGameShow({
                     <div className="round-meta-actions round-meta-actions-bottom">
                       <button
                         className="primary-button"
-                        onClick={revealAnswers ? hideRevealResults : openRevealResults}
+                        onClick={revealAnswers ? openResults : revealCurrentAnswer}
                         type="button"
                       >
-                        {revealAnswers ? "Hide answer" : "Reveal answer"}
+                        {revealAnswers ? "Results" : "Reveal answer"}
                       </button>
-                      <span className="reveal-status">
-                        {revealAnswers ? `Answer: ${currentStep.answer}` : "Answer hidden"}
-                      </span>
+                      {revealAnswers ? (
+                        <button className="ghost-button" onClick={goToNext} type="button">
+                          Next question
+                        </button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
