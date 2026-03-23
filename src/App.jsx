@@ -2,29 +2,17 @@ import { useEffect, useState } from "react";
 import HomeScreen from "./components/HomeScreen";
 import MainGameShow from "./components/MainGameShow";
 
-const starterPlayers = [
-  {
-    id: 1,
-    name: "You",
-    scores: {
-      mainShow: 0,
-    },
+const starterPlayers = [];
+export const HOST_ID = "hunter-host";
+export const defaultHostProfile = {
+  id: HOST_ID,
+  name: "Hunter",
+  icon: "🎙️",
+  scores: {
+    mainShow: 0,
   },
-  {
-    id: 2,
-    name: "Sister",
-    scores: {
-      mainShow: 0,
-    },
-  },
-  {
-    id: 3,
-    name: "Mom",
-    scores: {
-      mainShow: 0,
-    },
-  },
-];
+};
+export const playerIcons = ["🎤", "💖", "🌟", "🎧", "🪩", "🔥", "🎵", "💎"];
 
 const groupQuizzes = [
   {
@@ -68,8 +56,9 @@ function getRouteFromHash(hashValue) {
 export default function App() {
   const [route, setRoute] = useState(getRouteFromHash(window.location.hash));
   const [players, setPlayers] = useState(starterPlayers);
+  const [hostProfile, setHostProfile] = useState(defaultHostProfile);
   const [playerName, setPlayerName] = useState("");
-  const [hostId, setHostId] = useState(starterPlayers[0]?.id ?? null);
+  const [playerIcon, setPlayerIcon] = useState(playerIcons[0]);
   const [hostGetsScore, setHostGetsScore] = useState(false);
   const [desiredPlayerCount, setDesiredPlayerCount] = useState(starterPlayers.length);
   const [selectedGroup, setSelectedGroup] = useState(groupQuizzes[0]);
@@ -90,29 +79,27 @@ export default function App() {
     const trimmedName = playerName.trim();
     if (!trimmedName) return;
 
-    setPlayers((currentPlayers) => [
-      ...currentPlayers,
-      {
-        id: Date.now(),
-        name: trimmedName,
-        scores: {
-          mainShow: 0,
-        },
+    const newPlayer = {
+      id: Date.now(),
+      name: trimmedName,
+      icon: playerIcon,
+      scores: {
+        mainShow: 0,
       },
-    ]);
+    };
+
+    setPlayers((currentPlayers) => [...currentPlayers, newPlayer]);
     setPlayerName("");
+    setPlayerIcon((currentIcon) => {
+      const currentIndex = playerIcons.indexOf(currentIcon);
+      return playerIcons[(currentIndex + 1) % playerIcons.length];
+    });
     setDesiredPlayerCount((count) => Number(count) + 1);
   }
 
   function removePlayer(playerId) {
     setPlayers((currentPlayers) => {
       const nextPlayers = currentPlayers.filter((player) => player.id !== playerId);
-      if (!nextPlayers.length) return currentPlayers;
-
-      if (!nextPlayers.some((player) => player.id === hostId)) {
-        setHostId(nextPlayers[0].id);
-      }
-
       setDesiredPlayerCount(nextPlayers.length);
       return nextPlayers;
     });
@@ -136,8 +123,8 @@ export default function App() {
       <MainGameShow
         players={players}
         setPlayers={setPlayers}
-        hostId={hostId}
-        setHostId={setHostId}
+        hostProfile={hostProfile}
+        setHostProfile={setHostProfile}
         hostGetsScore={hostGetsScore}
         setHostGetsScore={setHostGetsScore}
         playerName={playerName}
@@ -154,12 +141,17 @@ export default function App() {
   return (
     <HomeScreen
       players={players}
-      hostId={hostId}
+      hostProfile={hostProfile}
+      hostGetsScore={hostGetsScore}
       selectedGroup={selectedGroup}
       launchMessage={launchMessage}
       playerName={playerName}
-      onHostChange={setHostId}
+      playerIcon={playerIcon}
+      playerIcons={playerIcons}
+      onHostGetsScoreChange={setHostGetsScore}
       onAddPlayer={addPlayer}
+      onRemovePlayer={removePlayer}
+      onPlayerIconChange={setPlayerIcon}
       onPlayerNameChange={setPlayerName}
       onStartGroupQuiz={startGroupQuiz}
       onStartMainShow={goToMainShow}

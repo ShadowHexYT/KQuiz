@@ -1,5 +1,6 @@
 import AnimatedContent from "./AnimatedContent";
 import AnimatedList from "./AnimatedList";
+import Carousel from "./Carousel";
 import StaggeredMenu from "./StaggeredMenu";
 import { useState } from "react";
 
@@ -60,13 +61,6 @@ const mainModes = [
     actionLabel: "Open gameshow",
   },
   {
-    id: "speed-rounds",
-    title: "Speed Rounds",
-    description:
-      "Reserved for a faster challenge mode with quick prompts, timers, and score tracking.",
-    actionLabel: "Coming soon",
-  },
-  {
     id: "jeopardy",
     title: "Jeopardy",
     description:
@@ -91,18 +85,26 @@ const mainModes = [
 
 export default function HomeScreen({
   players,
-  hostId,
+  hostProfile,
+  hostGetsScore,
   selectedGroup,
   launchMessage,
   playerName,
-  onHostChange,
+  playerIcon,
+  playerIcons,
+  onHostGetsScoreChange,
   onAddPlayer,
+  onRemovePlayer,
+  onPlayerIconChange,
   onPlayerNameChange,
   onStartGroupQuiz,
   onStartMainShow,
 }) {
-  const [activeModeId, setActiveModeId] = useState(mainModes[0].id);
-  const activeMode = mainModes.find((mode) => mode.id === activeModeId) ?? mainModes[0];
+  const [activeModeIndex, setActiveModeIndex] = useState(0);
+  const [isCarouselHovered, setIsCarouselHovered] = useState(false);
+  const activeMode = mainModes[activeModeIndex] ?? mainModes[0];
+  const playerSlotCount = Math.max(6, players.length + 2);
+  const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => players[index] ?? null);
 
   return (
     <div className="page-shell" id="top">
@@ -122,7 +124,7 @@ export default function HomeScreen({
       />
 
       <main className="app-frame">
-        <section className="hero-card">
+        <section className="hero-showcase">
           <AnimatedContent
             distance={100}
             direction="vertical"
@@ -135,26 +137,28 @@ export default function HomeScreen({
             threshold={0.1}
             delay={0}
           >
-            <div className="hero-copy">
-              <p className="eyebrow">Family K-pop game night</p>
-              <h1>KPOP Quiz Studio</h1>
-              <p className="hero-text">
-                The main gameshow is now the headline experience with group rounds,
-                manual host scoring, and a dedicated route.
-              </p>
+            <section className="hero-card">
+              <div className="hero-copy">
+                <p className="eyebrow">Family K-pop game night</p>
+                <h1>KPOP Quiz Studio</h1>
+                <p className="hero-text">
+                  The main gameshow is now the headline experience with group rounds,
+                  manual host scoring, and a dedicated route.
+                </p>
 
-              <div className="hero-badges">
-                <span>Main gameshow ready</span>
-                <span>Host controls</span>
-                <span>Cross-platform React</span>
-              </div>
+                <div className="hero-badges">
+                  <span>Main gameshow ready</span>
+                  <span>Host controls</span>
+                  <span>Cross-platform React</span>
+                </div>
 
-              <div className="hero-actions">
-                <button className="primary-button" onClick={onStartMainShow} type="button">
-                  Start Main Gameshow
-                </button>
+                <div className="hero-actions">
+                  <button className="primary-button" onClick={onStartMainShow} type="button">
+                    Start Main Gameshow
+                  </button>
+                </div>
               </div>
-            </div>
+            </section>
           </AnimatedContent>
 
           <AnimatedContent
@@ -169,6 +173,48 @@ export default function HomeScreen({
             threshold={0.1}
             delay={0.12}
           >
+            <aside className="player-slots-panel">
+              <div className="host-panel-header">
+                <div>
+                  <p className="panel-label">Players</p>
+                  <h2>Player lineup</h2>
+                </div>
+                <span className="player-count">{players.length} joined</span>
+              </div>
+              <div className="player-slot-grid">
+                {playerSlots.map((player, index) =>
+                  player ? (
+                    <div className="player-slot-card is-filled" key={player.id}>
+                      <span className="player-slot-icon">{player.icon}</span>
+                      <strong>{player.name}</strong>
+                      <p>Ready to play</p>
+                    </div>
+                  ) : (
+                    <div className="player-slot-card is-empty" key={`empty-${index}`}>
+                      <span className="player-slot-icon">+</span>
+                      <strong>Empty player</strong>
+                      <p>Add a player to fill this slot</p>
+                    </div>
+                  ),
+                )}
+              </div>
+            </aside>
+          </AnimatedContent>
+        </section>
+
+        <AnimatedContent
+          distance={80}
+          direction="vertical"
+          reverse={false}
+          duration={0.8}
+          ease="cubic-bezier(0.22, 1, 0.36, 1)"
+          initialOpacity={0}
+          animateOpacity
+          scale={0.99}
+          threshold={0.1}
+          delay={0.08}
+        >
+          <section className="party-setup-section">
             <aside className="host-panel">
               <div className="host-panel-header">
                 <div>
@@ -192,23 +238,68 @@ export default function HomeScreen({
                 </div>
               </form>
 
-              <div className="host-select-wrap">
-                <label htmlFor="hostSelectHome">Current host</label>
-                <select
-                  id="hostSelectHome"
-                  value={hostId ?? ""}
-                  onChange={(event) => onHostChange(Number(event.target.value))}
-                >
-                  {players.map((player) => (
-                    <option key={player.id} value={player.id}>
-                      {player.name}
-                    </option>
+              <div className="icon-picker-wrap">
+                <label>Pick an icon</label>
+                <div className="icon-picker-grid">
+                  {playerIcons.map((icon) => (
+                    <button
+                      className={`icon-picker-button ${playerIcon === icon ? "is-active" : ""}`}
+                      key={icon}
+                      onClick={() => onPlayerIconChange(icon)}
+                      type="button"
+                    >
+                      <span>{icon}</span>
+                    </button>
                   ))}
-                </select>
+                </div>
+              </div>
+
+              <div className="host-select-wrap">
+                <label>Current host</label>
+                <div className="host-fixed-card">
+                  <div>
+                    <strong>
+                      {hostProfile.icon} {hostProfile.name}
+                    </strong>
+                    <p>Default host for the show</p>
+                  </div>
+                  <label className="toggle-row">
+                    <input
+                      checked={hostGetsScore}
+                      type="checkbox"
+                      onChange={(event) => onHostGetsScoreChange(event.target.checked)}
+                    />
+                    <span>Count Hunter as a player</span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="setup-player-list home-player-list">
+                {players.length ? (
+                  players.map((player) => (
+                    <div className="setup-player-row" key={player.id}>
+                      <div>
+                        <strong>
+                          {player.icon} {player.name}
+                        </strong>
+                        <p>Player</p>
+                      </div>
+                      <button
+                        className="ghost-button"
+                        onClick={() => onRemovePlayer(player.id)}
+                        type="button"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="setup-help">Add players manually to build your quiz group.</p>
+                )}
               </div>
             </aside>
-          </AnimatedContent>
-        </section>
+          </section>
+        </AnimatedContent>
 
         <AnimatedContent
           distance={80}
@@ -223,42 +314,65 @@ export default function HomeScreen({
           delay={0.1}
         >
           <section className="mode-section" id="modes">
-            <div className="section-heading">
-              <div>
-                <p className="section-kicker">Featured area</p>
-                <h2>Main quiz modes</h2>
-              </div>
-              <p className="section-note">
-                Pick a mode tab here. The main gameshow is active now, and the others
-                are ready as placeholders for later.
-              </p>
-            </div>
+            <div className="mode-layout">
+              <aside className="mode-instructions-card">
+                <p className="panel-label">How to start</p>
+                <h2>Choose your game mode</h2>
+                <p className="mode-instructions-text">
+                  Let the cards cycle, tap the one you want, and look for the
+                  selected check before pressing play.
+                </p>
+                <div className="mode-instruction-list">
+                  <div className="mode-instruction-item">
+                    <strong>1</strong>
+                    <span>Watch the carousel or click a card to jump straight to it.</span>
+                  </div>
+                  <div className="mode-instruction-item">
+                    <strong>2</strong>
+                    <span>The selected card becomes your active mode.</span>
+                  </div>
+                  <div className="mode-instruction-item">
+                    <strong>3</strong>
+                    <span>Press play below the carousel to launch that mode.</span>
+                  </div>
+                </div>
+                <div className="mode-current-pick">
+                  <span className="mode-current-pill">Selected now</span>
+                  <strong>{activeMode.title}</strong>
+                </div>
+              </aside>
 
-            <div className="mode-tabs">
-              {mainModes.map((mode) => (
-                <button
-                  key={mode.id}
-                  className={`mode-tab ${mode.id === activeModeId ? "is-active" : ""}`}
-                  onClick={() => setActiveModeId(mode.id)}
-                  type="button"
+              <div className="mode-carousel-column">
+                <div
+                  className="mode-carousel-wrap"
+                  onMouseEnter={() => setIsCarouselHovered(true)}
+                  onMouseLeave={() => setIsCarouselHovered(false)}
                 >
-                  {mode.title}
-                </button>
-              ))}
-            </div>
+                  <Carousel
+                    activeIndex={activeModeIndex}
+                    autoplay
+                    autoplayDelay={5000}
+                    baseWidth={280}
+                    isPaused={isCarouselHovered}
+                    items={mainModes}
+                    loop
+                    onSelect={setActiveModeIndex}
+                    pauseOnHover
+                    round={false}
+                  />
+                </div>
 
-            <article className="mode-feature-card">
-              <p className="mode-label">Selected mode</p>
-              <h3>{activeMode.title}</h3>
-              <p>{activeMode.description}</p>
-              {activeMode.id === "main-game" ? (
-                <button className="primary-button" onClick={onStartMainShow} type="button">
-                  {activeMode.actionLabel}
-                </button>
-              ) : (
-                <span className="mode-coming-soon">{activeMode.actionLabel}</span>
-              )}
-            </article>
+                <div className="mode-play-row">
+                  <button
+                    className="primary-button"
+                    onClick={activeMode.id === "main-game" ? onStartMainShow : undefined}
+                    type="button"
+                  >
+                    {activeMode.id === "main-game" ? "Play" : "Coming Soon"}
+                  </button>
+                </div>
+              </div>
+            </div>
           </section>
         </AnimatedContent>
 

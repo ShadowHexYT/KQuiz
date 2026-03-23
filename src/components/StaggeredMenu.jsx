@@ -4,6 +4,10 @@ function isExternalLink(link) {
   return typeof link === "string" && /^https?:\/\//.test(link);
 }
 
+function isActionItem(item) {
+  return typeof item?.onClick === "function";
+}
+
 export default function StaggeredMenu({
   position = "right",
   items = [],
@@ -99,6 +103,27 @@ export default function StaggeredMenu({
               const itemStyle = { transitionDelay: `${120 + index * 75}ms` };
               const itemNumber = String(index + 1).padStart(2, "0");
 
+              if (isActionItem(item)) {
+                return (
+                  <button
+                    key={`${item.label}-${index}`}
+                    className={`menu-link menu-link-button ${isOpen ? "is-open" : ""}`}
+                    type="button"
+                    aria-label={item.ariaLabel}
+                    style={itemStyle}
+                    onClick={() => {
+                      item.onClick();
+                      closeMenu();
+                    }}
+                  >
+                    {displayItemNumbering ? (
+                      <span className="menu-link-number">{itemNumber}</span>
+                    ) : null}
+                    <span>{item.label}</span>
+                  </button>
+                );
+              }
+
               return (
                 <a
                   key={`${item.label}-${index}`}
@@ -122,17 +147,32 @@ export default function StaggeredMenu({
               <p className="menu-kicker">Quick links</p>
               <div className="menu-social-list">
                 {socialItems.map((item, index) => (
-                  <a
-                    key={`${item.label}-${index}`}
-                    href={item.link}
-                    className={`menu-social-link ${isOpen ? "is-open" : ""}`}
-                    style={{ transitionDelay: `${360 + index * 70}ms` }}
-                    target={isExternalLink(item.link) ? "_blank" : undefined}
-                    rel={isExternalLink(item.link) ? "noreferrer" : undefined}
-                    onClick={closeMenu}
-                  >
-                    {item.label}
-                  </a>
+                  isActionItem(item) ? (
+                    <button
+                      key={`${item.label}-${index}`}
+                      type="button"
+                      className={`menu-social-link menu-social-button ${isOpen ? "is-open" : ""}`}
+                      style={{ transitionDelay: `${360 + index * 70}ms` }}
+                      onClick={() => {
+                        item.onClick();
+                        closeMenu();
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ) : (
+                    <a
+                      key={`${item.label}-${index}`}
+                      href={item.link}
+                      className={`menu-social-link ${isOpen ? "is-open" : ""}`}
+                      style={{ transitionDelay: `${360 + index * 70}ms` }}
+                      target={isExternalLink(item.link) ? "_blank" : undefined}
+                      rel={isExternalLink(item.link) ? "noreferrer" : undefined}
+                      onClick={closeMenu}
+                    >
+                      {item.label}
+                    </a>
+                  )
                 ))}
               </div>
             </div>

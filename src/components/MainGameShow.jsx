@@ -2,10 +2,12 @@ import { useMemo, useRef, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
 import Counter from "./Counter";
 import GameSetupModal from "./GameSetupModal";
+import StaggeredMenu from "./StaggeredMenu";
 import { mainQuizRounds } from "../data/mainQuizRounds";
+import { HOST_ID } from "../App";
 
-function playerCanScore(player, hostId, hostGetsScore) {
-  if (player.id !== hostId) return true;
+function playerCanScore(player, hostGetsScore) {
+  if (player.id !== HOST_ID) return true;
   return hostGetsScore;
 }
 
@@ -47,8 +49,8 @@ function buildRoundSteps(round) {
 export default function MainGameShow({
   players,
   setPlayers,
-  hostId,
-  setHostId,
+  hostProfile,
+  setHostProfile,
   hostGetsScore,
   setHostGetsScore,
   playerName,
@@ -78,8 +80,10 @@ export default function MainGameShow({
   const currentRound = mainQuizRounds[currentRoundIndex];
   const currentSteps = useMemo(() => buildRoundSteps(currentRound), [currentRound]);
   const currentStep = currentSteps[currentStepIndex];
-  const eligiblePlayers = players.filter((player) =>
-    playerCanScore(player, hostId, hostGetsScore),
+  const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
+  const eligiblePlayers = useMemo(
+    () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore)),
+    [displayPlayers, hostGetsScore],
   );
   const usesGroupCollage =
     currentStep.type === "group" ||
@@ -242,13 +246,38 @@ export default function MainGameShow({
     return Boolean(awardedPoints[stepId]?.[playerId]);
   }
 
+  function updateScoreForPlayer(playerId, amount) {
+    if (playerId === HOST_ID) {
+      setHostProfile((currentHost) => ({
+        ...currentHost,
+        scores: {
+          ...currentHost.scores,
+          mainShow: currentHost.scores.mainShow + amount,
+        },
+      }));
+      return;
+    }
+
+    setPlayers((currentPlayers) =>
+      currentPlayers.map((player) =>
+        player.id === playerId
+          ? {
+              ...player,
+              scores: {
+                ...player.scores,
+                mainShow: player.scores.mainShow + amount,
+              },
+            }
+          : player,
+      ),
+    );
+  }
+
   function autoAwardCorrectGuesses() {
     const stepId = currentStep.id;
-    const correctPlayerIds = players
+    const correctPlayerIds = eligiblePlayers
       .filter(
-        (player) =>
-          playerCanScore(player, hostId, hostGetsScore) &&
-          getAssignedOption(player.id) === currentStep.answer,
+        (player) => getAssignedOption(player.id) === currentStep.answer,
       )
       .map((player) => player.id);
 
@@ -262,19 +291,7 @@ export default function MainGameShow({
         return currentAwards;
       }
 
-      setPlayers((currentPlayers) =>
-        currentPlayers.map((player) =>
-          playerIdsToAdd.includes(player.id)
-            ? {
-                ...player,
-                scores: {
-                  ...player.scores,
-                  mainShow: player.scores.mainShow + 1,
-                },
-              }
-            : player,
-        ),
-      );
+      playerIdsToAdd.forEach((playerId) => updateScoreForPlayer(playerId, 1));
 
       return {
         ...currentAwards,
@@ -307,19 +324,7 @@ export default function MainGameShow({
       const wasAwarded = Boolean(currentAwards[currentStep.id]?.[playerId]);
       const nextValue = !wasAwarded;
 
-      setPlayers((currentPlayers) =>
-        currentPlayers.map((player) => {
-          if (player.id !== playerId) return player;
-
-          return {
-            ...player,
-            scores: {
-              ...player.scores,
-              mainShow: player.scores.mainShow + (nextValue ? 1 : -1),
-            },
-          };
-        }),
-      );
+      updateScoreForPlayer(playerId, nextValue ? 1 : -1);
 
       return {
         ...currentAwards,
@@ -388,6 +393,13 @@ export default function MainGameShow({
   }
 
   function resetScores() {
+    setHostProfile((currentHost) => ({
+      ...currentHost,
+      scores: {
+        ...currentHost.scores,
+        mainShow: 0,
+      },
+    }));
     setPlayers((currentPlayers) =>
       currentPlayers.map((player) => ({
         ...player,
@@ -413,6 +425,13 @@ export default function MainGameShow({
     setPoppingOption(null);
     setIsResultsOpen(false);
     setIsSampleOpen(false);
+    setHostProfile((currentHost) => ({
+      ...currentHost,
+      scores: {
+        ...currentHost.scores,
+        mainShow: 0,
+      },
+    }));
     setPlayers((currentPlayers) =>
       currentPlayers.map((player) => ({
         ...player,
@@ -424,6 +443,19 @@ export default function MainGameShow({
     );
     setScoreRefreshTick((value) => value + 1);
   }
+
+  const menuItems = [
+    { label: "Top", ariaLabel: "Jump to the top of the gameshow", link: "#gameshow-top" },
+    { label: "Scores", ariaLabel: "Jump to live scores", link: "#gameshow-scores" },
+    { label: "Round", ariaLabel: "Jump to current round details", link: "#gameshow-round" },
+    { label: "Choices", ariaLabel: "Jump to answer choices", link: "#gameshow-choices" },
+  ];
+
+  const menuActions = [
+    { label: "Back Home", onClick: onBackHome },
+    { label: "Reset Quiz", onClick: resetQuiz },
+    { label: "Game Setup", onClick: () => setIsSetupOpen(true) },
+  ];
 
   function changeDesiredPlayerCount(nextValue) {
     const parsedValue = Number(nextValue);
@@ -448,22 +480,30 @@ export default function MainGameShow({
     if (safeCount < players.length) {
       const remainingPlayers = players.slice(0, safeCount);
       setPlayers(remainingPlayers);
-
-      if (!remainingPlayers.some((player) => player.id === hostId)) {
-        setHostId(remainingPlayers[0]?.id ?? null);
-      }
     }
   }
 
   return (
-    <div className="page-shell game-show-shell">
+    <div className="page-shell game-show-shell" id="gameshow-top">
       <div className="background-orb background-orb-left" />
       <div className="background-orb background-orb-right" />
+      <StaggeredMenu
+        position="right"
+        items={menuItems}
+        socialItems={menuActions}
+        displaySocials
+        displayItemNumbering
+        menuButtonColor="#fff8ef"
+        openMenuButtonColor="#fff8ef"
+        changeMenuColorOnOpen
+        colors={["#ff8d66", "#ff5d8f"]}
+        accentColor="#ff5d8f"
+      />
 
       <GameSetupModal
         isOpen={isSetupOpen}
         players={players}
-        hostId={hostId}
+        hostProfile={hostProfile}
         hostGetsScore={hostGetsScore}
         playerName={playerName}
         desiredPlayerCount={desiredPlayerCount}
@@ -472,7 +512,6 @@ export default function MainGameShow({
         onDesiredPlayerCountChange={changeDesiredPlayerCount}
         onAddPlayer={addPlayer}
         onRemovePlayer={removePlayer}
-        onHostChange={setHostId}
         onHostGetsScoreChange={setHostGetsScore}
       />
 
@@ -502,17 +541,20 @@ export default function MainGameShow({
               </div>
 
               <div className="results-player-list">
-                {players.map((player) => {
-                  const canScore = playerCanScore(player, hostId, hostGetsScore);
+                {displayPlayers.map((player) => {
+                  const canScore = playerCanScore(player, hostGetsScore);
                   const playerGuess = getAssignedOption(player.id);
                   const gotPoint = isAwarded(currentStep.id, player.id);
 
                   return (
                     <div className="results-player-row" key={player.id}>
                       <div>
-                        <strong>{player.name}</strong>
+                        <strong>
+                          {player.icon ? `${player.icon} ` : ""}
+                          {player.name}
+                        </strong>
                         <p className="inline-score-meta">
-                          {player.id === hostId && !hostGetsScore
+                          {player.id === HOST_ID && !hostGetsScore
                             ? "Host scoring disabled"
                             : playerGuess
                               ? `Guess: ${playerGuess}`
@@ -610,22 +652,6 @@ export default function MainGameShow({
                 member one by one, then the extra personal questions.
               </p>
             </div>
-
-            <div className="game-show-toolbar">
-              <button className="ghost-button" onClick={onBackHome} type="button">
-                Back to home
-              </button>
-              <button className="ghost-button" onClick={resetQuiz} type="button">
-                Reset quiz
-              </button>
-              <button
-                className="primary-button"
-                onClick={() => setIsSetupOpen(true)}
-                type="button"
-              >
-                Game setup
-              </button>
-            </div>
           </section>
         </AnimatedContent>
 
@@ -641,7 +667,7 @@ export default function MainGameShow({
           threshold={0.1}
           delay={0.05}
         >
-          <section className="score-strip-panel">
+          <section className="score-strip-panel" id="gameshow-scores">
             <div className="score-strip-header">
               <div>
                 <p className="panel-label">Live scores</p>
@@ -710,14 +736,17 @@ export default function MainGameShow({
             </div>
 
             <div className="score-strip">
-              {players.map((player) => {
-                const isHost = player.id === hostId;
-                const isScoring = playerCanScore(player, hostId, hostGetsScore);
+              {displayPlayers.map((player) => {
+                const isHost = player.id === HOST_ID;
+                const isScoring = playerCanScore(player, hostGetsScore);
 
                 return (
                   <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>
                     <div>
-                      <strong>{player.name}</strong>
+                      <strong>
+                        {player.icon ? `${player.icon} ` : ""}
+                        {player.name}
+                      </strong>
                       <p>
                         {isHost
                           ? hostGetsScore
@@ -759,7 +788,7 @@ export default function MainGameShow({
               threshold={0.1}
               delay={0.08}
             >
-              <section className="round-card">
+              <section className="round-card" id="gameshow-round">
                 <section className="round-info-section">
                   <div className="question-header-block">
                     <span className="player-count">
@@ -877,7 +906,7 @@ export default function MainGameShow({
                     </div>
                   </div>
 
-                  <div className="round-meta-card">
+                  <div className="round-meta-card" id="gameshow-choices">
                     <p className="flow-section-label">Multiple Choice</p>
                     <div
                       className={`round-flow-choices ${
@@ -912,11 +941,13 @@ export default function MainGameShow({
                                       className="flow-choice-tag is-locked"
                                       key={`${option}-${player.id}`}
                                     >
+                                      {player.icon ? `${player.icon} ` : ""}
                                       {player.name}
                                     </span>
                                   ))}
                                   {shouldShowPreview ? (
                                     <span className="flow-choice-tag">
+                                      {previewPlayer.icon ? `${previewPlayer.icon} ` : ""}
                                       {previewPlayer.name}
                                     </span>
                                   ) : null}

@@ -3,7 +3,7 @@ import AnimatedContent from "./AnimatedContent";
 export default function GameSetupModal({
   isOpen,
   players,
-  hostId,
+  hostProfile,
   hostGetsScore,
   playerName,
   desiredPlayerCount,
@@ -12,7 +12,6 @@ export default function GameSetupModal({
   onDesiredPlayerCountChange,
   onAddPlayer,
   onRemovePlayer,
-  onHostChange,
   onHostGetsScoreChange,
 }) {
   if (!isOpen) return null;
@@ -67,21 +66,10 @@ export default function GameSetupModal({
             </div>
 
             <div className="setup-card">
-              <label className="setup-label" htmlFor="hostSelect">
-                Who is the host?
-              </label>
-              <select
-                id="hostSelect"
-                className="setup-input"
-                value={hostId ?? ""}
-                onChange={(event) => onHostChange(Number(event.target.value))}
-              >
-                {players.map((player) => (
-                  <option key={player.id} value={player.id}>
-                    {player.name}
-                  </option>
-                ))}
-              </select>
+              <label className="setup-label">Who is the host?</label>
+              <div className="setup-input host-fixed-input">
+                {hostProfile.icon} {hostProfile.name}
+              </div>
 
               <label className="toggle-row">
                 <input
@@ -116,23 +104,17 @@ export default function GameSetupModal({
 
             <div className="setup-player-list">
               {players.map((player) => {
-                const isHost = player.id === hostId;
-
                 return (
                   <div className="setup-player-row" key={player.id}>
                     <div>
-                      <strong>{player.name}</strong>
-                      <p>
-                        {isHost
-                          ? hostGetsScore
-                            ? "Host and scoring"
-                            : "Host only"
-                          : "Player"}
-                      </p>
+                      <strong>
+                        {player.icon ? `${player.icon} ` : ""}
+                        {player.name}
+                      </strong>
+                      <p>Player</p>
                     </div>
                     <button
                       className="ghost-button"
-                      disabled={players.length <= 1}
                       onClick={() => onRemovePlayer(player.id)}
                       type="button"
                     >
@@ -141,6 +123,14 @@ export default function GameSetupModal({
                   </div>
                 );
               })}
+              <div className="setup-player-row setup-host-row">
+                <div>
+                  <strong>
+                    {hostProfile.icon} {hostProfile.name}
+                  </strong>
+                  <p>{hostGetsScore ? "Host and scoring" : "Host only"}</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
