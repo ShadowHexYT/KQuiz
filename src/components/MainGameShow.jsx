@@ -387,6 +387,44 @@ export default function MainGameShow({
     goToRound(currentRoundIndex + 1);
   }
 
+  function resetScores() {
+    setPlayers((currentPlayers) =>
+      currentPlayers.map((player) => ({
+        ...player,
+        scores: {
+          ...player.scores,
+          mainShow: 0,
+        },
+      })),
+    );
+
+    setAwardedPoints({});
+    setScoreRefreshTick((value) => value + 1);
+  }
+
+  function resetQuiz() {
+    setCurrentRoundIndex(0);
+    setCurrentStepIndex(0);
+    setRevealAnswers(false);
+    setGuessAssignments({});
+    setPreviewAssignments({});
+    setAwardedPoints({});
+    setHoldingOption(null);
+    setPoppingOption(null);
+    setIsResultsOpen(false);
+    setIsSampleOpen(false);
+    setPlayers((currentPlayers) =>
+      currentPlayers.map((player) => ({
+        ...player,
+        scores: {
+          ...player.scores,
+          mainShow: 0,
+        },
+      })),
+    );
+    setScoreRefreshTick((value) => value + 1);
+  }
+
   function changeDesiredPlayerCount(nextValue) {
     const parsedValue = Number(nextValue);
     if (!Number.isFinite(parsedValue)) {
@@ -577,6 +615,9 @@ export default function MainGameShow({
               <button className="ghost-button" onClick={onBackHome} type="button">
                 Back to home
               </button>
+              <button className="ghost-button" onClick={resetQuiz} type="button">
+                Reset quiz
+              </button>
               <button
                 className="primary-button"
                 onClick={() => setIsSetupOpen(true)}
@@ -631,11 +672,41 @@ export default function MainGameShow({
                       />
                     </svg>
                   </button>
+                  <button
+                    aria-label="Reset scores"
+                    className="score-refresh-button score-reset-button"
+                    onClick={resetScores}
+                    type="button"
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24">
+                      <path
+                        d="M3 6h18"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M8 6V4h8v2"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
+                      <path
+                        d="M6 6l1 14h10l1-14"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  </button>
                 </div>
               </div>
-              <span className="player-count">
-                Group {currentRoundIndex + 1} / {mainQuizRounds.length}
-              </span>
             </div>
 
             <div className="score-strip">
@@ -689,8 +760,11 @@ export default function MainGameShow({
               delay={0.08}
             >
               <section className="round-card">
-                <div className="round-card-top">
-                  <div>
+                <section className="round-info-section">
+                  <div className="question-header-block">
+                    <span className="player-count">
+                      Group {currentRoundIndex + 1} / {mainQuizRounds.length}
+                    </span>
                     <p className="section-kicker">
                       {currentStep.type === "group" ? "????" : currentRound.groupName}
                     </p>
@@ -737,51 +811,70 @@ export default function MainGameShow({
                       Next
                     </button>
                   </div>
-                </div>
+                </section>
 
-                <div className="round-overview">
-                  <div className="member-image-wrap">
-                    {usesGroupCollage ? (
-                      <div className="group-collage">
-                        {currentRound.members.map((member) => (
+                <section className="round-game-section">
+                  <div className="round-overview">
+                  <div className="round-visual-column">
+                    <div className="member-image-wrap">
+                      {usesGroupCollage ? (
+                        <div className="group-collage">
+                          {currentRound.members.map((member) => (
+                            <div className="group-collage-tile" key={member.name}>
+                              <img
+                                alt={`${member.name} from ${currentRound.groupName}`}
+                                className="group-collage-image"
+                                src={member.image}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : usesAlbumCover ? (
+                        <div className="member-image-stage">
                           <img
-                            key={member.name}
-                            alt={`${member.name} from ${currentRound.groupName}`}
-                            className="group-collage-image"
-                            src={member.image}
+                            alt={`${currentRound.groupName} ${currentStep.answer} cover art`}
+                            className="album-cover-image"
+                            src={currentStep.coverImage}
                           />
-                        ))}
-                      </div>
-                    ) : usesAlbumCover ? (
-                      <div className="member-image-stage">
-                        <img
-                          alt={`${currentRound.groupName} ${currentStep.answer} cover art`}
-                          className="album-cover-image"
-                          src={currentStep.coverImage}
-                        />
-                      </div>
-                    ) : (
-                      <div className="member-image-stage">
-                        <img
-                          alt={`${currentStep.answer} from ${currentRound.groupName}`}
-                          className="member-image"
-                          src={currentStep.image}
-                        />
-                      </div>
-                    )}
+                        </div>
+                      ) : (
+                        <div className="member-image-stage">
+                          <img
+                            alt={`${currentStep.answer} from ${currentRound.groupName}`}
+                            className="member-image"
+                            src={currentStep.image}
+                          />
+                        </div>
+                      )}
 
-                    {hasSongSample ? (
+                      {hasSongSample ? (
+                        <button
+                          className="sample-audio-button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setIsSampleOpen(true);
+                          }}
+                          type="button"
+                        >
+                          Listen to sample
+                        </button>
+                      ) : null}
+                    </div>
+
+                    <div className="image-action-bar">
                       <button
-                        className="sample-audio-button"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setIsSampleOpen(true);
-                        }}
+                        className="primary-button"
+                        onClick={revealAnswers ? openResults : revealCurrentAnswer}
                         type="button"
                       >
-                        Listen to sample
+                        {revealAnswers ? "Results" : "Reveal answer"}
                       </button>
-                    ) : null}
+                      {revealAnswers ? (
+                        <button className="ghost-button" onClick={goToNext} type="button">
+                          Next question
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
 
                   <div className="round-meta-card">
@@ -805,7 +898,7 @@ export default function MainGameShow({
                         return (
                           <div className="flow-choice-wrap" key={option}>
                             <button
-                              className={`choice-button flow-choice-button ${isCorrect ? "is-correct" : ""} ${holdingOption === option ? "is-holding" : ""} ${poppingOption === option ? "is-popping" : ""}`}
+                              className={`choice-button flow-choice-button ${currentStep.choices.length % 2 !== 0 ? "is-list-view" : ""} ${isCorrect ? "is-correct" : ""} ${holdingOption === option ? "is-holding" : ""} ${poppingOption === option ? "is-popping" : ""}`}
                               onClick={() => handleChoiceClick(option)}
                               onMouseDown={() => handleChoicePointerDown(option)}
                               onMouseLeave={handleChoicePointerUp}
@@ -835,23 +928,9 @@ export default function MainGameShow({
                         );
                       })}
                     </div>
-
-                    <div className="round-meta-actions round-meta-actions-bottom">
-                      <button
-                        className="primary-button"
-                        onClick={revealAnswers ? openResults : revealCurrentAnswer}
-                        type="button"
-                      >
-                        {revealAnswers ? "Results" : "Reveal answer"}
-                      </button>
-                      {revealAnswers ? (
-                        <button className="ghost-button" onClick={goToNext} type="button">
-                          Next question
-                        </button>
-                      ) : null}
-                    </div>
                   </div>
-                </div>
+                  </div>
+                </section>
 
               </section>
             </AnimatedContent>

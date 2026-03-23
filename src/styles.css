@@ -834,6 +834,11 @@ button {
   border-color: rgba(255, 211, 111, 0.35);
 }
 
+.score-reset-button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 93, 143, 0.35);
+}
+
 .score-refresh-button svg {
   width: 1.1rem;
   height: 1.1rem;
@@ -874,12 +879,47 @@ button {
   align-items: flex-start;
 }
 
+.round-info-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  padding-bottom: 1.1rem;
+  margin-bottom: 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.round-game-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.question-header-block {
+  display: grid;
+  gap: 0.45rem;
+  padding-bottom: 0.45rem;
+}
+
 .round-overview {
   display: grid;
-  grid-template-columns: minmax(260px, 0.8fr) minmax(260px, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   margin: 1.25rem 0;
   align-items: start;
+}
+
+.round-overview > * {
+  min-width: 0;
+  width: 100%;
+}
+
+.round-visual-column {
+  position: sticky;
+  top: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  align-self: start;
+  width: 100%;
 }
 
 .round-step-copy {
@@ -896,17 +936,23 @@ button {
 
 .member-image-wrap {
   overflow: hidden;
-  position: sticky;
-  top: 1rem;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 55%),
     rgba(6, 10, 20, 0.82);
   height: clamp(420px, 68vh, 760px);
+}
+
+.image-action-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .sample-audio-button {
@@ -930,22 +976,31 @@ button {
 .group-collage {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
   gap: 0.35rem;
   width: 100%;
   height: 100%;
   padding: 0.55rem;
-  height: 100%;
+}
+
+.group-collage-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
 }
 
 .group-collage-image {
   width: 100%;
   height: 100%;
-  min-height: 150px;
+  min-height: 0;
   padding: 0.35rem;
   object-fit: contain;
   object-position: center center;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.03);
 }
 
 .member-image-stage {
@@ -989,6 +1044,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  width: 100%;
   max-height: calc(100vh - 8rem);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1092,6 +1148,12 @@ button {
   overflow: hidden;
 }
 
+.flow-choice-button.is-list-view {
+  min-height: 108px;
+  padding: 0.95rem 1.1rem;
+  border-radius: 24px;
+}
+
 .flow-choice-button.is-holding {
   animation: choiceShake 0.18s linear infinite;
 }
@@ -1167,6 +1229,10 @@ button {
   font-size: clamp(1.2rem, 2.1vw, 1.8rem);
   font-weight: 700;
   line-height: 1.15;
+}
+
+.flow-choice-button.is-list-view .flow-choice-label {
+  font-size: clamp(1.05rem, 1.8vw, 1.45rem);
 }
 
 .round-meta-status {
@@ -1401,6 +1467,7 @@ button {
   .game-show-hero,
   .score-strip-header,
   .round-card-top,
+  .round-info-section,
   .prompt-card-top,
   .inline-scoring-header,
   .inline-score-row,
@@ -1415,6 +1482,10 @@ button {
   .round-overview,
   .setup-grid {
     grid-template-columns: 1fr;
+  }
+
+  .round-visual-column {
+    position: static;
   }
 
   .member-image-wrap {

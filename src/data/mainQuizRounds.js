@@ -1,5 +1,5 @@
 // Favorites and bias picks are seeded defaults for v1 and can be customized later.
-export const mainQuizRounds = [
+const rounds = [
   {
     id: "lesserafim",
     groupName: "LE SSERAFIM",
@@ -526,3 +526,25 @@ export const mainQuizRounds = [
     ],
   },
 ];
+
+export const mainQuizRounds = rounds.map((round) => {
+  const allGroupNames = rounds.map((item) => item.groupName);
+  const memberNames = round.members.map((member) => member.name);
+
+  return {
+    ...round,
+    groupChoices: allGroupNames,
+    extras: round.extras.map((extra) => {
+      if (["leader", "maknae", "bias"].includes(extra.key)) {
+        const includesSpecialAnswer = !memberNames.includes(extra.answer);
+
+        return {
+          ...extra,
+          choices: includesSpecialAnswer ? [extra.answer, ...memberNames] : memberNames,
+        };
+      }
+
+      return extra;
+    }),
+  };
+});
