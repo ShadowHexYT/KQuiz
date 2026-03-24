@@ -1,8 +1,9 @@
+import { useState } from "react";
+import { HOST_ID } from "../App";
 import AnimatedContent from "./AnimatedContent";
 import AnimatedList from "./AnimatedList";
 import Carousel from "./Carousel";
 import StaggeredMenu from "./StaggeredMenu";
-import { useState } from "react";
 
 const groupQuizzes = [
   {
@@ -90,21 +91,71 @@ export default function HomeScreen({
   selectedGroup,
   launchMessage,
   playerName,
-  playerIcon,
+  teams,
+  teamsEnabled,
+  newPlayerTeamId,
   playerIcons,
   onHostGetsScoreChange,
   onAddPlayer,
   onRemovePlayer,
-  onPlayerIconChange,
   onPlayerNameChange,
+  onNewPlayerTeamChange,
+  onPlayerUpdate,
+  onHostUpdate,
+  onAssignPlayerAsHost,
+  onRestoreDefaultHost,
+  onTeamCountChange,
+  onTeamRename,
+  onTeamsEnabledChange,
   onStartGroupQuiz,
   onStartMainShow,
 }) {
   const [activeModeIndex, setActiveModeIndex] = useState(0);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
+  const [openEmojiMenuFor, setOpenEmojiMenuFor] = useState(null);
+  const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const activeMode = mainModes[activeModeIndex] ?? mainModes[0];
-  const playerSlotCount = Math.max(6, players.length + 2);
-  const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => players[index] ?? null);
+  const lineupPlayers = [hostProfile, ...players];
+  const playerSlotCount = Math.max(6, lineupPlayers.length + 1);
+  const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null);
+
+  function getTeamName(teamId) {
+    return teams.find((team) => team.id === teamId)?.name ?? "Unassigned";
+  }
+
+  function getPlayerSubtitle(player) {
+    if (player.id === hostProfile.id) {
+      return "Host";
+    }
+
+    if (teamsEnabled && player.teamId) {
+      return getTeamName(player.teamId);
+    }
+
+    return "";
+  }
+
+  function updatePlayerIcon(player, icon) {
+    if (player.id === hostProfile.id) {
+      onHostUpdate({ icon });
+    } else {
+      onPlayerUpdate(player.id, { icon });
+    }
+
+    setOpenEmojiMenuFor(null);
+  }
+
+  function handleTeamsEnabledChange(isEnabled) {
+    onTeamsEnabledChange(isEnabled);
+    if (!isEnabled) {
+      setIsTeamMenuOpen(false);
+    }
+  }
+
+  function handleTeamCountSelect(count) {
+    onTeamCountChange(String(count));
+    setIsTeamMenuOpen(false);
+  }
 
   return (
     <div className="page-shell" id="top">
@@ -114,6 +165,8 @@ export default function HomeScreen({
         position="right"
         items={menuItems}
         socialItems={socialItems}
+        itemSectionLabel="Main options"
+        socialSectionLabel="Navigation"
         displaySocials
         displayItemNumbering
         menuButtonColor="#fff8ef"
@@ -173,30 +226,94 @@ export default function HomeScreen({
             threshold={0.1}
             delay={0.12}
           >
-            <aside className="player-slots-panel">
+            <aside className="host-panel host-panel-compact">
               <div className="host-panel-header">
                 <div>
                   <p className="panel-label">Players</p>
-                  <h2>Player lineup</h2>
+                  <h2>Party setup</h2>
                 </div>
                 <span className="player-count">{players.length} joined</span>
               </div>
-              <div className="player-slot-grid">
-                {playerSlots.map((player, index) =>
-                  player ? (
-                    <div className="player-slot-card is-filled" key={player.id}>
-                      <span className="player-slot-icon">{player.icon}</span>
-                      <strong>{player.name}</strong>
-                      <p>Ready to play</p>
-                    </div>
-                  ) : (
-                    <div className="player-slot-card is-empty" key={`empty-${index}`}>
-                      <span className="player-slot-icon">+</span>
-                      <strong>Empty player</strong>
-                      <p>Add a player to fill this slot</p>
-                    </div>
-                  ),
-                )}
+
+              <form className="player-form" onSubmit={onAddPlayer}>
+                <label htmlFor="playerName">Add player</label>
+                <div className="player-form-stack">
+                  <input
+                    className="player-text-input"
+                    id="playerName"
+                    type="text"
+                    placeholder="Enter a name"
+                    value={playerName}
+                    onChange={(event) => onPlayerNameChange(event.target.value)}
+                  />
+                  {teamsEnabled ? (
+                    <select
+                      className="player-select-input"
+                      value={newPlayerTeamId}
+                      onChange={(event) => onNewPlayerTeamChange(event.target.value)}
+                    >
+                      {teams.map((team) => (
+                        <option key={team.id} value={team.id}>
+                          {team.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : null}
+                  <button className="primary-button" type="submit">
+                    Add player
+                  </button>
+                </div>
+              </form>
+
+              <div className="team-structure-card">
+                <div className="team-structure-header">
+                  <div>
+                    <label className="setup-inline-label" htmlFor="teamsEnabled">
+                      Teams
+                    </label>
+                    <p className="setup-help">Turn teams on when you want grouped play.</p>
+                  </div>
+                  <label className="toggle-row compact-toggle toggle-card">
+                    <input
+                      id="teamsEnabled"
+                      checked={teamsEnabled}
+                      type="checkbox"
+                      onChange={(event) => handleTeamsEnabledChange(event.target.checked)}
+                    />
+                    <span className={`toggle-switch ${teamsEnabled ? "is-active" : ""}`} aria-hidden="true">
+                      <span className="toggle-knob" />
+                    </span>
+                  </label>
+                </div>
+
+                {teamsEnabled ? (
+                  <div className="team-dropdown-wrap">
+                    <button
+                      aria-expanded={isTeamMenuOpen}
+                      className="team-dropdown-trigger"
+                      onClick={() => setIsTeamMenuOpen((currentValue) => !currentValue)}
+                      type="button"
+                    >
+                      <span>Team structure</span>
+                      <strong>{teams.length} {teams.length === 1 ? "team" : "teams"}</strong>
+                    </button>
+
+                    {isTeamMenuOpen ? (
+                      <div className="team-dropdown-menu">
+                        {[1, 2, 3, 4].map((count) => (
+                          <button
+                            className={`team-dropdown-option ${teams.length === count ? "is-active" : ""}`}
+                            key={count}
+                            onClick={() => handleTeamCountSelect(count)}
+                            type="button"
+                          >
+                            {count} {count === 1 ? "team" : "teams"}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             </aside>
           </AnimatedContent>
@@ -215,86 +332,138 @@ export default function HomeScreen({
           delay={0.08}
         >
           <section className="party-setup-section">
-            <aside className="host-panel">
+            <aside className="player-slots-panel player-lineup-wide">
               <div className="host-panel-header">
                 <div>
                   <p className="panel-label">Players</p>
-                  <h2>Party setup</h2>
+                  <h2>Player lineup</h2>
                 </div>
-                <span className="player-count">{players.length} joined</span>
+                <span className="player-count">{lineupPlayers.length} total</span>
               </div>
 
-              <form className="player-form" onSubmit={onAddPlayer}>
-                <label htmlFor="playerName">Add player</label>
-                <div className="player-form-row">
-                  <input
-                    id="playerName"
-                    type="text"
-                    placeholder="Enter a name"
-                    value={playerName}
-                    onChange={(event) => onPlayerNameChange(event.target.value)}
-                  />
-                  <button type="submit">Add</button>
-                </div>
-              </form>
-
-              <div className="icon-picker-wrap">
-                <label>Pick an icon</label>
-                <div className="icon-picker-grid">
-                  {playerIcons.map((icon) => (
-                    <button
-                      className={`icon-picker-button ${playerIcon === icon ? "is-active" : ""}`}
-                      key={icon}
-                      onClick={() => onPlayerIconChange(icon)}
-                      type="button"
+              <div className="player-slot-grid player-slot-grid-wide">
+                {playerSlots.map((player, index) =>
+                  player ? (
+                    <div
+                      className={`player-slot-card is-filled ${player.id === hostProfile.id ? "is-host" : ""}`}
+                      key={player.id}
                     >
-                      <span>{icon}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+                      <div className="player-slot-top">
+                        <div className="player-icon-menu-wrap">
+                          <button
+                            aria-expanded={openEmojiMenuFor === player.id}
+                            aria-label={`Change emoji for ${player.name}`}
+                            className="player-icon-select"
+                            onClick={() =>
+                              setOpenEmojiMenuFor((currentValue) =>
+                                currentValue === player.id ? null : player.id,
+                              )
+                            }
+                            type="button"
+                          >
+                            <span className="player-slot-icon">{player.icon}</span>
+                            <span className="player-icon-caret">⌄</span>
+                          </button>
 
-              <div className="host-select-wrap">
-                <label>Current host</label>
-                <div className="host-fixed-card">
-                  <div>
-                    <strong>
-                      {hostProfile.icon} {hostProfile.name}
-                    </strong>
-                    <p>Default host for the show</p>
-                  </div>
-                  <label className="toggle-row">
-                    <input
-                      checked={hostGetsScore}
-                      type="checkbox"
-                      onChange={(event) => onHostGetsScoreChange(event.target.checked)}
-                    />
-                    <span>Count Hunter as a player</span>
-                  </label>
-                </div>
-              </div>
+                          {openEmojiMenuFor === player.id ? (
+                            <div className="player-icon-menu">
+                              {playerIcons.map((icon) => (
+                                <button
+                                  className={`player-icon-option ${player.icon === icon ? "is-active" : ""}`}
+                                  key={icon}
+                                  onClick={() => updatePlayerIcon(player, icon)}
+                                  type="button"
+                                >
+                                  {icon}
+                                </button>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
 
-              <div className="setup-player-list home-player-list">
-                {players.length ? (
-                  players.map((player) => (
-                    <div className="setup-player-row" key={player.id}>
-                      <div>
-                        <strong>
-                          {player.icon} {player.name}
-                        </strong>
-                        <p>Player</p>
+                        <div>
+                          <strong>{player.name}</strong>
+                          {getPlayerSubtitle(player) ? <p>{getPlayerSubtitle(player)}</p> : null}
+                        </div>
                       </div>
-                      <button
-                        className="ghost-button"
-                        onClick={() => onRemovePlayer(player.id)}
-                        type="button"
-                      >
-                        Remove
-                      </button>
+
+                      {teamsEnabled ? (
+                        <div className="lineup-control-group">
+                          <label className="lineup-control">
+                            <span>Team</span>
+                            <select
+                              className="player-select-input"
+                              value={player.teamId ?? teams[0]?.id ?? ""}
+                              onChange={(event) =>
+                                player.id === hostProfile.id
+                                  ? onHostUpdate({ teamId: event.target.value })
+                                  : onPlayerUpdate(player.id, { teamId: event.target.value })
+                              }
+                            >
+                              {teams.map((team) => (
+                                <option key={team.id} value={team.id}>
+                                  {team.name}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        </div>
+                      ) : null}
+
+                      <div className="player-slot-actions">
+                        {player.id === hostProfile.id ? (
+                          <>
+                            <span className="host-pill">
+                              {hostProfile.id === HOST_ID ? "Default host" : "Current host"}
+                            </span>
+                            {hostProfile.id !== HOST_ID ? (
+                              <button
+                                className="ghost-button player-slot-action"
+                                onClick={onRestoreDefaultHost}
+                                type="button"
+                              >
+                                Make player
+                              </button>
+                            ) : null}
+                            <label className="toggle-row compact-toggle toggle-card">
+                              <input
+                                checked={hostGetsScore}
+                                type="checkbox"
+                                onChange={(event) => onHostGetsScoreChange(event.target.checked)}
+                              />
+                              <span className={`toggle-switch ${hostGetsScore ? "is-active" : ""}`} aria-hidden="true">
+                                <span className="toggle-knob" />
+                              </span>
+                              <span>Score</span>
+                            </label>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              className="ghost-button player-slot-action"
+                              onClick={() => onAssignPlayerAsHost(player.id)}
+                              type="button"
+                            >
+                              Make host
+                            </button>
+                            <button
+                              className="ghost-button player-slot-action"
+                              onClick={() => onRemovePlayer(player.id)}
+                              type="button"
+                            >
+                              Remove
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  ))
-                ) : (
-                  <p className="setup-help">Add players manually to build your quiz group.</p>
+                  ) : (
+                    <div className="player-slot-card is-empty" key={`empty-${index}`}>
+                      <span className="player-slot-icon">+</span>
+                      <strong>Empty player</strong>
+                      <p>Add a player in setup to fill this slot</p>
+                    </div>
+                  ),
                 )}
               </div>
             </aside>
@@ -393,11 +562,11 @@ export default function HomeScreen({
               <div>
                 <p className="section-kicker">Bottom category</p>
                 <h2>Group-specific quizzes</h2>
+                <p className="section-note">
+                  Group-specific quizzes still live here while the main show handles
+                  the headline experience.
+                </p>
               </div>
-              <p className="section-note">
-                Group-specific quizzes still live here while the main show handles
-                the headline experience.
-              </p>
             </div>
 
             <div className="group-showcase">

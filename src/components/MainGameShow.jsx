@@ -4,10 +4,8 @@ import Counter from "./Counter";
 import GameSetupModal from "./GameSetupModal";
 import StaggeredMenu from "./StaggeredMenu";
 import { mainQuizRounds } from "../data/mainQuizRounds";
-import { HOST_ID } from "../App";
-
-function playerCanScore(player, hostGetsScore) {
-  if (player.id !== HOST_ID) return true;
+function playerCanScore(player, hostGetsScore, hostId) {
+  if (player.id !== hostId) return true;
   return hostGetsScore;
 }
 
@@ -82,8 +80,8 @@ export default function MainGameShow({
   const currentStep = currentSteps[currentStepIndex];
   const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
   const eligiblePlayers = useMemo(
-    () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore)),
-    [displayPlayers, hostGetsScore],
+    () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore, hostProfile.id)),
+    [displayPlayers, hostGetsScore, hostProfile.id],
   );
   const usesGroupCollage =
     currentStep.type === "group" ||
@@ -213,13 +211,8 @@ export default function MainGameShow({
 
   function playPopSound() {
     try {
-      if (!audioContextRef.current) {
-        const ContextClass = window.AudioContext || window.webkitAudioContext;
-        if (!ContextClass) return;
-        audioContextRef.current = new ContextClass();
-      }
-
-      const context = audioContextRef.current;
+      const context = getAudioContext();
+      if (!context) return;
       const now = context.currentTime;
       const oscillator = context.createOscillator();
       const gain = context.createGain();
@@ -242,12 +235,84 @@ export default function MainGameShow({
     }
   }
 
+  function getAudioContext() {
+    if (!audioContextRef.current) {
+      const ContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!ContextClass) return null;
+      audioContextRef.current = new ContextClass();
+    }
+
+    if (audioContextRef.current.state === "suspended") {
+      audioContextRef.current.resume().catch(() => {});
+    }
+
+    return audioContextRef.current;
+  }
+
+  function playCelebrateSound() {
+    try {
+      const context = getAudioContext();
+      if (!context) return;
+
+      const now = context.currentTime;
+      const frequencies = [523.25, 659.25, 783.99];
+
+      frequencies.forEach((frequency, index) => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+
+        oscillator.type = "triangle";
+        oscillator.frequency.setValueAtTime(frequency, now + index * 0.03);
+        oscillator.frequency.exponentialRampToValueAtTime(frequency * 1.08, now + 0.18 + index * 0.03);
+
+        gain.gain.setValueAtTime(0.0001, now + index * 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.09, now + 0.04 + index * 0.03);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28 + index * 0.03);
+
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+
+        oscillator.start(now + index * 0.03);
+        oscillator.stop(now + 0.3 + index * 0.03);
+      });
+    } catch {
+      // Ignore audio errors so the UI keeps working even if autoplay is blocked.
+    }
+  }
+
+  function playIncorrectBuzzer() {
+    try {
+      const context = getAudioContext();
+      if (!context) return;
+
+      const now = context.currentTime;
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+
+      oscillator.type = "sawtooth";
+      oscillator.frequency.setValueAtTime(220, now);
+      oscillator.frequency.exponentialRampToValueAtTime(140, now + 0.24);
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.12, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+
+      oscillator.start(now);
+      oscillator.stop(now + 0.28);
+    } catch {
+      // Ignore audio errors so the UI keeps working even if autoplay is blocked.
+    }
+  }
+
   function isAwarded(stepId, playerId) {
     return Boolean(awardedPoints[stepId]?.[playerId]);
   }
 
   function updateScoreForPlayer(playerId, amount) {
-    if (playerId === HOST_ID) {
+    if (playerId === hostProfile.id) {
       setHostProfile((currentHost) => ({
         ...currentHost,
         scores: {
@@ -281,7 +346,7 @@ export default function MainGameShow({
       )
       .map((player) => player.id);
 
-    if (!correctPlayerIds.length) return;
+    if (!correctPlayerIds.length) return [];
 
     setAwardedPoints((currentAwards) => {
       const currentStepAwards = currentAwards[stepId] ?? {};
@@ -301,10 +366,17 @@ export default function MainGameShow({
         },
       };
     });
+
+    return correctPlayerIds;
   }
 
   function revealCurrentAnswer() {
-    autoAwardCorrectGuesses();
+    const correctPlayerIds = autoAwardCorrectGuesses();
+    if (correctPlayerIds.length) {
+      playCelebrateSound();
+    } else if (eligiblePlayers.length) {
+      playIncorrectBuzzer();
+    }
     setRevealAnswers(true);
   }
 
@@ -444,17 +516,17 @@ export default function MainGameShow({
     setScoreRefreshTick((value) => value + 1);
   }
 
-  const menuItems = [
-    { label: "Top", ariaLabel: "Jump to the top of the gameshow", link: "#gameshow-top" },
-    { label: "Scores", ariaLabel: "Jump to live scores", link: "#gameshow-scores" },
-    { label: "Round", ariaLabel: "Jump to current round details", link: "#gameshow-round" },
-    { label: "Choices", ariaLabel: "Jump to answer choices", link: "#gameshow-choices" },
-  ];
-
   const menuActions = [
     { label: "Back Home", onClick: onBackHome },
     { label: "Reset Quiz", onClick: resetQuiz },
     { label: "Game Setup", onClick: () => setIsSetupOpen(true) },
+  ];
+
+  const menuNavigation = [
+    { label: "Top", ariaLabel: "Jump to the top of the gameshow", link: "#gameshow-top" },
+    { label: "Scores", ariaLabel: "Jump to live scores", link: "#gameshow-scores" },
+    { label: "Round", ariaLabel: "Jump to current round details", link: "#gameshow-round" },
+    { label: "Choices", ariaLabel: "Jump to answer choices", link: "#gameshow-choices" },
   ];
 
   function changeDesiredPlayerCount(nextValue) {
@@ -489,8 +561,10 @@ export default function MainGameShow({
       <div className="background-orb background-orb-right" />
       <StaggeredMenu
         position="right"
-        items={menuItems}
-        socialItems={menuActions}
+        items={menuActions}
+        socialItems={menuNavigation}
+        itemSectionLabel="Main options"
+        socialSectionLabel="Navigation"
         displaySocials
         displayItemNumbering
         menuButtonColor="#fff8ef"
@@ -542,7 +616,7 @@ export default function MainGameShow({
 
               <div className="results-player-list">
                 {displayPlayers.map((player) => {
-                  const canScore = playerCanScore(player, hostGetsScore);
+                  const canScore = playerCanScore(player, hostGetsScore, hostProfile.id);
                   const playerGuess = getAssignedOption(player.id);
                   const gotPoint = isAwarded(currentStep.id, player.id);
 
@@ -554,7 +628,7 @@ export default function MainGameShow({
                           {player.name}
                         </strong>
                         <p className="inline-score-meta">
-                          {player.id === HOST_ID && !hostGetsScore
+                          {player.id === hostProfile.id && !hostGetsScore
                             ? "Host scoring disabled"
                             : playerGuess
                               ? `Guess: ${playerGuess}`
@@ -737,8 +811,8 @@ export default function MainGameShow({
 
             <div className="score-strip">
               {displayPlayers.map((player) => {
-                const isHost = player.id === HOST_ID;
-                const isScoring = playerCanScore(player, hostGetsScore);
+                const isHost = player.id === hostProfile.id;
+                const isScoring = playerCanScore(player, hostGetsScore, hostProfile.id);
 
                 return (
                   <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>

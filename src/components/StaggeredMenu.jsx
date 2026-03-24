@@ -12,6 +12,8 @@ export default function StaggeredMenu({
   position = "right",
   items = [],
   socialItems = [],
+  itemSectionLabel = "Main options",
+  socialSectionLabel = "Navigation",
   displaySocials = true,
   displayItemNumbering = true,
   menuButtonColor = "#ffffff",
@@ -98,53 +100,56 @@ export default function StaggeredMenu({
             </div>
           </div>
 
-          <nav className="menu-nav" aria-label="Sidebar navigation">
-            {items.map((item, index) => {
-              const itemStyle = { transitionDelay: `${120 + index * 75}ms` };
-              const itemNumber = String(index + 1).padStart(2, "0");
+          <div className="menu-section">
+            <p className="menu-kicker">{itemSectionLabel}</p>
+            <nav className="menu-nav" aria-label="Sidebar navigation">
+              {items.map((item, index) => {
+                const itemStyle = { transitionDelay: `${120 + index * 75}ms` };
+                const itemNumber = String(index + 1).padStart(2, "0");
 
-              if (isActionItem(item)) {
+                if (isActionItem(item)) {
+                  return (
+                    <button
+                      key={`${item.label}-${index}`}
+                      className={`menu-link menu-link-button ${isOpen ? "is-open" : ""}`}
+                      type="button"
+                      aria-label={item.ariaLabel}
+                      style={itemStyle}
+                      onClick={() => {
+                        item.onClick();
+                        closeMenu();
+                      }}
+                    >
+                      {displayItemNumbering ? (
+                        <span className="menu-link-number">{itemNumber}</span>
+                      ) : null}
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                }
+
                 return (
-                  <button
+                  <a
                     key={`${item.label}-${index}`}
-                    className={`menu-link menu-link-button ${isOpen ? "is-open" : ""}`}
-                    type="button"
+                    className={`menu-link ${isOpen ? "is-open" : ""}`}
+                    href={item.link}
                     aria-label={item.ariaLabel}
                     style={itemStyle}
-                    onClick={() => {
-                      item.onClick();
-                      closeMenu();
-                    }}
+                    onClick={closeMenu}
                   >
                     {displayItemNumbering ? (
                       <span className="menu-link-number">{itemNumber}</span>
                     ) : null}
                     <span>{item.label}</span>
-                  </button>
+                  </a>
                 );
-              }
-
-              return (
-                <a
-                  key={`${item.label}-${index}`}
-                  className={`menu-link ${isOpen ? "is-open" : ""}`}
-                  href={item.link}
-                  aria-label={item.ariaLabel}
-                  style={itemStyle}
-                  onClick={closeMenu}
-                >
-                  {displayItemNumbering ? (
-                    <span className="menu-link-number">{itemNumber}</span>
-                  ) : null}
-                  <span>{item.label}</span>
-                </a>
-              );
-            })}
-          </nav>
+              })}
+            </nav>
+          </div>
 
           {displaySocials ? (
-            <div className="menu-socials">
-              <p className="menu-kicker">Quick links</p>
+            <div className="menu-socials menu-section">
+              <p className="menu-kicker">{socialSectionLabel}</p>
               <div className="menu-social-list">
                 {socialItems.map((item, index) => (
                   isActionItem(item) ? (
