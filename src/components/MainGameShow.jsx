@@ -4,6 +4,7 @@ import Counter from "./Counter";
 import GameSetupModal from "./GameSetupModal";
 import StaggeredMenu from "./StaggeredMenu";
 import { mainQuizRounds } from "../data/mainQuizRounds";
+
 function playerCanScore(player, hostGetsScore, hostId) {
   if (player.id !== hostId) return true;
   return hostGetsScore;
@@ -913,127 +914,127 @@ export default function MainGameShow({
           </section>
         </AnimatedContent>
 
-        <AnimatedContent
-          distance={60}
-          direction="vertical"
-          reverse={false}
-          duration={0.75}
-          ease="cubic-bezier(0.22, 1, 0.36, 1)"
-          initialOpacity={0}
-          animateOpacity
-          scale={0.99}
-          threshold={0.1}
-          delay={0.05}
-        >
-          <section className="score-strip-panel" id="gameshow-scores">
-            <div className="score-strip-header">
-              <div>
-                <p className="panel-label">Live scores</p>
-                <div className="score-strip-title-row">
-                  <h2>Visible while you play</h2>
-                  <button
-                    aria-label="Refresh score tally"
-                    className="score-refresh-button"
-                    onClick={() => setScoreRefreshTick((value) => value + 1)}
-                    type="button"
-                  >
-                    <svg aria-hidden="true" viewBox="0 0 24 24">
-                      <path
-                        d="M20 12a8 8 0 1 1-2.34-5.66"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M20 4v6h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                      />
-                    </svg>
-                  </button>
-                  <button
-                    aria-label="Reset scores"
-                    className="score-refresh-button score-reset-button"
-                    onClick={resetScores}
-                    type="button"
-                  >
-                    <svg aria-hidden="true" viewBox="0 0 24 24">
-                      <path
-                        d="M3 6h18"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M8 6V4h8v2"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                      />
-                      <path
-                        d="M6 6l1 14h10l1-14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="score-strip">
-              {displayPlayers.map((player) => {
-                const isHost = player.id === hostProfile.id;
-                const isScoring = playerCanScore(player, hostGetsScore, hostProfile.id);
-
-                return (
-                  <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>
-                    <div>
-                      <strong>
-                        {player.icon ? `${player.icon} ` : ""}
-                        {player.name}
-                      </strong>
-                      <p>
-                        {isHost
-                          ? hostGetsScore
-                            ? "Host and player"
-                            : "Host only"
-                          : "Player"}
-                      </p>
-                    </div>
-                    <div className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
-                      <Counter
-                        digitPlaceHolders={false}
-                        fontSize={34}
-                        gap={2}
-                        padding={0}
-                        places={[100, 10, 1]}
-                        textColor={!isScoring ? "rgba(255, 248, 239, 0.56)" : "#ffd978"}
-                        trigger={scoreRefreshTick}
-                        value={player.scores.mainShow}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        </AnimatedContent>
-
         <section className="game-show-layout">
           <div className="game-board-column">
+            <AnimatedContent
+              distance={60}
+              direction="vertical"
+              reverse={false}
+              duration={0.75}
+              ease="cubic-bezier(0.22, 1, 0.36, 1)"
+              initialOpacity={0}
+              animateOpacity
+              scale={0.99}
+              threshold={0.1}
+              delay={0.05}
+            >
+              <section className="score-strip-panel score-strip-panel-wide" id="gameshow-scores">
+                <div className="score-strip-header">
+                  <div>
+                    <p className="panel-label">Live scores</p>
+                    <div className="score-strip-title-row">
+                      <h2>Current game</h2>
+                      <button
+                        aria-label="Refresh score tally"
+                        className="score-refresh-button"
+                        onClick={() => setScoreRefreshTick((value) => value + 1)}
+                        type="button"
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                          <path
+                            d="M20 12a8 8 0 1 1-2.34-5.66"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                          />
+                          <path
+                            d="M20 4v6h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        aria-label="Reset scores"
+                        className="score-refresh-button score-reset-button"
+                        onClick={resetScores}
+                        type="button"
+                      >
+                        <svg aria-hidden="true" viewBox="0 0 24 24">
+                          <path
+                            d="M3 6h18"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                          />
+                          <path
+                            d="M8 6V4h8v2"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                          />
+                          <path
+                            d="M6 6l1 14h10l1-14"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="score-strip">
+                  {displayPlayers.map((player) => {
+                    const isHost = player.id === hostProfile.id;
+                    const isScoring = playerCanScore(player, hostGetsScore, hostProfile.id);
+
+                    return (
+                      <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>
+                        <div>
+                          <strong>
+                            {player.icon ? `${player.icon} ` : ""}
+                            {player.name}
+                          </strong>
+                          <p>
+                            {isHost
+                              ? hostGetsScore
+                                ? "Host and player"
+                                : "Host only"
+                              : "Player"}
+                          </p>
+                        </div>
+                        <div className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
+                          <Counter
+                            digitPlaceHolders={false}
+                            fontSize={34}
+                            gap={2}
+                            padding={0}
+                            places={[100, 10, 1]}
+                            textColor={!isScoring ? "rgba(255, 248, 239, 0.56)" : "#ffd978"}
+                            trigger={scoreRefreshTick}
+                            value={player.scores.mainShow}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            </AnimatedContent>
+
             <AnimatedContent
               distance={60}
               direction="vertical"
@@ -1047,31 +1048,16 @@ export default function MainGameShow({
               delay={0.08}
             >
               <section className="round-card" id="gameshow-round">
-                <section className="round-info-section">
-                  <div className="question-header-block">
-                    <span className="player-count">
-                      Group {currentRoundIndex + 1} / {mainQuizRounds.length}
-                    </span>
-                    <p className="section-kicker">
-                      {currentStep.type === "group" ? "????" : currentRound.groupName}
-                    </p>
-                    <h2>{currentStep.label}</h2>
-                    <p className="round-step-copy">
-                      Step {currentStepIndex + 1} of {currentSteps.length} in this round
-                    </p>
-                    <p className="round-step-description">{currentStep.description}</p>
-                    {isAnswerTestMode ? (
-                      <p className="answer-test-note">
-                        Test mode is on. Click a choice to make it the correct answer for this step.
-                      </p>
-                    ) : null}
-                  </div>
-                </section>
-
                 <section className="round-game-section">
                   <div className="round-overview">
                   <div className="round-visual-column">
                     <div className="member-image-wrap">
+                      <div className="image-question-bar">
+                        <div className="image-question-copy">
+                          <p className="flow-section-label">Group {currentRoundIndex + 1}</p>
+                          <h2>{currentStep.label}</h2>
+                        </div>
+                      </div>
                       {usesGroupCollage ? (
                         <div
                           className="image-carousel-shell"

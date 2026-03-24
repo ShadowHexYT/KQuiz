@@ -1518,16 +1518,6 @@ button {
   align-items: flex-start;
 }
 
-.round-info-section {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  align-items: flex-start;
-  padding-bottom: 1.1rem;
-  margin-bottom: 1.1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
 .round-game-section {
   display: grid;
   gap: 1rem;
@@ -1537,6 +1527,10 @@ button {
   display: grid;
   gap: 0.45rem;
   padding-bottom: 0.45rem;
+}
+
+.score-strip-panel-wide {
+  padding: 1rem 1.1rem 1.1rem;
 }
 
 .round-overview {
@@ -1591,9 +1585,8 @@ button {
   overflow: hidden;
   overscroll-behavior: contain;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   width: 100%;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1601,6 +1594,37 @@ button {
     radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 55%),
     rgba(6, 10, 20, 0.82);
   height: clamp(520px, 72vh, 780px);
+}
+
+.image-question-bar {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 68px;
+  margin: 0;
+  padding: 0.35rem 1rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px 20px 0 0;
+  background:
+    linear-gradient(180deg, rgba(15, 22, 40, 0.96), rgba(15, 22, 40, 0.9)),
+    rgba(15, 22, 40, 0.9);
+}
+
+.image-question-copy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.image-question-bar .flow-section-label {
+  margin: 0;
+}
+
+.image-question-bar h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.2;
 }
 
 .image-action-bar {
@@ -1651,6 +1675,7 @@ button {
   position: relative;
   width: 100%;
   height: 100%;
+  transform: translateY(-12px);
 }
 
 .image-carousel-card {
