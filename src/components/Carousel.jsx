@@ -12,18 +12,43 @@ export default function Carousel({
   round = false,
   isPaused = false,
 }) {
+  const itemCount = items.length;
   const safeIndex = useMemo(() => {
-    if (!items.length) return 0;
-    return Math.min(Math.max(activeIndex, 0), items.length - 1);
-  }, [activeIndex, items.length]);
+    if (!itemCount) return 0;
+    return Math.min(Math.max(activeIndex, 0), itemCount - 1);
+  }, [activeIndex, itemCount]);
+
+  const visibleItems = useMemo(() => {
+    if (!itemCount) {
+      return [];
+    }
+
+    return items.map((item, index) => {
+      let offset = index - safeIndex;
+
+      if (loop && itemCount > 2) {
+        if (offset > itemCount / 2) {
+          offset -= itemCount;
+        } else if (offset < -itemCount / 2) {
+          offset += itemCount;
+        }
+      }
+
+      return {
+        item,
+        index,
+        offset,
+      };
+    });
+  }, [itemCount, items, loop, safeIndex]);
 
   useEffect(() => {
-    if (!autoplay || isPaused || items.length <= 1) return undefined;
+    if (!autoplay || isPaused || itemCount <= 1) return undefined;
 
     const timer = window.setTimeout(() => {
       const nextIndex = safeIndex + 1;
 
-      if (nextIndex >= items.length) {
+      if (nextIndex >= itemCount) {
         if (loop) {
           onSelect?.(0);
         }
@@ -34,7 +59,7 @@ export default function Carousel({
     }, autoplayDelay);
 
     return () => window.clearTimeout(timer);
-  }, [autoplay, autoplayDelay, isPaused, items.length, loop, onSelect, safeIndex]);
+  }, [autoplay, autoplayDelay, isPaused, itemCount, loop, onSelect, safeIndex]);
 
   return (
     <div
@@ -42,8 +67,7 @@ export default function Carousel({
       style={{ "--carousel-base-width": `${baseWidth}px` }}
     >
       <div className="carousel-track" role="listbox" aria-label="Game modes">
-        {items.map((item, index) => {
-          const offset = index - safeIndex;
+        {visibleItems.map(({ item, index, offset }) => {
           const isActive = index === safeIndex;
 
           return (
@@ -54,7 +78,7 @@ export default function Carousel({
               onClick={() => onSelect?.(index)}
               style={{
                 transform: `translateX(calc(-50% + ${offset * 72}%)) scale(${isActive ? 1 : 0.88})`,
-                zIndex: items.length - Math.abs(offset),
+                zIndex: itemCount - Math.abs(offset),
                 opacity: Math.abs(offset) > 1 ? 0 : 1,
                 pointerEvents: Math.abs(offset) > 1 ? "none" : "auto",
               }}

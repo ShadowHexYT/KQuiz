@@ -37,10 +37,6 @@ function buildTeams(count, currentTeams = []) {
 
 const groupQuizzes = [
   {
-    label: "BLACKPINK",
-    description: "Music videos, solos, fashion moments, and major live stages.",
-  },
-  {
     label: "TWICE",
     description: "Title tracks, choreography highlights, and member trivia.",
   },

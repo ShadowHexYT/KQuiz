@@ -49,6 +49,206 @@ button {
   min-height: 100vh;
 }
 
+.kpop-background-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.kpop-background-grid {
+  position: absolute;
+  inset: 0;
+}
+
+.kpop-background-card {
+  position: absolute;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  opacity: 0;
+  filter: saturate(1.18);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
+  animation: backgroundPulse 8s ease-in-out infinite;
+}
+
+.kpop-background-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(10, 14, 28, 0.1), rgba(10, 14, 28, 0.74)),
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.16), transparent 42%);
+}
+
+.kpop-background-card-1 {
+  top: 8%;
+  left: -2%;
+  width: clamp(180px, 20vw, 300px);
+  aspect-ratio: 4 / 5;
+  transform: rotate(-10deg);
+  animation-delay: 0s;
+}
+
+.kpop-background-card-2 {
+  top: 12%;
+  right: 5%;
+  width: clamp(170px, 18vw, 280px);
+  aspect-ratio: 4 / 5;
+  transform: rotate(8deg);
+  animation-delay: 1.3s;
+}
+
+.kpop-background-card-3 {
+  bottom: 10%;
+  left: 8%;
+  width: clamp(190px, 22vw, 320px);
+  aspect-ratio: 16 / 10;
+  transform: rotate(7deg);
+  animation-delay: 2.6s;
+}
+
+.kpop-background-card-4 {
+  right: -3%;
+  bottom: 9%;
+  width: clamp(200px, 24vw, 360px);
+  aspect-ratio: 16 / 10;
+  transform: rotate(-8deg);
+  animation-delay: 3.9s;
+}
+
+.kpop-background-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.06);
+}
+
+.kpop-floating-tags {
+  position: absolute;
+  inset: 0;
+}
+
+.kpop-floating-tag {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 248, 239, 0.64);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(10px);
+  animation: floatTag 18s ease-in-out infinite;
+}
+
+.kpop-floating-tag-logo {
+  border-color: rgba(255, 141, 102, 0.18);
+  background:
+    linear-gradient(135deg, rgba(255, 141, 102, 0.16), rgba(255, 93, 143, 0.14)),
+    rgba(255, 255, 255, 0.06);
+  color: rgba(255, 248, 239, 0.86);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  letter-spacing: 0.12em;
+}
+
+.kpop-floating-tag-tag {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 248, 239, 0.56);
+}
+
+.kpop-floating-tag-icon {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: rgba(255, 151, 184, 0.58);
+  font-size: 1.65rem;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: 0;
+  text-shadow: 0 0 24px rgba(255, 93, 143, 0.22);
+}
+
+.kpop-floating-tag-1 {
+  top: 9%;
+  left: 17%;
+  animation-delay: 0s;
+}
+
+.kpop-floating-tag-2 {
+  top: 18%;
+  right: 20%;
+  animation-delay: 2s;
+}
+
+.kpop-floating-tag-3 {
+  top: 38%;
+  left: 6%;
+  animation-delay: 4s;
+}
+
+.kpop-floating-tag-4 {
+  top: 52%;
+  right: 8%;
+  animation-delay: 6s;
+}
+
+.kpop-floating-tag-5 {
+  bottom: 20%;
+  left: 22%;
+  animation-delay: 8s;
+}
+
+.kpop-floating-tag-6 {
+  bottom: 10%;
+  right: 24%;
+  animation-delay: 10s;
+}
+
+.kpop-floating-tag-7 {
+  top: 14%;
+  left: 42%;
+  animation-delay: 1s;
+}
+
+.kpop-floating-tag-8 {
+  top: 28%;
+  right: 34%;
+  animation-delay: 3s;
+}
+
+.kpop-floating-tag-9 {
+  top: 62%;
+  left: 14%;
+  animation-delay: 5s;
+}
+
+.kpop-floating-tag-10 {
+  top: 70%;
+  right: 14%;
+  animation-delay: 7s;
+}
+
+.kpop-floating-tag-11 {
+  bottom: 28%;
+  left: 44%;
+  animation-delay: 9s;
+}
+
+.kpop-floating-tag-12 {
+  bottom: 6%;
+  right: 38%;
+  animation-delay: 11s;
+}
+
 .primary-button,
 .ghost-button {
   border-radius: 12px;
@@ -360,11 +560,64 @@ button {
   overflow: visible;
 }
 
+@keyframes backgroundPulse {
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: translate3d(0, 0, 0) scale(0.96);
+  }
+  18% {
+    opacity: 0.2;
+    transform: translate3d(0, -6px, 0) scale(1);
+  }
+  28% {
+    opacity: 0.3;
+    transform: translate3d(0, -10px, 0) scale(1.02);
+  }
+  44% {
+    opacity: 0.15;
+    transform: translate3d(0, 0, 0) scale(0.98);
+  }
+}
+
+@keyframes floatTag {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.48;
+  }
+  50% {
+    transform: translate3d(0, -14px, 0);
+    opacity: 0.74;
+  }
+}
+
+.hero-showcase-banner {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .hero-card {
   display: block;
   height: 100%;
-  padding: 1.5rem;
+  padding: 1.75rem;
   border-radius: 28px;
+}
+
+.hero-card-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(320px, 420px);
+  gap: 1.5rem;
+  align-items: stretch;
+  background:
+    radial-gradient(circle at top left, rgba(255, 141, 102, 0.2), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(97, 220, 155, 0.12), transparent 28%),
+    rgba(15, 22, 40, 0.78);
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .eyebrow,
@@ -395,26 +648,220 @@ button {
 .hero-copy h1 {
   font-size: clamp(2.6rem, 4vw, 4.8rem);
   line-height: 0.96;
-  max-width: 10ch;
+  max-width: 14ch;
 }
 
 .hero-text {
   max-width: 62ch;
   color: rgba(255, 248, 239, 0.8);
-  margin: 1rem 0 1.5rem;
-}
-
-.hero-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
+  margin: 1rem 0 0.85rem;
 }
 
 .hero-actions {
-  margin-top: 1.25rem;
+  display: flex;
+  justify-content: center;
+  margin-top: 0.35rem;
+  padding-top: 0.35rem;
 }
 
-.hero-badges span,
+.hero-lineup-panel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.9rem;
+  margin-top: 0.35rem;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(9, 14, 27, 0.62);
+}
+
+.hero-lineup-panel .hero-actions {
+  margin-top: auto;
+  padding-top: 0.35rem;
+}
+
+.hero-lineup-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.hero-lineup-header h2,
+.hero-lineup-chip strong,
+.hero-lineup-chip p {
+  margin: 0;
+}
+
+.hero-lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: minmax(70px, auto);
+  gap: 0.65rem;
+}
+
+.hero-team-name-grid {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.hero-team-name-card {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hero-team-name-input {
+  padding: 0.8rem 0.9rem;
+}
+
+.hero-lineup-chip {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.8rem 0.9rem;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.hero-lineup-chip.is-host {
+  grid-column: 1 / -1;
+  border-color: rgba(255, 211, 111, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 211, 111, 0.08), rgba(255, 255, 255, 0.03)),
+    rgba(255, 255, 255, 0.04);
+}
+
+.hero-lineup-chip.is-empty {
+  border-style: dashed;
+  color: rgba(255, 248, 239, 0.72);
+}
+
+.hero-lineup-chip p {
+  color: rgba(255, 248, 239, 0.68);
+  font-size: 0.82rem;
+}
+
+.hero-lineup-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 1.05rem;
+}
+
+.hero-setup-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  height: 100%;
+  transform: translateY(-5px);
+  padding: 1.1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(8, 13, 24, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.hero-setup-panel .party-settings-grid-secondary {
+  margin-top: 0;
+}
+
+.party-settings-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.party-settings-grid-secondary {
+  align-items: start;
+}
+
+.party-settings-grid-tertiary {
+  margin-top: auto;
+}
+
+.party-settings-grid-secondary > * {
+  margin-top: 0 !important;
+  align-self: start !important;
+}
+
+.party-setting-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)),
+    rgba(8, 13, 24, 0.55);
+}
+
+.party-format-card {
+  position: relative;
+  overflow: visible;
+}
+
+.party-setting-card strong,
+.party-setting-card p,
+.party-setting-feature p {
+  margin: 0;
+}
+
+.party-setting-card strong {
+  font-size: 1rem;
+}
+
+.party-setting-card p,
+.party-setting-feature .setup-help {
+  color: rgba(255, 248, 239, 0.68);
+}
+
+.party-setting-feature {
+  margin-top: 0;
+  align-content: start;
+  min-height: 100%;
+}
+
+.party-control-card {
+  position: relative;
+  display: block;
+  min-height: 84px;
+  padding: 1rem;
+  align-self: start;
+}
+
+.party-control-card .team-structure-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 2rem;
+}
+
+.party-control-card .setup-inline-label {
+  margin-bottom: 0;
+}
+
+.party-control-card .toggle-row {
+  margin-top: 0;
+  align-self: center;
+}
+
 .player-count,
 .host-pill {
   display: inline-flex;
@@ -422,11 +869,6 @@ button {
   justify-content: center;
   border-radius: 999px;
   padding: 0.45rem 0.9rem;
-}
-
-.hero-badges span {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f8efe0;
 }
 
 .host-panel {
@@ -491,6 +933,17 @@ button {
 .player-form-stack {
   display: grid;
   gap: 0.75rem;
+}
+
+.player-team-slot {
+  display: none;
+  visibility: hidden;
+}
+
+.player-team-slot.is-visible {
+  display: block;
+  min-height: 0;
+  visibility: visible;
 }
 
 .player-form-row input,
@@ -592,6 +1045,12 @@ button {
   z-index: 20;
 }
 
+.team-dropdown-wrap-compact {
+  width: 100%;
+  max-width: 230px;
+  margin-top: 0.75rem;
+}
+
 .team-dropdown-trigger {
   display: flex;
   align-items: center;
@@ -608,6 +1067,24 @@ button {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
+.team-dropdown-trigger-compact {
+  justify-content: center;
+  gap: 0.8rem;
+  min-height: 3.15rem;
+  width: 100%;
+  text-align: center;
+}
+
+.team-dropdown-trigger-compact span,
+.team-dropdown-trigger-compact strong {
+  color: #fff8ef;
+}
+
+.team-dropdown-trigger-compact:disabled {
+  cursor: default;
+  opacity: 0.78;
+}
+
 .team-dropdown-trigger strong,
 .team-dropdown-trigger span {
   margin: 0;
@@ -620,8 +1097,10 @@ button {
 .team-dropdown-menu {
   position: absolute;
   top: calc(100% + 0.45rem);
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
+  width: min(220px, calc(100vw - 3rem));
+  transform: translateX(-50%);
   z-index: 8;
   display: grid;
   gap: 0.35rem;
@@ -831,7 +1310,7 @@ button {
 }
 
 .section-heading {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .section-note {
@@ -933,6 +1412,14 @@ button {
   margin-top: 1.5rem;
 }
 
+.party-lineup-section {
+  display: none;
+}
+
+.hero-team-card {
+  margin-top: 0;
+}
+
 .host-panel-compact {
   width: 100%;
   max-width: 420px;
@@ -941,6 +1428,11 @@ button {
   position: relative;
   z-index: 12;
   overflow: visible;
+}
+
+.host-panel-wide {
+  width: 100%;
+  max-width: none;
 }
 
 .icon-picker-grid {
@@ -1018,6 +1510,14 @@ button {
 
 .player-lineup-wide {
   width: 100%;
+}
+
+.mode-section-top {
+  margin-top: 1.5rem;
+}
+
+.group-section {
+  margin-top: 1.1rem;
 }
 
 .player-slot-action {
@@ -2305,11 +2805,34 @@ button {
 }
 
 @media (max-width: 840px) {
-  .hero-card {
-    grid-template-columns: 1fr;
+  .kpop-background-card-2,
+  .kpop-background-card-4,
+  .kpop-floating-tag-2,
+  .kpop-floating-tag-4,
+  .kpop-floating-tag-6 {
+    display: none;
   }
 
   .hero-showcase {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card,
+  .hero-card-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-lineup-header,
+  .hero-lineup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-lineup-header {
+    display: grid;
+  }
+
+  .party-settings-grid,
+  .hero-team-name-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2408,6 +2931,20 @@ button {
 }
 
 @media (max-width: 560px) {
+  .kpop-background-card {
+    opacity: 0.08;
+  }
+
+  .kpop-floating-tag {
+    font-size: 0.7rem;
+    padding: 0.35rem 0.65rem;
+  }
+
+  .kpop-floating-tag-icon {
+    font-size: 1.25rem;
+    padding: 0;
+  }
+
   .staggered-menu-root.is-right {
     right: 0.8rem;
   }
