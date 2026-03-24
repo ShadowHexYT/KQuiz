@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import HomeScreen from "./components/HomeScreen";
 import MainGameShow from "./components/MainGameShow";
+import { createEmptyScores, GAME_SCORE_KEYS, normalizeScores } from "./data/scoreModel";
 
 const starterPlayers = [];
 const DEFAULT_TEAM_COUNT = 2;
@@ -10,11 +11,16 @@ export const defaultHostProfile = {
   name: "Hunter",
   icon: "🎙️",
   teamId: "team-1",
-  scores: {
-    mainShow: 0,
-  },
+  scores: createEmptyScores(),
 };
 export const playerIcons = ["🎤", "💖", "🌟", "🎧", "🪩", "🔥", "🎵", "💎"];
+
+function resetProfileScores(profile) {
+  return {
+    ...profile,
+    scores: createEmptyScores(),
+  };
+}
 
 function createTeam(index, name) {
   return {
@@ -31,10 +37,6 @@ function buildTeams(count, currentTeams = []) {
 
 const groupQuizzes = [
   {
-    label: "BTS",
-    description: "Hits, eras, members, and iconic performance moments.",
-  },
-  {
     label: "BLACKPINK",
     description: "Music videos, solos, fashion moments, and major live stages.",
   },
@@ -43,12 +45,8 @@ const groupQuizzes = [
     description: "Title tracks, choreography highlights, and member trivia.",
   },
   {
-    label: "Stray Kids",
-    description: "Unit songs, album eras, rap lines, and performance energy.",
-  },
-  {
-    label: "SEVENTEEN",
-    description: "Subunits, variety moments, choreo details, and discography.",
+    label: "LE SSERAFIM",
+    description: "Fearless concepts, choreography moments, member visuals, and comeback rounds.",
   },
   {
     label: "NewJeans",
@@ -59,8 +57,16 @@ const groupQuizzes = [
     description: "Concepts, catchy hooks, member facts, and comeback rounds.",
   },
   {
-    label: "ATEEZ",
-    description: "Stage power, lore-inspired questions, and song intros.",
+    label: "aespa",
+    description: "Virtual-era concepts, standout visuals, and song recognition rounds.",
+  },
+  {
+    label: "NMIXX",
+    description: "Member recognition, bold title tracks, and vocal-heavy quiz moments.",
+  },
+  {
+    label: "Kiss of Life",
+    description: "Performance charisma, member trivia, and recent comeback questions.",
   },
 ];
 
@@ -75,6 +81,7 @@ export default function App() {
   const [hostProfile, setHostProfile] = useState({
     ...defaultHostProfile,
     teamId: initialTeams[0].id,
+    scores: createEmptyScores(),
   });
   const [playerName, setPlayerName] = useState("");
   const [teams, setTeams] = useState(initialTeams);
@@ -106,27 +113,37 @@ export default function App() {
       name: trimmedName,
       icon: playerIcons[0],
       teamId: teamsEnabled ? newPlayerTeamId || fallbackTeamId : null,
-      scores: {
-        mainShow: 0,
-      },
+      scores: createEmptyScores(),
     };
 
-    setPlayers((currentPlayers) => [...currentPlayers, newPlayer]);
+    setPlayers((currentPlayers) => [...currentPlayers.map(resetProfileScores), newPlayer]);
+    setHostProfile((currentHost) => resetProfileScores(currentHost));
     setPlayerName("");
     setDesiredPlayerCount((count) => Number(count) + 1);
   }
 
   function removePlayer(playerId) {
     setPlayers((currentPlayers) => {
-      const nextPlayers = currentPlayers.filter((player) => player.id !== playerId);
+      const nextPlayers = currentPlayers
+        .filter((player) => player.id !== playerId)
+        .map(resetProfileScores);
       setDesiredPlayerCount(nextPlayers.length);
       return nextPlayers;
     });
+    setHostProfile((currentHost) => resetProfileScores(currentHost));
   }
 
   function updatePlayer(playerId, updates) {
     setPlayers((currentPlayers) =>
-      currentPlayers.map((player) => (player.id === playerId ? { ...player, ...updates } : player)),
+      currentPlayers.map((player) =>
+        player.id === playerId
+          ? {
+              ...player,
+              ...updates,
+              scores: normalizeScores(updates.scores ?? player.scores),
+            }
+          : player,
+      ),
     );
   }
 
@@ -134,6 +151,7 @@ export default function App() {
     setHostProfile((currentHost) => ({
       ...currentHost,
       ...updates,
+      scores: normalizeScores(updates.scores ?? currentHost.scores),
     }));
   }
 
@@ -151,11 +169,13 @@ export default function App() {
       currentPlayers.map((player) => ({
         ...player,
         teamId: nextTeamIds.has(player.teamId) ? player.teamId : fallbackTeamId,
+        scores: normalizeScores(player.scores),
       })),
     );
     setHostProfile((currentHost) => ({
       ...currentHost,
       teamId: nextTeamIds.has(currentHost.teamId) ? currentHost.teamId : fallbackTeamId,
+      scores: normalizeScores(currentHost.scores),
     }));
   }
 
@@ -174,13 +194,15 @@ export default function App() {
     if (hostProfile.id !== HOST_ID) {
       nextPlayers.push({
         ...hostProfile,
+        scores: normalizeScores(hostProfile.scores),
       });
     }
 
-    setPlayers(nextPlayers);
+    setPlayers(nextPlayers.map(resetProfileScores));
     setDesiredPlayerCount(nextPlayers.length);
     setHostProfile({
-      ...selectedPlayer,
+      ...resetProfileScores(selectedPlayer),
+      teamId: selectedPlayer.teamId,
     });
   }
 
@@ -188,18 +210,17 @@ export default function App() {
     if (hostProfile.id === HOST_ID) return;
 
     setPlayers((currentPlayers) => [
-      ...currentPlayers,
-      {
+      ...currentPlayers.map(resetProfileScores),
+      resetProfileScores({
         ...hostProfile,
-      },
+        scores: normalizeScores(hostProfile.scores),
+      }),
     ]);
     setDesiredPlayerCount((count) => Number(count) + 1);
     setHostProfile({
       ...defaultHostProfile,
       teamId: teams[0]?.id ?? defaultHostProfile.teamId,
-      scores: {
-        ...defaultHostProfile.scores,
-      },
+      scores: createEmptyScores(),
     });
   }
 
@@ -231,6 +252,7 @@ export default function App() {
         setDesiredPlayerCount={setDesiredPlayerCount}
         addPlayer={addPlayer}
         removePlayer={removePlayer}
+        scoreKey={GAME_SCORE_KEYS.mainShow}
         onBackHome={goHome}
       />
     );

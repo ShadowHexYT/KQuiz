@@ -7,10 +7,6 @@ import StaggeredMenu from "./StaggeredMenu";
 
 const groupQuizzes = [
   {
-    label: "BTS",
-    description: "Hits, eras, members, and iconic performance moments.",
-  },
-  {
     label: "BLACKPINK",
     description: "Music videos, solos, fashion moments, and major live stages.",
   },
@@ -19,12 +15,8 @@ const groupQuizzes = [
     description: "Title tracks, choreography highlights, and member trivia.",
   },
   {
-    label: "Stray Kids",
-    description: "Unit songs, album eras, rap lines, and performance energy.",
-  },
-  {
-    label: "SEVENTEEN",
-    description: "Subunits, variety moments, choreo details, and discography.",
+    label: "LE SSERAFIM",
+    description: "Fearless concepts, choreography moments, member visuals, and comeback rounds.",
   },
   {
     label: "NewJeans",
@@ -35,8 +27,16 @@ const groupQuizzes = [
     description: "Concepts, catchy hooks, member facts, and comeback rounds.",
   },
   {
-    label: "ATEEZ",
-    description: "Stage power, lore-inspired questions, and song intros.",
+    label: "aespa",
+    description: "Virtual-era concepts, standout visuals, and song recognition rounds.",
+  },
+  {
+    label: "NMIXX",
+    description: "Member recognition, bold title tracks, and vocal-heavy quiz moments.",
+  },
+  {
+    label: "Kiss of Life",
+    description: "Performance charisma, member trivia, and recent comeback questions.",
   },
 ];
 
@@ -335,7 +335,6 @@ export default function HomeScreen({
             <aside className="player-slots-panel player-lineup-wide">
               <div className="host-panel-header">
                 <div>
-                  <p className="panel-label">Players</p>
                   <h2>Player lineup</h2>
                 </div>
                 <span className="player-count">{lineupPlayers.length} total</span>

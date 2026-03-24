@@ -4,6 +4,7 @@ import Counter from "./Counter";
 import GameSetupModal from "./GameSetupModal";
 import StaggeredMenu from "./StaggeredMenu";
 import { mainQuizRounds } from "../data/mainQuizRounds";
+import { createEmptyScores, normalizeScores } from "../data/scoreModel";
 
 function playerCanScore(player, hostGetsScore, hostId) {
   if (player.id !== hostId) return true;
@@ -58,6 +59,7 @@ export default function MainGameShow({
   setDesiredPlayerCount,
   addPlayer,
   removePlayer,
+  scoreKey,
   onBackHome,
 }) {
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
@@ -446,8 +448,8 @@ export default function MainGameShow({
       setHostProfile((currentHost) => ({
         ...currentHost,
         scores: {
-          ...currentHost.scores,
-          mainShow: currentHost.scores.mainShow + amount,
+          ...normalizeScores(currentHost.scores),
+          [scoreKey]: (normalizeScores(currentHost.scores)[scoreKey] ?? 0) + amount,
         },
       }));
       return;
@@ -459,8 +461,8 @@ export default function MainGameShow({
           ? {
               ...player,
               scores: {
-                ...player.scores,
-                mainShow: player.scores.mainShow + amount,
+                ...normalizeScores(player.scores),
+                [scoreKey]: (normalizeScores(player.scores)[scoreKey] ?? 0) + amount,
               },
             }
           : player,
@@ -598,16 +600,16 @@ export default function MainGameShow({
     setHostProfile((currentHost) => ({
       ...currentHost,
       scores: {
-        ...currentHost.scores,
-        mainShow: 0,
+        ...normalizeScores(currentHost.scores),
+        [scoreKey]: 0,
       },
     }));
     setPlayers((currentPlayers) =>
       currentPlayers.map((player) => ({
         ...player,
         scores: {
-          ...player.scores,
-          mainShow: 0,
+          ...normalizeScores(player.scores),
+          [scoreKey]: 0,
         },
       })),
     );
@@ -630,16 +632,16 @@ export default function MainGameShow({
     setHostProfile((currentHost) => ({
       ...currentHost,
       scores: {
-        ...currentHost.scores,
-        mainShow: 0,
+        ...normalizeScores(currentHost.scores),
+        [scoreKey]: 0,
       },
     }));
     setPlayers((currentPlayers) =>
       currentPlayers.map((player) => ({
         ...player,
         scores: {
-          ...player.scores,
-          mainShow: 0,
+          ...normalizeScores(player.scores),
+          [scoreKey]: 0,
         },
       })),
     );
@@ -677,15 +679,26 @@ export default function MainGameShow({
       const extras = Array.from({ length: safeCount - players.length }, (_, index) => ({
         id: Date.now() + index,
         name: `Player ${players.length + index + 1}`,
-        scores: { mainShow: 0 },
+        scores: createEmptyScores(),
       }));
-      setPlayers((currentPlayers) => [...currentPlayers, ...extras]);
+      setPlayers((currentPlayers) => [
+        ...currentPlayers.map((player) => ({ ...player, scores: createEmptyScores() })),
+        ...extras,
+      ]);
+      setHostProfile((currentHost) => ({
+        ...currentHost,
+        scores: createEmptyScores(),
+      }));
       return;
     }
 
     if (safeCount < players.length) {
       const remainingPlayers = players.slice(0, safeCount);
-      setPlayers(remainingPlayers);
+      setPlayers(remainingPlayers.map((player) => ({ ...player, scores: createEmptyScores() })));
+      setHostProfile((currentHost) => ({
+        ...currentHost,
+        scores: createEmptyScores(),
+      }));
     }
   }
 
@@ -1025,7 +1038,7 @@ export default function MainGameShow({
                             places={[100, 10, 1]}
                             textColor={!isScoring ? "rgba(255, 248, 239, 0.56)" : "#ffd978"}
                             trigger={scoreRefreshTick}
-                            value={player.scores.mainShow}
+                            value={normalizeScores(player.scores)[scoreKey] ?? 0}
                           />
                         </div>
                       </div>
