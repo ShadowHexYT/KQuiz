@@ -1,4 +1,16 @@
 // Favorites and bias picks are seeded defaults for v1 and can be customized later.
+function getStableHash(value) {
+  return Array.from(value).reduce((hash, char) => hash + char.charCodeAt(0), 0);
+}
+
+function getShuffledChoices(choices, seed) {
+  return [...choices].sort((left, right) => {
+    const leftScore = getStableHash(`${seed}-${left}`);
+    const rightScore = getStableHash(`${seed}-${right}`);
+    return leftScore - rightScore;
+  });
+}
+
 const rounds = [
   {
     id: "lesserafim",
@@ -533,7 +545,7 @@ export const mainQuizRounds = rounds.map((round) => {
 
   return {
     ...round,
-    groupChoices: allGroupNames,
+    groupChoices: getShuffledChoices(allGroupNames, `${round.id}-groups`),
     extras: round.extras.map((extra) => {
       if (["leader", "maknae", "bias"].includes(extra.key)) {
         const includesSpecialAnswer = !memberNames.includes(extra.answer);

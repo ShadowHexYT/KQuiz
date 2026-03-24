@@ -1343,6 +1343,30 @@ button {
   gap: 0.75rem;
 }
 
+.round-nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.45rem 0.4rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  background: rgba(10, 16, 29, 0.5);
+}
+
+.round-nav-label {
+  color: rgba(255, 248, 239, 0.78);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.round-nav-arrow {
+  min-width: 2.3rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
 .game-show-layout {
   margin-top: 1.25rem;
 }
@@ -1520,7 +1544,8 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   margin: 1.25rem 0;
-  align-items: start;
+  align-items: stretch;
+  min-height: clamp(520px, 72vh, 780px);
 }
 
 .round-overview > * {
@@ -1536,6 +1561,7 @@ button {
   gap: 0.85rem;
   align-self: start;
   width: 100%;
+  height: clamp(520px, 72vh, 780px);
 }
 
 .round-step-copy {
@@ -1550,8 +1576,20 @@ button {
   font-weight: 600;
 }
 
+.answer-test-note {
+  margin: 0.65rem 0 0;
+  color: #ffd978;
+  font-weight: 700;
+}
+
+.ghost-button.is-active {
+  border-color: rgba(255, 141, 102, 0.34);
+  background: rgba(255, 141, 102, 0.14);
+}
+
 .member-image-wrap {
   overflow: hidden;
+  overscroll-behavior: contain;
   position: relative;
   display: flex;
   align-items: center;
@@ -1562,7 +1600,7 @@ button {
   background:
     radial-gradient(circle at top, rgba(255, 255, 255, 0.04), transparent 55%),
     rgba(6, 10, 20, 0.82);
-  height: clamp(420px, 68vh, 760px);
+  height: clamp(520px, 72vh, 780px);
 }
 
 .image-action-bar {
@@ -1599,6 +1637,71 @@ button {
   transform: translateY(-2px);
 }
 
+.image-carousel-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding: 0;
+}
+
+.image-carousel-track {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-carousel-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  align-content: end;
+  width: min(68%, 420px);
+  height: min(76%, 430px);
+  padding: 0.65rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(255, 141, 102, 0.12), transparent 38%),
+    rgba(15, 22, 40, 0.82);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.24);
+  transition:
+    transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 280ms ease,
+    border-color 220ms ease;
+  overflow: hidden;
+}
+
+.image-carousel-card.is-active {
+  border-color: rgba(255, 141, 102, 0.42);
+}
+
+.image-carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.image-carousel-caption {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(10, 16, 29, 0.8);
+  color: #fff8ef;
+  font-weight: 700;
+}
+
 .group-collage {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1617,6 +1720,17 @@ button {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
   overflow: hidden;
+}
+
+.image-viewer-trigger {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.image-viewer-trigger:hover {
+  transform: none;
 }
 
 .group-collage-image {
@@ -1671,11 +1785,34 @@ button {
   flex-direction: column;
   gap: 0.35rem;
   width: 100%;
-  max-height: calc(100vh - 8rem);
+  padding: 0 1rem 1rem;
+  height: clamp(520px, 72vh, 780px);
+  max-height: clamp(520px, 72vh, 780px);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+
+.round-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: -1px;
+  z-index: 5;
+  margin: 0 -1rem 0;
+  padding: 0.35rem 1rem 0.6rem;
+  border-radius: 20px 20px 0 0;
+  background:
+    linear-gradient(180deg, rgba(9, 14, 27, 0.98), rgba(9, 14, 27, 0.98)),
+    rgba(9, 14, 27, 0.98);
+  backdrop-filter: blur(10px);
+}
+
+.round-meta-top .round-controls {
+  justify-content: flex-end;
 }
 
 .round-meta-card::-webkit-scrollbar {
@@ -1726,6 +1863,7 @@ button {
   align-items: start;
   margin-top: 0.65rem;
   margin-bottom: auto;
+  min-height: 0;
 }
 
 .round-flow-choices.is-even {
@@ -1916,6 +2054,10 @@ button {
   width: min(820px, 100%);
 }
 
+.photo-viewer-modal {
+  width: min(980px, 100%);
+}
+
 .results-player-list {
   display: grid;
   gap: 0.75rem;
@@ -1979,6 +2121,43 @@ button {
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 0;
+}
+
+.photo-viewer-shell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.photo-viewer-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: min(72vh, 720px);
+  padding: 1rem;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top, rgba(255, 141, 102, 0.08), transparent 48%),
+    rgba(10, 16, 29, 0.78);
+}
+
+.photo-viewer-image {
+  display: block;
+  max-width: 100%;
+  max-height: min(68vh, 680px);
+  object-fit: contain;
+  border-radius: 18px;
+}
+
+.photo-viewer-arrow {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  padding: 0;
+  font-size: 1.1rem;
 }
 
 .score-toggle {

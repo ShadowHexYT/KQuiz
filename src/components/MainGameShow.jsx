@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
 import Counter from "./Counter";
 import GameSetupModal from "./GameSetupModal";
@@ -70,14 +70,21 @@ export default function MainGameShow({
   const [poppingOption, setPoppingOption] = useState(null);
   const [isResultsOpen, setIsResultsOpen] = useState(false);
   const [isSampleOpen, setIsSampleOpen] = useState(false);
+  const [isAnswerTestMode, setIsAnswerTestMode] = useState(false);
+  const [answerOverrides, setAnswerOverrides] = useState({});
+  const [photoViewerIndex, setPhotoViewerIndex] = useState(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isImageCarouselPaused, setIsImageCarouselPaused] = useState(false);
   const [scoreRefreshTick, setScoreRefreshTick] = useState(0);
   const longPressRef = useRef({ timer: null, triggered: false });
+  const imageDragRef = useRef({ startX: 0, active: false });
   const audioContextRef = useRef(null);
   const popResetTimerRef = useRef(null);
 
   const currentRound = mainQuizRounds[currentRoundIndex];
   const currentSteps = useMemo(() => buildRoundSteps(currentRound), [currentRound]);
   const currentStep = currentSteps[currentStepIndex];
+  const resolvedAnswer = answerOverrides[currentStep.id] ?? currentStep.answer;
   const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
   const eligiblePlayers = useMemo(
     () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore, hostProfile.id)),
@@ -93,6 +100,40 @@ export default function MainGameShow({
     currentStep.type === "extra" &&
     currentStep.key === "favoriteSong" &&
     currentStep.sampleVideoId;
+  const galleryImages = useMemo(() => {
+    if (usesAlbumCover) {
+      return [
+        {
+          src: currentStep.coverImage,
+          alt: `${currentRound.groupName} ${resolvedAnswer} cover art`,
+        },
+      ];
+    }
+
+    return currentRound.members.map((member) => ({
+      src: member.image,
+      alt: `${member.name} from ${currentRound.groupName}`,
+      name: member.name,
+    }));
+  }, [currentRound, currentStep.coverImage, currentRound.groupName, resolvedAnswer, usesAlbumCover]);
+  const usesImageCarousel = usesGroupCollage && galleryImages.length > 1;
+  const activeGalleryImage =
+    photoViewerIndex !== null ? galleryImages[photoViewerIndex] ?? null : null;
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+    setIsImageCarouselPaused(false);
+  }, [currentRound.id, currentStep.id]);
+
+  useEffect(() => {
+    if (!usesImageCarousel || isImageCarouselPaused || galleryImages.length <= 1) return undefined;
+
+    const timer = window.setTimeout(() => {
+      setActiveImageIndex((currentIndex) => (currentIndex + 1) % galleryImages.length);
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [galleryImages.length, isImageCarouselPaused, usesImageCarousel, activeImageIndex]);
 
   function getPreviewPlayerId(option) {
     return previewAssignments[currentStep.id]?.[option] ?? null;
@@ -170,6 +211,8 @@ export default function MainGameShow({
   }
 
   function handleChoicePointerDown(option) {
+    if (isAnswerTestMode) return;
+
     longPressRef.current.triggered = false;
     setHoldingOption(option);
     longPressRef.current.timer = window.setTimeout(() => {
@@ -180,6 +223,8 @@ export default function MainGameShow({
   }
 
   function handleChoicePointerUp() {
+    if (isAnswerTestMode) return;
+
     if (longPressRef.current.timer) {
       window.clearTimeout(longPressRef.current.timer);
       longPressRef.current.timer = null;
@@ -188,12 +233,96 @@ export default function MainGameShow({
   }
 
   function handleChoiceClick(option) {
+    if (isAnswerTestMode) {
+      assignTestAnswer(option);
+      return;
+    }
+
     if (longPressRef.current.triggered) {
       longPressRef.current.triggered = false;
       return;
     }
 
     cyclePreviewPlayer(option);
+  }
+
+  function openPhotoViewer(index) {
+    setPhotoViewerIndex(index);
+  }
+
+  function closePhotoViewer() {
+    setPhotoViewerIndex(null);
+  }
+
+  function showPreviousPhoto() {
+    if (photoViewerIndex === null || galleryImages.length <= 1) return;
+    setPhotoViewerIndex((currentIndex) =>
+      currentIndex === null ? 0 : (currentIndex - 1 + galleryImages.length) % galleryImages.length,
+    );
+  }
+
+  function showNextPhoto() {
+    if (photoViewerIndex === null || galleryImages.length <= 1) return;
+    setPhotoViewerIndex((currentIndex) =>
+      currentIndex === null ? 0 : (currentIndex + 1) % galleryImages.length,
+    );
+  }
+
+  function showPreviousCarouselImage() {
+    if (!galleryImages.length) return;
+    setActiveImageIndex((currentIndex) => (currentIndex - 1 + galleryImages.length) % galleryImages.length);
+  }
+
+  function showNextCarouselImage() {
+    if (!galleryImages.length) return;
+    setActiveImageIndex((currentIndex) => (currentIndex + 1) % galleryImages.length);
+  }
+
+  function handleImageCarouselWheel(event) {
+    if (!usesImageCarousel) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setIsImageCarouselPaused(true);
+    if (event.deltaY > 0 || event.deltaX > 0) {
+      showNextCarouselImage();
+    } else {
+      showPreviousCarouselImage();
+    }
+  }
+
+  function handleImageCarouselPointerDown(event) {
+    if (!usesImageCarousel) return;
+    imageDragRef.current = { startX: event.clientX, active: true };
+    setIsImageCarouselPaused(true);
+  }
+
+  function handleImageCarouselPointerMove(event) {
+    if (!usesImageCarousel || !imageDragRef.current.active) return;
+    const deltaX = event.clientX - imageDragRef.current.startX;
+
+    if (Math.abs(deltaX) < 40) return;
+
+    imageDragRef.current.active = false;
+    if (deltaX < 0) {
+      showNextCarouselImage();
+    } else {
+      showPreviousCarouselImage();
+    }
+  }
+
+  function handleImageCarouselPointerUp() {
+    imageDragRef.current.active = false;
+  }
+
+  function assignTestAnswer(option) {
+    setAnswerOverrides((currentOverrides) => ({
+      ...currentOverrides,
+      [currentStep.id]: option,
+    }));
+    playCelebrateSound();
+    setRevealAnswers(false);
+    setIsResultsOpen(false);
+    setIsSampleOpen(false);
   }
 
   function triggerPopAnimation(option) {
@@ -342,7 +471,7 @@ export default function MainGameShow({
     const stepId = currentStep.id;
     const correctPlayerIds = eligiblePlayers
       .filter(
-        (player) => getAssignedOption(player.id) === currentStep.answer,
+        (player) => getAssignedOption(player.id) === resolvedAnswer,
       )
       .map((player) => player.id);
 
@@ -520,6 +649,10 @@ export default function MainGameShow({
     { label: "Back Home", onClick: onBackHome },
     { label: "Reset Quiz", onClick: resetQuiz },
     { label: "Game Setup", onClick: () => setIsSetupOpen(true) },
+    {
+      label: isAnswerTestMode ? "Exit Test Mode" : "Test Answers",
+      onClick: () => setIsAnswerTestMode((currentValue) => !currentValue),
+    },
   ];
 
   const menuNavigation = [
@@ -679,7 +812,7 @@ export default function MainGameShow({
               <div className="setup-header">
                 <div>
                   <p className="panel-label">Song sample</p>
-                  <h2>{currentStep.answer}</h2>
+                  <h2>{resolvedAnswer}</h2>
                   <p className="setup-help">Listen to a short sample before guessing.</p>
                 </div>
                 <button
@@ -698,8 +831,59 @@ export default function MainGameShow({
                   className="sample-video"
                   referrerPolicy="strict-origin-when-cross-origin"
                   src={`https://www.youtube.com/embed/${currentStep.sampleVideoId}?autoplay=1&start=30&end=50&rel=0`}
-                  title={`${currentStep.answer} sample`}
+                  title={`${resolvedAnswer} sample`}
                 />
+              </div>
+            </section>
+          </div>
+        ) : null}
+
+        {activeGalleryImage ? (
+          <div className="modal-overlay results-overlay" onClick={closePhotoViewer}>
+            <section
+              className="setup-modal photo-viewer-modal"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="setup-header">
+                <div>
+                  <p className="panel-label">Photo viewer</p>
+                  <h2>{currentRound.groupName}</h2>
+                </div>
+                <button className="ghost-button" onClick={closePhotoViewer} type="button">
+                  Close
+                </button>
+              </div>
+
+              <div className="photo-viewer-shell">
+                {galleryImages.length > 1 ? (
+                  <button
+                    aria-label="Previous photo"
+                    className="ghost-button photo-viewer-arrow"
+                    onClick={showPreviousPhoto}
+                    type="button"
+                  >
+                    &lt;
+                  </button>
+                ) : null}
+
+                <div className="photo-viewer-stage">
+                  <img
+                    alt={activeGalleryImage.alt}
+                    className="photo-viewer-image"
+                    src={activeGalleryImage.src}
+                  />
+                </div>
+
+                {galleryImages.length > 1 ? (
+                  <button
+                    aria-label="Next photo"
+                    className="ghost-button photo-viewer-arrow"
+                    onClick={showNextPhoto}
+                    type="button"
+                  >
+                    &gt;
+                  </button>
+                ) : null}
               </div>
             </section>
           </div>
@@ -876,43 +1060,11 @@ export default function MainGameShow({
                       Step {currentStepIndex + 1} of {currentSteps.length} in this round
                     </p>
                     <p className="round-step-description">{currentStep.description}</p>
-                  </div>
-                  <div className="round-controls">
-                    <button
-                      className="ghost-button"
-                      disabled={currentRoundIndex === 0}
-                      onClick={goToPreviousGroup}
-                      type="button"
-                    >
-                      Previous group
-                    </button>
-                    <button
-                      className="ghost-button"
-                      disabled={currentRoundIndex === mainQuizRounds.length - 1}
-                      onClick={goToNextGroup}
-                      type="button"
-                    >
-                      Next group
-                    </button>
-                    <button
-                      className="ghost-button"
-                      disabled={currentRoundIndex === 0 && currentStepIndex === 0}
-                      onClick={goToPrevious}
-                      type="button"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      className="ghost-button"
-                      disabled={
-                        currentRoundIndex === mainQuizRounds.length - 1 &&
-                        currentStepIndex === currentSteps.length - 1
-                      }
-                      onClick={goToNext}
-                      type="button"
-                    >
-                      Next
-                    </button>
+                    {isAnswerTestMode ? (
+                      <p className="answer-test-note">
+                        Test mode is on. Click a choice to make it the correct answer for this step.
+                      </p>
+                    ) : null}
                   </div>
                 </section>
 
@@ -921,33 +1073,76 @@ export default function MainGameShow({
                   <div className="round-visual-column">
                     <div className="member-image-wrap">
                       {usesGroupCollage ? (
-                        <div className="group-collage">
-                          {currentRound.members.map((member) => (
-                            <div className="group-collage-tile" key={member.name}>
-                              <img
-                                alt={`${member.name} from ${currentRound.groupName}`}
-                                className="group-collage-image"
-                                src={member.image}
-                              />
-                            </div>
-                          ))}
+                        <div
+                          className="image-carousel-shell"
+                          onMouseEnter={() => setIsImageCarouselPaused(true)}
+                          onMouseLeave={() => setIsImageCarouselPaused(false)}
+                          onPointerDown={handleImageCarouselPointerDown}
+                          onPointerMove={handleImageCarouselPointerMove}
+                          onPointerUp={handleImageCarouselPointerUp}
+                          onPointerLeave={handleImageCarouselPointerUp}
+                          onWheelCapture={handleImageCarouselWheel}
+                          onWheel={handleImageCarouselWheel}
+                        >
+                          <div className="image-carousel-track">
+                            {galleryImages.map((image, index) => {
+                              const offset = index - activeImageIndex;
+                              const isActive = index === activeImageIndex;
+
+                              return (
+                                <button
+                                  className={`image-carousel-card ${isActive ? "is-active" : ""}`}
+                                  key={image.src}
+                                  onClick={() => openPhotoViewer(index)}
+                                  style={{
+                                    transform: `translate(calc(-50% + ${offset * 92}%), -50%) scale(${isActive ? 1 : 0.82})`,
+                                    zIndex: galleryImages.length - Math.abs(offset),
+                                    opacity: Math.abs(offset) > 1 ? 0 : 1,
+                                    pointerEvents: Math.abs(offset) > 1 ? "none" : "auto",
+                                  }}
+                                  type="button"
+                                >
+                                  <img
+                                    alt={image.alt}
+                                    className="image-carousel-image"
+                                    src={image.src}
+                                  />
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       ) : usesAlbumCover ? (
-                        <div className="member-image-stage">
+                        <button
+                          className="member-image-stage image-viewer-trigger"
+                          onClick={() => openPhotoViewer(0)}
+                          type="button"
+                        >
                           <img
-                            alt={`${currentRound.groupName} ${currentStep.answer} cover art`}
+                            alt={`${currentRound.groupName} ${resolvedAnswer} cover art`}
                             className="album-cover-image"
                             src={currentStep.coverImage}
                           />
-                        </div>
+                        </button>
                       ) : (
-                        <div className="member-image-stage">
+                        <button
+                          className="member-image-stage image-viewer-trigger"
+                          onClick={() =>
+                            openPhotoViewer(
+                              Math.max(
+                                0,
+                                currentRound.members.findIndex((member) => member.name === currentStep.answer),
+                              ),
+                            )
+                          }
+                          type="button"
+                        >
                           <img
-                            alt={`${currentStep.answer} from ${currentRound.groupName}`}
+                            alt={`${resolvedAnswer} from ${currentRound.groupName}`}
                             className="member-image"
                             src={currentStep.image}
                           />
-                        </div>
+                        </button>
                       )}
 
                       {hasSongSample ? (
@@ -981,7 +1176,56 @@ export default function MainGameShow({
                   </div>
 
                   <div className="round-meta-card" id="gameshow-choices">
-                    <p className="flow-section-label">Multiple Choice</p>
+                    <div className="round-meta-top">
+                      <p className="flow-section-label">Multiple Choice</p>
+                      <div className="round-controls">
+                        <div className="round-nav-pill">
+                          <span className="round-nav-label">Group</span>
+                          <button
+                            aria-label="Previous group"
+                            className="ghost-button round-nav-arrow"
+                            disabled={currentRoundIndex === 0}
+                            onClick={goToPreviousGroup}
+                            type="button"
+                          >
+                            &lt;
+                          </button>
+                          <button
+                            aria-label="Next group"
+                            className="ghost-button round-nav-arrow"
+                            disabled={currentRoundIndex === mainQuizRounds.length - 1}
+                            onClick={goToNextGroup}
+                            type="button"
+                          >
+                            &gt;
+                          </button>
+                        </div>
+                        <div className="round-nav-pill">
+                          <span className="round-nav-label">Question</span>
+                          <button
+                            aria-label="Previous question"
+                            className="ghost-button round-nav-arrow"
+                            disabled={currentRoundIndex === 0 && currentStepIndex === 0}
+                            onClick={goToPrevious}
+                            type="button"
+                          >
+                            &lt;
+                          </button>
+                          <button
+                            aria-label="Next question"
+                            className="ghost-button round-nav-arrow"
+                            disabled={
+                              currentRoundIndex === mainQuizRounds.length - 1 &&
+                              currentStepIndex === currentSteps.length - 1
+                            }
+                            onClick={goToNext}
+                            type="button"
+                          >
+                            &gt;
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                     <div
                       className={`round-flow-choices ${
                         currentStep.choices.length % 2 === 0 ? "is-even" : "is-odd"
@@ -993,7 +1237,8 @@ export default function MainGameShow({
                           (player) => player.id === previewPlayerId,
                         );
                         const assignedPlayers = getPlayersForOption(option);
-                        const isCorrect = revealAnswers && currentStep.answer === option;
+                        const isCorrect =
+                          (revealAnswers || isAnswerTestMode) && resolvedAnswer === option;
                         const shouldShowPreview =
                           previewPlayer &&
                           !assignedPlayers.some((player) => player.id === previewPlayer.id);
