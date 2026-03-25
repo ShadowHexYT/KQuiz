@@ -7,14 +7,14 @@ const filters = ["All", "Board", "Audio", "Visual", "Party", "Battle", "Lore"];
 
 const menuItems = [
   { label: "Home", ariaLabel: "Return home", link: "#top" },
-  { label: "Modes", ariaLabel: "Jump to mode cards", link: "#mode-grid" },
-  { label: "Open Selected", ariaLabel: "Open the selected blueprint", onClick: () => {} },
+  { label: "Games", ariaLabel: "Jump to game cards", link: "#mode-grid" },
+  { label: "Open Selected", ariaLabel: "Open the selected game", onClick: () => {} },
 ];
 
 const socialItems = [
   { label: "Back Home", onClick: () => {} },
-  { label: "All Modes", link: "#mode-grid" },
-  { label: "Launch Mode", onClick: () => {} },
+  { label: "All Games", link: "#mode-grid" },
+  { label: "Launch Game", onClick: () => {} },
 ];
 
 export default function ModeHub({ onBackHome, onOpenMode }) {
@@ -42,7 +42,7 @@ export default function ModeHub({ onBackHome, onOpenMode }) {
 
   const resolvedSocialItems = socialItems.map((item) => {
     if (item.label === "Back Home") return { ...item, onClick: onBackHome };
-    if (item.label === "Launch Mode") return { ...item, onClick: () => selectedMode && onOpenMode(selectedMode.id) };
+    if (item.label === "Launch Game") return { ...item, onClick: () => selectedMode && onOpenMode(selectedMode.id) };
     return item;
   });
 
@@ -54,7 +54,7 @@ export default function ModeHub({ onBackHome, onOpenMode }) {
         position="right"
         items={resolvedMenuItems}
         socialItems={resolvedSocialItems}
-        itemSectionLabel="Mode hub"
+        itemSectionLabel="Game hub"
         socialSectionLabel="Jump links"
         displaySocials
         displayItemNumbering

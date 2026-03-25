@@ -149,6 +149,31 @@ export default function MainGameShow({
     usesSongChoiceGallery,
   ]);
   const usesImageCarousel = usesGroupCollage && galleryImages.length > 1;
+  const wrappedGalleryImages = useMemo(() => {
+    if (!usesImageCarousel || galleryImages.length <= 1) {
+      return galleryImages.map((image, index) => ({
+        ...image,
+        index,
+        offset: index - activeImageIndex,
+      }));
+    }
+
+    return galleryImages.map((image, index) => {
+      let offset = index - activeImageIndex;
+
+      if (offset > galleryImages.length / 2) {
+        offset -= galleryImages.length;
+      } else if (offset < -galleryImages.length / 2) {
+        offset += galleryImages.length;
+      }
+
+      return {
+        ...image,
+        index,
+        offset,
+      };
+    });
+  }, [activeImageIndex, galleryImages, usesImageCarousel]);
   const activeGalleryImage =
     photoViewerIndex !== null ? galleryImages[photoViewerIndex] ?? null : null;
 
@@ -1141,20 +1166,19 @@ export default function MainGameShow({
                           onWheel={handleImageCarouselWheel}
                         >
                           <div className="image-carousel-track">
-                            {galleryImages.map((image, index) => {
-                              const offset = index - activeImageIndex;
-                              const isActive = index === activeImageIndex;
+                            {wrappedGalleryImages.map((image) => {
+                              const isActive = image.index === activeImageIndex;
 
                               return (
                                 <button
                                   className={`image-carousel-card ${isActive ? "is-active" : ""}`}
                                   key={image.src}
-                                  onClick={() => openPhotoViewer(index)}
+                                  onClick={() => openPhotoViewer(image.index)}
                                   style={{
-                                    transform: `translate(calc(-50% + ${offset * 92}%), -50%) scale(${isActive ? 1 : 0.82})`,
-                                    zIndex: galleryImages.length - Math.abs(offset),
-                                    opacity: Math.abs(offset) > 1 ? 0 : 1,
-                                    pointerEvents: Math.abs(offset) > 1 ? "none" : "auto",
+                                    transform: `translate(calc(-50% + ${image.offset * 92}%), -50%) scale(${isActive ? 1 : 0.82})`,
+                                    zIndex: galleryImages.length - Math.abs(image.offset),
+                                    opacity: Math.abs(image.offset) > 1 ? 0 : 1,
+                                    pointerEvents: Math.abs(image.offset) > 1 ? "none" : "auto",
                                   }}
                                   type="button"
                                 >
