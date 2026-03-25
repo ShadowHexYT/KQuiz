@@ -304,6 +304,126 @@ const songMetaLibrary = {
     coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e1/15/42/e1154273-8ecd-5702-e6e6-597f28001681/25UMGIM82363.rgb.jpg/1000x1000bb.jpg",
     previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/62/64/b6/6264b62d-4228-1798-d8f3-8ab2bc3a452b/mzaf_17528719306040428837.plus.aac.p.m4a",
   },
+  "KiiiKiii::404 (New Era)": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/1c/b4/81/1cb481b3-9b5b-83bf-e047-41e3089b0653/199806885123.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/ef/d8/84/efd884da-ffb3-dff0-1c53-05ee61d7baa1/mzaf_9160660066743675925.plus.aac.p.m4a",
+  },
+  "KiiiKiii::Dancing Alone": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f4/d2/b7/f4d2b722-8292-9123-2282-22cb2b54200a/199538356090.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/5a/b2/f8/5ab2f87b-4322-f390-f4df-79763e3ebb3c/mzaf_15822948903916161321.plus.aac.p.m4a",
+  },
+  "KiiiKiii::I Do Me": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/7a/ce/99/7ace990a-c596-8988-4917-7687b24c2574/199066585641.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/8e/57/4e/8e574e26-8147-8430-6ace-93a8eb7a01d6/mzaf_5228116227050500579.plus.aac.p.m4a",
+  },
+  "KiiiKiii::Groundwork": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/59/5f/01/595f011c-399f-90d8-27c4-c9f800efae06/199066718230.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/59/7b/0f/597b0f1a-a5b3-0075-d443-5bebf485a408/mzaf_11546670624840672333.plus.aac.p.m4a",
+  },
+  "KiiiKiii::BTG": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/59/5f/01/595f011c-399f-90d8-27c4-c9f800efae06/199066718230.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/ef/57/06/ef57060e-ae26-6bb1-ce53-5700375fe5ef/mzaf_12560240570710042681.plus.aac.p.m4a",
+  },
+  "KiiiKiii::DEBUT SONG": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/59/5f/01/595f011c-399f-90d8-27c4-c9f800efae06/199066718230.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/cf/5e/52/cf5e528a-9c7e-f3bf-1295-7095010995a1/mzaf_2339569964785260765.plus.aac.p.m4a",
+  },
+  "Meovv::Burning Up": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/da/91/72/da917246-9ee7-2147-1426-d2288d25d662/8800335179325_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/7c/9b/c4/7c9bc4ec-87d3-3380-9232-ea0e5b2cd593/mzaf_9058700597149357186.plus.aac.p.m4a",
+  },
+  "Meovv::Hands Up": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/3f/0f/fa/3f0ffaae-0e26-fe64-3c89-8c44bad08320/8800303089540_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/99/a0/2b/99a02b7e-9845-eecc-3ab4-942e97695be3/mzaf_9848700373412010228.plus.aac.p.m4a",
+  },
+  "Meovv::Drop Top": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a9/7b/56/a97b56c3-984c-cea9-1c05-ed2d190cf495/8800303089526_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/33/0c/87/330c87ca-350a-3021-f721-c4e572bba845/mzaf_4467877248066065410.plus.aac.p.m4a",
+  },
+  "Meovv::MEOW": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/9b/7f/b9/9b7fb97f-57fd-0a2e-64de-30cd3a259c71/198704128974_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/66/cc/27/66cc271e-8a4f-61d8-f60a-8950c8c7b9fa/mzaf_3451951594926395113.plus.aac.p.m4a",
+  },
+  "Meovv::Body": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/20/f9/d4/20f9d425-b5c4-cc34-8c2a-2ee2b7155f32/8800287294121_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/7b/c0/55/7bc055b8-9023-bb09-6a47-67d19ad6474d/mzaf_17777114812422056918.plus.aac.p.m4a",
+  },
+  "Meovv::TOXIC": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/20/f9/d4/20f9d425-b5c4-cc34-8c2a-2ee2b7155f32/8800287294121_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/18/e3/78/18e37822-d33e-592e-aa5c-ad4b31d20857/mzaf_5232793053541043571.plus.aac.p.m4a",
+  },
+  "Hearts2Hearts::Rude!": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/78/b9/fb/78b9fb30-169a-eab0-38e9-8df725f8f2d6/888735954603.png/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/01/3c/36/013c3684-7121-8f9f-6eb5-00b610ac055c/mzaf_16203782190977593201.plus.aac.p.m4a",
+  },
+  "Hearts2Hearts::Focus": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/df/26/ea/df26eafa-06e8-8bd0-4180-5ba91fb91c39/888735953859.png/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/44/97/60/44976097-de99-04ed-b494-11634e957a26/mzaf_5997753821524447019.plus.aac.p.m4a",
+  },
+  "Hearts2Hearts::Style": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/05/f3/0b/05f30b30-22fb-3c21-c497-8fd8829f2004/888735952135.png/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/7d/a5/22/7da52235-4936-089b-cca7-57b39bd57901/mzaf_16582803519496058674.plus.aac.p.m4a",
+  },
+  "Hearts2Hearts::Spark": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/05/f3/0b/05f30b30-22fb-3c21-c497-8fd8829f2004/888735952135.png/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Hearts2Hearts::The Chase": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2b/0e/e8/2b0ee80e-eae3-aff6-9ca7-01cf7a830c78/888735951398.png/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/9d/7f/fb/9d7ffbed-b702-647e-a591-58700fcb4eb8/mzaf_29771823375578786.plus.aac.p.m4a",
+  },
+  "Hearts2Hearts::Butterflies": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2b/0e/e8/2b0ee80e-eae3-aff6-9ca7-01cf7a830c78/888735951398.png/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/c5/e1/d2/c5e1d24b-5ee6-974e-9579-e36a2858c41e/mzaf_15283787365828349651.plus.aac.p.m4a",
+  },
+  "XG::Hypnotize": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/d2/40/bc/d240bc00-1056-57c1-3ec8-cd57f957bcaf/4571694810689.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/61/79/ed/6179ed51-829e-8f66-6d1d-0b2bbc349a76/mzaf_11841702438848777890.plus.aac.p.m4a",
+  },
+  "XG::Is this love?": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/ae/69/ce/ae69ce7b-6007-c83a-f692-93ebfca55449/ANTCD-A0000014930.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/b1/af/71/b1af71ea-e159-1e11-1a18-3cfe30f3ec4b/mzaf_9554712132118939602.plus.aac.p.m4a",
+  },
+  "XG::New Dance": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/9e/a5/4f/9ea54f4c-3d87-eae0-bee8-f9d1d7ef51e5/ANTCD-A0000011283.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/cd/b4/12/cdb41207-dbfe-2a26-af67-89d73425d14e/mzaf_15928103081103994062.plus.aac.p.m4a",
+  },
+  "XG::Left Right": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/f8/4c/0a/f84c0abd-7bab-12ae-d7f0-0e8a9ad8079a/ANTCD-A0000009111.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/b2/ec/97/b2ec9767-1b20-6a80-517c-a694b7829c3c/mzaf_5057398466760774373.plus.aac.p.m4a",
+  },
+  "XG::WOKE UP": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/6b/54/bc/6b54bc75-1878-ae18-3269-e896d64cc08b/ANTCD-A0000013306.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/64/79/bf/6479bffd-f0b6-61ba-88ff-349154fbd829/mzaf_7268471923260701968.plus.aac.p.m4a",
+  },
+  "XG::SHOOTING STAR": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/f8/4c/0a/f84c0abd-7bab-12ae-d7f0-0e8a9ad8079a/ANTCD-A0000009111.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/6a/38/a9/6a38a90c-30dd-a92e-6414-079c4d823b89/mzaf_1680008559214815923.plus.aac.p.m4a",
+  },
+  "Baby DONT Cry::I Dont Care": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/97/fc/de/97fcdebf-6110-63a7-aa4d-f82306875562/cover_KM0023790_1.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/d0/b3/7f/d0b37f34-e2c0-c90e-5020-6a8be131d7cb/mzaf_5627744725201999020.plus.aac.p.m4a",
+  },
+  "Baby DONT Cry::Dream Rush": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/97/fc/de/97fcdebf-6110-63a7-aa4d-f82306875562/cover_KM0023790_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Baby DONT Cry::Cry Baby": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/97/fc/de/97fcdebf-6110-63a7-aa4d-f82306875562/cover_KM0023790_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Baby DONT Cry::Glow Up": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/97/fc/de/97fcdebf-6110-63a7-aa4d-f82306875562/cover_KM0023790_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Baby DONT Cry::Rumor": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/97/fc/de/97fcdebf-6110-63a7-aa4d-f82306875562/cover_KM0023790_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Baby DONT Cry::Fizzy": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/97/fc/de/97fcdebf-6110-63a7-aa4d-f82306875562/cover_KM0023790_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
   "ILLIT::Cherish (My Love)": {
     coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/e9/20/73/e9207332-1b22-18d0-5d1b-daaf370a4317/198704136962_Cover.jpg/1000x1000bb.jpg",
     previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/ff/c5/9d/ffc59d63-bd5d-0b93-4592-2dd7d797de8e/mzaf_7002868842246643213.plus.aac.p.m4a",
@@ -319,6 +439,354 @@ const songMetaLibrary = {
   "ILLIT::jellyous": {
     coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/e4/bc/4d/e4bc4da3-0013-9949-8e54-0eede523f9d4/198704525001_Cover.jpg/1000x1000bb.jpg",
     previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/13/13/20/13132098-7412-2b3b-f54b-5f9515c4a075/mzaf_12702295383222688240.plus.aac.p.m4a",
+  },
+  "BabyMonster::BATTER UP": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/cf/fd/ec/cffdec06-a89b-326f-f897-13a5a7c657f4/BABYMONSTER_BATTER_UP_Cover_4000.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "BabyMonster::CLIK CLAK": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b9/e1/ef/b9e1ef3a-e3eb-8152-e91b-20aca0fc9ffd/BM_DRIP_Digital-Cover_4000.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "BabyMonster::DRIP": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b9/e1/ef/b9e1ef3a-e3eb-8152-e91b-20aca0fc9ffd/BM_DRIP_Digital-Cover_4000.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "BabyMonster::FOREVER": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/5b/2a/86/5b2a8611-2005-2287-1981-9edac10b795b/BABYMONSTER_FORVER.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "BabyMonster::Love In My Heart": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b9/e1/ef/b9e1ef3a-e3eb-8152-e91b-20aca0fc9ffd/BM_DRIP_Digital-Cover_4000.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "G-(I)DLE::Allergy": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/7b/59/56/7b59565a-c6bd-a615-9cc2-955cb8481dfb/8804775254703.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "G-(I)DLE::LATATA": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/78/32/0e/78320ee9-3f98-aa6f-8efc-9bf598eabd5b/cover-.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "G-(I)DLE::Nxde": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/1b/d6/16/1bd61685-ddd6-e982-c686-61f669354dad/196922202544.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "G-(I)DLE::Oh my god": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/3f/da/3e/3fda3e46-be20-c065-1ae7-341b306b7af3/20UMGIM22107.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "G-(I)DLE::Queencard": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/7b/59/56/7b59565a-c6bd-a615-9cc2-955cb8481dfb/8804775254703.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "G-(I)DLE::Super Lady": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/52/34/27/5234273c-5585-261b-4fc5-b10cfd9bbd71/8804775368240.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ILLIT::Almond Chocolate": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/2b/be/38/2bbe3800-08d2-c340-af71-b828da918ba6/25UMGIM01018.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ILLIT::I'll Like You": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/e9/20/73/e9207332-1b22-18d0-5d1b-daaf370a4317/198704136962_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ILLIT::Lucky Girl Syndrome": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/3e/49/1e/3e491e43-4961-21ab-2abe-37fb1c0feb40/196922879227_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ILLIT::Magnetic": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/3e/49/1e/3e491e43-4961-21ab-2abe-37fb1c0feb40/196922879227_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ILLIT::My World": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/3e/49/1e/3e491e43-4961-21ab-2abe-37fb1c0feb40/196922879227_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ILLIT::Pimple": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/e9/20/73/e9207332-1b22-18d0-5d1b-daaf370a4317/198704136962_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ITZY::CAKE": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/50/e3/e0/50e3e0a3-d11c-d277-de39-a672a258ed4b/8809928950990_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ITZY::DALLA DALLA": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/b5/83/3f/b5833f11-e5e1-3f65-81f0-a69c5fe09499/192641939532_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ITZY::Not Shy": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/9f/ee/e2/9feee229-ffe1-6b42-f6d6-363bb27ff57f/192641939587_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ITZY::SNEAKERS": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/65/86/05/658605e1-1057-c6b7-fdc1-825ae50e6e2c/738676858761_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ITZY::SWIPE": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/e7/f3/d7/e7f3d7dc-4bf6-e15d-ca28-3105f713e693/192641938573_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "ITZY::Voltage": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/fa/e0/e7/fae0e7f9-99f9-71a8-6680-810a71044fe4/190296193286.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "IVE::ELEVEN": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/d3/63/4a/d3634a37-8dd2-8fc6-d138-895b3d237611/IVE_OnlineCover_fix.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "IVE::HEYA": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/33/6d/b4/336db418-00ea-9570-1aa5-2541c07e582e/198391557965.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "IVE::I AM": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/3a/23/b7/3a23b7f4-0b43-df9d-b7e4-14f992443324/197188335663.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "IVE::Kitsch": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/3a/23/b7/3a23b7f4-0b43-df9d-b7e4-14f992443324/197188335663.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "IVE::LOVE DIVE": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/67/f8/16/67f8164a-bfc2-f29b-e241-800426a968ef/cover_KM0015013_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "IVE::Off the Record": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/6c/2e/be/6c2ebe9c-5107-e055-9e93-05a45d0a703b/197189827297.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KATSEYE::Debut": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/ba/35/9d/ba359dae-1ff5-ef52-4327-e7c6b877ca2b/24UMGIM65526.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KATSEYE::Gnarly": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/e3/1c/8f/e31c8fb1-3450-1959-412d-7874e4465c6c/25UMGIM37397.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KATSEYE::My Way": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/08/fb/6a/08fb6a32-8856-f1f4-148b-8959bff0efb0/24UMGIM67773.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KATSEYE::Touch": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/08/fb/6a/08fb6a32-8856-f1f4-148b-8959bff0efb0/24UMGIM67773.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KPDH::Golden": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e1/15/42/e1154273-8ecd-5702-e6e6-597f28001681/25UMGIM82363.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KPDH::How It's Done": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/1e/eb/50/1eeb50b9-d3e3-ef81-13d3-9be87ab446a8/25UM1IM35857.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KPDH::Soda Pop": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e1/15/42/e1154273-8ecd-5702-e6e6-597f28001681/25UMGIM82363.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KPDH::Gunshot": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e1/15/42/e1154273-8ecd-5702-e6e6-597f28001681/25UMGIM82363.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "KPDH::Your Idol": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e1/15/42/e1154273-8ecd-5702-e6e6-597f28001681/25UMGIM82363.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Kiss of Life::Bad News": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/83/40/88/834088da-6387-50e3-a1ad-cc092acdbb65/cover_KM0018390_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Kiss of Life::Nobody Knows": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/83/40/88/834088da-6387-50e3-a1ad-cc092acdbb65/cover_KM0018390_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Kiss of Life::Nothing": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e1/6f/c2/e16fc273-6872-31a0-a667-3e8777da2636/8804775348402.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Kiss of Life::Shhh": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/da/29/02/da29023d-6e10-bdd2-7415-ffaa1d5bf481/cover_KM0017387_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Kiss of Life::Sugarcoat": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/da/29/02/da29023d-6e10-bdd2-7415-ffaa1d5bf481/cover_KM0017387_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "Kiss of Life::Sticky": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/9b/00/c7/9b00c7e0-2e78-af06-bcfe-89d7a00e5a6d/cover_KM0019987_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "LE SSERAFIM::ANTIFRAGILE": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/c8/79/da/c879dadf-db1e-95a5-caf5-b18c7c81d2b6/192641874413_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "LE SSERAFIM::Blue Flame": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/77/c9/7f/77c97fcc-e72d-13e9-2e41-d5c23ceb5e43/196922016622_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "LE SSERAFIM::EASY": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/22/0f/fd/220ffdbf-152c-5b65-d5af-01256c1328c2/196922796531_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "LE SSERAFIM::Perfect Night": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/a0/cd/40/a0cd4013-89cf-0554-0aa5-1ac5a0bb3db1/196922680779_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "LE SSERAFIM::Smart": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/22/0f/fd/220ffdbf-152c-5b65-d5af-01256c1328c2/196922796531_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "LE SSERAFIM::UNFORGIVEN": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/27/13/c3/2713c389-4f01-b5e7-59f5-3204b37cb594/196922444470_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "LE SSERAFIM::Eve, Psyche, and the Bluebeards wife": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/27/13/c3/2713c389-4f01-b5e7-59f5-3204b37cb594/196922444470_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NMIXX::DASH": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/58/67/42/58674202-0971-b51e-df73-b5695cfadd6e/8809928950259_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NMIXX::DICE": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/86/27/38/86273818-e315-adec-fe27-c65bb5f9c982/738676860016_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NMIXX::Love Is Lonely": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/90/76/09/907609f4-0740-9439-f8c9-61e1ae7e8425/8809928952499_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NMIXX::Love Me Like This": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/4f/92/32/4f9232bc-b05d-b467-edcb-41f39356045f/738676860504_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NMIXX::O.O": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/01/35/8b/01358bfe-d94d-de1e-3750-6a9e276ffc12/738676858525_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NMIXX::See that?": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/90/76/09/907609f4-0740-9439-f8c9-61e1ae7e8425/8809928952499_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NewJeans::Attention": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/4e/64/34/4e64344b-3ac6-c503-2c41-257a15401416/192641873096_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NewJeans::Cookie": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/4e/64/34/4e64344b-3ac6-c503-2c41-257a15401416/192641873096_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NewJeans::Cool With You": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/d3/4b/7e/d34b7e1e-af3b-43b6-2949-7a8c652a1bc9/196922462726_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NewJeans::Ditto": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/f6/29/42/f629426e-92fe-535c-cbe4-76e70850819b/196922287107_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NewJeans::OMG": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music113/v4/48/96/08/4896085e-b550-cb0a-3e5b-1f203521cb82/196922265464_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "NewJeans::Super Shy": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music126/v4/63/e5/e2/63e5e2e4-829b-924d-a1dc-8058a1d69bd4/196922462702_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "STAYC::ASAP": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/ff/f0/44/fff044b5-8d7c-b728-76be-5b214c5fecf0/STAYC_STAYDOM_JPG.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "STAYC::GPT": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/a5/98/8c/a5988c68-c82c-f9e5-4d98-07a7b20fc325/cover_KM0020496_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "STAYC::Poppy": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/5b/41/0b/5b410b11-0bfd-db80-2413-f2fd99454b5e/22UM1IM26561.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "STAYC::SO WHAT": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/ff/f0/44/fff044b5-8d7c-b728-76be-5b214c5fecf0/STAYC_STAYDOM_JPG.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "STAYC::Stereotype": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/07/9b/27/079b2760-a382-6d95-b43e-2cf4c563c1ce/cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "STAYC::Teddy Bear": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/d3/e2/34/d3e23468-4920-f7b9-e955-322eb98af917/cover_KM0016800_1.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "TWICE::Alcohol-Free": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/d6/02/45/d602455b-23ea-8b81-9ea2-f0931db4a1f9/738676858204_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "TWICE::Dance the Night Away": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/5d/8d/ae/5d8daec6-bf17-9220-6ffb-d69981dd4ef6/00602508874840_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "TWICE::Feel Special": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music114/v4/75/bb/cc/75bbcc8c-bc12-983b-196f-bb6e355cc978/00602508875281_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "TWICE::TT": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/0e/c5/67/0ec5678b-9070-ac48-f01d-c8af72b92d01/00602508870064_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "TWICE::Talk that Talk": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music122/v4/6d/80/45/6d8045ba-5b0e-c88a-0736-87fd14665e69/738676859874_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "TWICE::The Feels": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/e0/d5/e6/e0d5e67a-9723-4d72-7510-dbf82553ca68/738676858334_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "VIVIZ::BOP BOP!": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/0a/3f/53/0a3f5311-0381-c503-2dc5-0a130a0ce370/8804775224782_cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "VIVIZ::Loveade": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/f2/35/78/f23578ca-7828-a836-0947-a380dacc9ce4/8804775229657_cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "VIVIZ::Overflow": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/42/5a/20/425a2026-a87d-7e6a-26d9-4159de176762/8804775284434_cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "VIVIZ::Pull Up": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/3e/bc/0c/3ebc0c66-2994-0c1b-0f79-40103d343e6e/8804775267154_cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "VIVIZ::Rum Pum Pum": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/ab/f9/4d/abf94dda-fa40-1de4-5ca0-fa75ad4ac1a1/888272107920.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "VIVIZ::Tweet Tweet": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/0a/3f/53/0a3f5311-0381-c503-2dc5-0a130a0ce370/8804775224782_cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "aespa::Armageddon": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/50/7e/e0/507ee09f-ccfd-1e3c-af90-ca5e92b1221b/00888735949869_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "aespa::Black Mamba": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/1f/53/e2/1f53e291-df44-bb66-1c29-6e74c2b0eab0/aespa_BlackMamba_final.png/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "aespa::Illusion": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/c9/7d/dd/c97ddd34-5962-8cf1-a55c-cf730d3069f5/888735941375.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "aespa::Savage": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/51/f7/85/51f7852b-7602-136b-ac15-8b3878260c64/4000aespa_M01_Savage_DC.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "aespa::Spicy": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/af/2c/6d/af2c6d62-0ebc-2dff-17b3-8eeb2b3986a0/888735943621.jpg/1000x1000bb.jpg",
+    previewUrl: null,
+  },
+  "aespa::Supernova": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/50/7e/e0/507ee09f-ccfd-1e3c-af90-ca5e92b1221b/00888735949869_Cover.jpg/1000x1000bb.jpg",
+    previewUrl: null,
   },
 };
 
@@ -336,6 +804,11 @@ const groupSongFallbacks = {
   "G-(I)DLE": songMetaLibrary["G-(I)DLE::My Bag"],
   TWICE: songMetaLibrary["TWICE::I Got You"],
   KPDH: songMetaLibrary["KPDH::Free"],
+  KiiiKiii: songMetaLibrary["KiiiKiii::404 (New Era)"],
+  Meovv: songMetaLibrary["Meovv::Burning Up"],
+  Hearts2Hearts: songMetaLibrary["Hearts2Hearts::Rude!"],
+  XG: songMetaLibrary["XG::Hypnotize"],
+  "Baby DONT Cry": songMetaLibrary["Baby DONT Cry::I Dont Care"],
   ILLIT: songMetaLibrary["ILLIT::Cherish (My Love)"],
 };
 
@@ -351,23 +824,22 @@ function getSongMeta(groupName, title) {
 }
 
 function buildFavoriteSongExtras({ groupName, favorites, wrongSongs }) {
-  return favorites.map((favorite, index) => {
-    const rotatedWrongSongs = [...wrongSongs.slice(index), ...wrongSongs.slice(0, index)].slice(0, 3);
-    const choices = getShuffledChoices(
-      [favorite, ...rotatedWrongSongs],
-      `${groupName}-${favorite}-favorite-song`,
-    );
+  const choices = getShuffledChoices(
+    [...favorites, ...wrongSongs],
+    `${groupName}-favorite-songs`,
+  );
 
-    return {
-      key: `favoriteSong-${slugify(favorite)}`,
+  return [
+    {
+      key: "favoriteSongs",
       kind: "favoriteSong",
-      label: "Which song is one of my favorite songs?",
-      answer: favorite,
-      previewUrl: getSongMeta(groupName, favorite).previewUrl,
+      label: "Which songs are some of my favorites?",
+      answer: favorites[0] ?? "",
+      answers: favorites,
       songChoices: choices.map((songTitle) => getSongMeta(groupName, songTitle)),
       choices,
-    };
-  });
+    },
+  ];
 }
 
 const rounds = [
@@ -385,8 +857,26 @@ const rounds = [
     extras: [
       ...buildFavoriteSongExtras({
         groupName: "LE SSERAFIM",
-        favorites: ["No Celestial", "Fire in the Belly", "Ash", "HOT", "Swan Song", "Different"],
-        wrongSongs: ["ANTIFRAGILE", "Perfect Night", "Smart", "EASY", "Blue Flame", "UNFORGIVEN"],
+        favorites: [
+          "No Celestial",
+          "Fire in the Belly",
+          "Ash",
+          "HOT",
+          "Swan Song",
+          "Different",
+          "Eve, Psyche, and the Bluebeards wife",
+        ],
+        wrongSongs: [
+          "ANTIFRAGILE",
+          "Perfect Night",
+          "Smart",
+          "EASY",
+          "Blue Flame",
+          "UNFORGIVEN",
+          "FEARLESS",
+          "Impurities",
+          "CRAZY",
+        ],
       }),
       {
         key: "leader",
@@ -424,7 +914,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "IVE",
         favorites: ["Rebel Heart", "Accendio", "Bang Bang", "Baddie", "After Like", "Wave"],
-        wrongSongs: ["LOVE DIVE", "I AM", "HEYA", "Kitsch", "Off the Record", "ELEVEN"],
+        wrongSongs: [
+          "LOVE DIVE",
+          "I AM",
+          "HEYA",
+          "Kitsch",
+          "Off the Record",
+          "ELEVEN",
+          "Either Way",
+          "Blue Blood",
+          "Royal",
+          "Take It",
+        ],
       }),
       {
         key: "leader",
@@ -462,7 +963,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "NMIXX",
         favorites: ["Run for Roses", "Blue Valentine", "Shape of Love", "RICO"],
-        wrongSongs: ["DASH", "Love Me Like This", "See that?", "O.O", "DICE", "Love Is Lonely"],
+        wrongSongs: [
+          "DASH",
+          "Love Me Like This",
+          "See that?",
+          "O.O",
+          "DICE",
+          "Love Is Lonely",
+          "Party O'Clock",
+          "Roller Coaster",
+          "Soñar (Breaker)",
+          "BOOM",
+        ],
       }),
       {
         key: "leader",
@@ -499,7 +1011,16 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "ILLIT",
         favorites: ["Cherish (My Love)", "Tick-Tack", "Midnight Fiction", "jellyous"],
-        wrongSongs: ["Magnetic", "Lucky Girl Syndrome", "My World", "Almond Chocolate", "Pimple", "I'll Like You"],
+        wrongSongs: [
+          "Magnetic",
+          "Lucky Girl Syndrome",
+          "My World",
+          "Almond Chocolate",
+          "Pimple",
+          "I'll Like You",
+          "IYKYK",
+          "little monster",
+        ],
       }),
       {
         key: "leader",
@@ -536,7 +1057,19 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "ITZY",
         favorites: ["Ringo", "Wannabe", "Mafia in the morning", "Loco", "Untouchable"],
-        wrongSongs: ["DALLA DALLA", "Not Shy", "Voltage", "CAKE", "SNEAKERS", "SWIPE"],
+        wrongSongs: [
+          "DALLA DALLA",
+          "Not Shy",
+          "Voltage",
+          "CAKE",
+          "SNEAKERS",
+          "SWIPE",
+          "ICY",
+          "Cheshire",
+          "Mr. Vampire",
+          "Bet On Me",
+          "BORN TO BE",
+        ],
       }),
       {
         key: "leader",
@@ -573,7 +1106,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "STAYC",
         favorites: ["Young Luv", "Bubble", "RUN2U", "Stay WITH me", "Cheeky Icy Thang", "BEBE"],
-        wrongSongs: ["ASAP", "Teddy Bear", "Poppy", "Stereotype", "GPT", "SO WHAT"],
+        wrongSongs: [
+          "ASAP",
+          "Teddy Bear",
+          "Poppy",
+          "Stereotype",
+          "GPT",
+          "SO WHAT",
+          "BEAUTIFUL MONSTER",
+          "24/7",
+          "COMPLEX",
+          "FLEXING ON MY EX",
+        ],
       }),
       {
         key: "leader",
@@ -650,7 +1194,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "aespa",
         favorites: ["Whiplash", "Girls", "Drama", "Hold On Tight"],
-        wrongSongs: ["Supernova", "Savage", "Spicy", "Armageddon", "Illusion", "Black Mamba"],
+        wrongSongs: [
+          "Supernova",
+          "Savage",
+          "Spicy",
+          "Armageddon",
+          "Illusion",
+          "Black Mamba",
+          "Next Level",
+          "Better Things",
+          "Salty & Sweet",
+          "Mine",
+        ],
       }),
       {
         key: "leader",
@@ -687,7 +1242,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "NewJeans",
         favorites: ["ETA", "GODS", "Hype Boy"],
-        wrongSongs: ["Ditto", "Super Shy", "OMG", "Attention", "Cookie", "Cool With You"],
+        wrongSongs: [
+          "Ditto",
+          "Super Shy",
+          "OMG",
+          "Attention",
+          "Cookie",
+          "Cool With You",
+          "How Sweet",
+          "Bubble Gum",
+          "Hurt",
+          "ASAP",
+        ],
       }),
       {
         key: "leader",
@@ -724,7 +1290,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "G-(I)DLE",
         favorites: ["My Bag", "Senorita", "Tomboy", "Eyes Roll", "Paradise", "I DO"],
-        wrongSongs: ["Queencard", "Nxde", "Super Lady", "LATATA", "Oh my god", "Allergy"],
+        wrongSongs: [
+          "Queencard",
+          "Nxde",
+          "Super Lady",
+          "LATATA",
+          "Oh my god",
+          "Allergy",
+          "Wife",
+          "LION",
+          "HWAA",
+          "HANN (Alone)",
+        ],
       }),
       {
         key: "leader",
@@ -760,7 +1337,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "Kiss of Life",
         favorites: ["Midas Touch", "k bye", "igloo", "Te Quiero", "Tell me"],
-        wrongSongs: ["Sticky", "Nobody Knows", "Shhh", "Bad News", "Sugarcoat", "Nothing"],
+        wrongSongs: [
+          "Sticky",
+          "Nobody Knows",
+          "Shhh",
+          "Bad News",
+          "Sugarcoat",
+          "Nothing",
+          "Bye My Neverland",
+          "Gentleman",
+          "TTG",
+          "Get Loud",
+        ],
       }),
       {
         key: "leader",
@@ -795,7 +1383,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "VIVIZ",
         favorites: ["Untie", "Cliche", "MANIAC"],
-        wrongSongs: ["BOP BOP!", "Pull Up", "Rum Pum Pum", "Loveade", "Tweet Tweet", "Overflow"],
+        wrongSongs: [
+          "BOP BOP!",
+          "Pull Up",
+          "Rum Pum Pum",
+          "Loveade",
+          "Tweet Tweet",
+          "Overflow",
+          "Love Love Love",
+          "Vanilla Sugar Killer",
+          "Red Sun!",
+          "Mirror",
+        ],
       }),
       {
         key: "leader",
@@ -834,7 +1433,18 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "BabyMonster",
         favorites: ["Hot Sauce", "Psycho", "Sheesh", "Like That", "Billionaire"],
-        wrongSongs: ["DRIP", "BATTER UP", "FOREVER", "Really Like You", "CLIK CLAK", "Love In My Heart"],
+        wrongSongs: [
+          "DRIP",
+          "BATTER UP",
+          "FOREVER",
+          "Really Like You",
+          "CLIK CLAK",
+          "Love In My Heart",
+          "Millionaire",
+          "Dream",
+          "Woke Up In Tokyo",
+          "BILLIONAIRE - JP Ver.",
+        ],
       }),
       {
         key: "leader",
@@ -891,7 +1501,26 @@ const rounds = [
           "Fake and True",
           "Breakthrough",
         ],
-        wrongSongs: ["Feel Special", "TT", "Talk that Talk", "Dance the Night Away", "The Feels", "Alcohol-Free"],
+        wrongSongs: [
+          "Feel Special",
+          "TT",
+          "Talk that Talk",
+          "Dance the Night Away",
+          "The Feels",
+          "Alcohol-Free",
+          "Like OOH-AHH",
+          "CHEER UP",
+          "Likey",
+          "KNOCK KNOCK",
+          "SIGNAL",
+          "Heart Shaker",
+          "More & More",
+          "SCIENTIST",
+          "SET ME FREE",
+          "ONE SPARK",
+          "Hare Hare",
+          "Candy Pop",
+        ],
       }),
       {
         key: "leader",
@@ -929,7 +1558,7 @@ const rounds = [
         key: "favoriteSong",
         label: "What is my favorite song?",
         answer: "404 (New Era)",
-        choices: ["404 (New Era)", "I Do Me", "Groundwork", "BTG"],
+        choices: ["404 (New Era)", "Dancing Alone", "I Do Me", "Groundwork", "BTG", "DEBUT SONG"],
       },
       {
         key: "leader",
@@ -967,7 +1596,7 @@ const rounds = [
         key: "favoriteSong",
         label: "What is my favorite song?",
         answer: "Burning Up",
-        choices: ["Burning Up", "MEOW", "Body", "Hands Up"],
+        choices: ["Burning Up", "Hands Up", "Drop Top", "MEOW", "Body", "TOXIC"],
       },
       {
         key: "leader",
@@ -1008,7 +1637,7 @@ const rounds = [
         key: "favoriteSong",
         label: "What is my favorite song?",
         answer: "Rude!",
-        choices: ["Rude!", "The Chase", "Butterflies", "Spark"],
+        choices: ["Rude!", "Focus", "Style", "The Chase", "Butterflies", "Spark"],
       },
       {
         key: "leader",
@@ -1048,7 +1677,7 @@ const rounds = [
         key: "favoriteSong",
         label: "What is my favorite song?",
         answer: "Hypnotize",
-        choices: ["Hypnotize", "WOKE UP", "SHOOTING STAR", "LEFT RIGHT"],
+        choices: ["Hypnotize", "Is this love?", "New Dance", "Left Right", "WOKE UP", "SHOOTING STAR"],
       },
       {
         key: "leader",
@@ -1085,7 +1714,7 @@ const rounds = [
         key: "favoriteSong",
         label: "What is my favorite song?",
         answer: "I Dont Care",
-        choices: ["I Dont Care", "Dream Rush", "Cry Baby", "Glow Up"],
+        choices: ["I Dont Care", "Dream Rush", "Cry Baby", "Glow Up", "Rumor", "Fizzy"],
       },
       {
         key: "leader",
@@ -1120,7 +1749,7 @@ const rounds = [
       ...buildFavoriteSongExtras({
         groupName: "KPDH",
         favorites: ["Takedown", "What it sounds like", "Free"],
-        wrongSongs: ["Golden", "How It's Done", "Soda Pop", "Your Idol", "Gunshot"],
+        wrongSongs: ["Golden", "How It's Done", "Soda Pop", "Your Idol", "Gunshot", "Howl", "Shadow", "Eclipse"],
       }),
       {
         key: "leader",
@@ -1156,6 +1785,22 @@ export const mainQuizRounds = rounds.map((round) => {
       choices: getShuffledChoices(memberNames, `${round.id}-member-${member.name}`),
     })),
     extras: round.extras.map((extra) => {
+      if (extra.kind === "favoriteSong" || extra.key.startsWith("favoriteSong")) {
+        const shuffledChoices = getShuffledChoices(extra.choices, `${round.id}-${extra.key}`);
+        const favoriteAnswers = extra.answers ?? [extra.answer];
+
+        return {
+          ...extra,
+          kind: "favoriteSong",
+          answer: favoriteAnswers[0] ?? extra.answer,
+          answers: favoriteAnswers,
+          choices: shuffledChoices,
+          coverImage: getSongMeta(round.groupName, extra.answer).coverImage,
+          previewUrl: null,
+          songChoices: shuffledChoices.map((songTitle) => getSongMeta(round.groupName, songTitle)),
+        };
+      }
+
       if (["leader", "maknae", "bias"].includes(extra.key)) {
         const includesSpecialAnswer = !memberNames.includes(extra.answer);
         const baseChoices = includesSpecialAnswer ? [extra.answer, ...memberNames] : memberNames;

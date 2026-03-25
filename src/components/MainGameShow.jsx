@@ -39,17 +39,13 @@ function buildRoundSteps(round) {
       kind: extra.kind,
       label: extra.label,
       answer: extra.answer,
+      answers: extra.answers,
       choices: extra.choices,
       coverImage:
         extra.coverImage ??
         extra.songChoices?.find((song) => song.title === extra.answer)?.coverImage ??
         null,
-      previewUrl:
-        extra.previewUrl ??
-        extra.songChoices?.find((song) => song.title === extra.answer)?.previewUrl ??
-        null,
       songChoices: extra.songChoices,
-      sampleVideoId: extra.sampleVideoId,
       description: "Finish the round with the extra personal questions.",
     })),
   ];
@@ -81,7 +77,6 @@ export default function MainGameShow({
   const [holdingOption, setHoldingOption] = useState(null);
   const [poppingOption, setPoppingOption] = useState(null);
   const [isResultsOpen, setIsResultsOpen] = useState(false);
-  const [isSampleOpen, setIsSampleOpen] = useState(false);
   const [isAnswerTestMode, setIsAnswerTestMode] = useState(false);
   const [answerOverrides, setAnswerOverrides] = useState({});
   const [photoViewerIndex, setPhotoViewerIndex] = useState(null);
@@ -92,12 +87,12 @@ export default function MainGameShow({
   const imageDragRef = useRef({ startX: 0, active: false });
   const audioContextRef = useRef(null);
   const popResetTimerRef = useRef(null);
-  const songPreviewRef = useRef(null);
 
   const currentRound = mainQuizRounds[currentRoundIndex];
   const currentSteps = useMemo(() => buildRoundSteps(currentRound), [currentRound]);
   const currentStep = currentSteps[currentStepIndex];
   const resolvedAnswer = answerOverrides[currentStep.id] ?? currentStep.answer;
+  const resolvedAnswers = currentStep.answers ?? [resolvedAnswer];
   const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
   const eligiblePlayers = useMemo(
     () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore, hostProfile.id)),
@@ -113,12 +108,16 @@ export default function MainGameShow({
   const usesSongChoiceGallery = isFavoriteSongStep && (currentStep.songChoices?.length ?? 0) > 0;
   const usesAlbumCover =
     isFavoriteSongStep && !usesSongChoiceGallery && currentStep.coverImage;
-  const hasAutoSongPreview = isFavoriteSongStep && Boolean(currentStep.previewUrl);
-  const hasLegacySampleVideo = Boolean(currentStep.sampleVideoId) && !currentStep.previewUrl;
   const galleryImages = useMemo(() => {
     if (usesSongChoiceGallery) {
+      const seenCovers = new Set();
+
       return currentStep.songChoices
-        .filter((song) => song.coverImage)
+        .filter((song) => {
+          if (!song.coverImage || seenCovers.has(song.coverImage)) return false;
+          seenCovers.add(song.coverImage);
+          return true;
+        })
         .map((song) => ({
           src: song.coverImage,
           alt: `${song.title} cover art`,
@@ -153,44 +152,10 @@ export default function MainGameShow({
   const activeGalleryImage =
     photoViewerIndex !== null ? galleryImages[photoViewerIndex] ?? null : null;
 
-  function stopSongPreview() {
-    if (!songPreviewRef.current) return;
-
-    songPreviewRef.current.pause();
-    songPreviewRef.current.currentTime = 0;
-    songPreviewRef.current = null;
-  }
-
   useEffect(() => {
     setActiveImageIndex(0);
     setIsImageCarouselPaused(false);
   }, [currentRound.id, currentStep.id]);
-
-  useEffect(() => {
-    stopSongPreview();
-    setIsSampleOpen(false);
-  }, [currentStep.id]);
-
-  useEffect(() => {
-    if (!revealAnswers || !hasAutoSongPreview || !currentStep.previewUrl) {
-      stopSongPreview();
-      return undefined;
-    }
-
-    const preview = new Audio(currentStep.previewUrl);
-    preview.volume = 0.85;
-    songPreviewRef.current = preview;
-    preview.play().catch(() => {});
-
-    return () => {
-      if (songPreviewRef.current === preview) {
-        stopSongPreview();
-      } else {
-        preview.pause();
-        preview.currentTime = 0;
-      }
-    };
-  }, [currentStep.previewUrl, hasAutoSongPreview, revealAnswers]);
 
   useEffect(() => {
     if (!usesImageCarousel || isImageCarouselPaused || galleryImages.length <= 1) return undefined;
@@ -210,11 +175,29 @@ export default function MainGameShow({
     return guessAssignments[currentStep.id]?.[playerId] ?? null;
   }
 
+  function getAssignedOptions(playerId) {
+    const assignedValue = guessAssignments[currentStep.id]?.[playerId];
+
+    if (isFavoriteSongStep) {
+      return Array.isArray(assignedValue)
+        ? assignedValue
+        : assignedValue
+          ? [assignedValue]
+          : [];
+    }
+
+    return assignedValue ? [assignedValue] : [];
+  }
+
   function getPlayersForOption(option) {
-    return eligiblePlayers.filter((player) => getAssignedOption(player.id) === option);
+    return eligiblePlayers.filter((player) => getAssignedOptions(player.id).includes(option));
   }
 
   function getAvailablePlayersForOption(option) {
+    if (isFavoriteSongStep) {
+      return eligiblePlayers;
+    }
+
     return eligiblePlayers.filter((player) => {
       const assignedOption = getAssignedOption(player.id);
       return !assignedOption || assignedOption === option;
@@ -272,7 +255,20 @@ export default function MainGameShow({
       ...currentAssignments,
       [currentStep.id]: {
         ...currentAssignments[currentStep.id],
-        [previewPlayerId]: option,
+        [previewPlayerId]: isFavoriteSongStep
+          ? (() => {
+              const currentSelections = currentAssignments[currentStep.id]?.[previewPlayerId];
+              const nextSelections = Array.isArray(currentSelections)
+                ? currentSelections
+                : currentSelections
+                  ? [currentSelections]
+                  : [];
+
+              return nextSelections.includes(option)
+                ? nextSelections.filter((item) => item !== option)
+                : [...nextSelections, option];
+            })()
+          : option,
       },
     }));
   }
@@ -389,7 +385,6 @@ export default function MainGameShow({
     playCelebrateSound();
     setRevealAnswers(false);
     setIsResultsOpen(false);
-    setIsSampleOpen(false);
   }
 
   function triggerPopAnimation(option) {
@@ -503,8 +498,12 @@ export default function MainGameShow({
     }
   }
 
-  function isAwarded(stepId, playerId) {
-    return Boolean(awardedPoints[stepId]?.[playerId]);
+  function isAwarded(stepId, playerId, optionKey = "__single") {
+    return Boolean(awardedPoints[stepId]?.[playerId]?.[optionKey]);
+  }
+
+  function getAwardedCount(stepId, playerId) {
+    return Object.values(awardedPoints[stepId]?.[playerId] ?? {}).filter(Boolean).length;
   }
 
   function updateScoreForPlayer(playerId, amount) {
@@ -536,39 +535,54 @@ export default function MainGameShow({
 
   function autoAwardCorrectGuesses() {
     const stepId = currentStep.id;
-    const correctPlayerIds = eligiblePlayers
-      .filter(
-        (player) => getAssignedOption(player.id) === resolvedAnswer,
-      )
-      .map((player) => player.id);
-
-    if (!correctPlayerIds.length) return [];
+    const awardedHits = [];
 
     setAwardedPoints((currentAwards) => {
       const currentStepAwards = currentAwards[stepId] ?? {};
-      const playerIdsToAdd = correctPlayerIds.filter((playerId) => !currentStepAwards[playerId]);
+      const nextStepAwards = { ...currentStepAwards };
 
-      if (!playerIdsToAdd.length) {
+      eligiblePlayers.forEach((player) => {
+        const selectedOptions = getAssignedOptions(player.id);
+        const correctOptions = isFavoriteSongStep
+          ? selectedOptions.filter((option) => resolvedAnswers.includes(option))
+          : selectedOptions.filter((option) => option === resolvedAnswer);
+
+        if (!correctOptions.length) return;
+
+        const playerAwards = { ...(nextStepAwards[player.id] ?? {}) };
+        const optionKeys = isFavoriteSongStep ? correctOptions : ["__single"];
+        let playerEarnedPoint = false;
+
+        optionKeys.forEach((optionKey) => {
+          if (playerAwards[optionKey]) return;
+          playerAwards[optionKey] = true;
+          awardedHits.push({ playerId: player.id, optionKey });
+          playerEarnedPoint = true;
+        });
+
+        if (playerEarnedPoint) {
+          nextStepAwards[player.id] = playerAwards;
+        }
+      });
+
+      if (!awardedHits.length) {
         return currentAwards;
       }
 
-      playerIdsToAdd.forEach((playerId) => updateScoreForPlayer(playerId, 1));
+      awardedHits.forEach(({ playerId }) => updateScoreForPlayer(playerId, 1));
 
       return {
         ...currentAwards,
-        [stepId]: {
-          ...currentStepAwards,
-          ...Object.fromEntries(playerIdsToAdd.map((playerId) => [playerId, true])),
-        },
+        [stepId]: nextStepAwards,
       };
     });
 
-    return correctPlayerIds;
+    return awardedHits;
   }
 
   function revealCurrentAnswer() {
-    const correctPlayerIds = autoAwardCorrectGuesses();
-    if (correctPlayerIds.length) {
+    const correctHits = autoAwardCorrectGuesses();
+    if (correctHits.length) {
       playCelebrateSound();
     } else if (eligiblePlayers.length) {
       playIncorrectBuzzer();
@@ -586,10 +600,11 @@ export default function MainGameShow({
   }
 
   function togglePoint(playerId) {
+    if (isFavoriteSongStep) return;
     if (!revealAnswers) return;
 
     setAwardedPoints((currentAwards) => {
-      const wasAwarded = Boolean(currentAwards[currentStep.id]?.[playerId]);
+      const wasAwarded = Boolean(currentAwards[currentStep.id]?.[playerId]?.__single);
       const nextValue = !wasAwarded;
 
       updateScoreForPlayer(playerId, nextValue ? 1 : -1);
@@ -598,28 +613,27 @@ export default function MainGameShow({
         ...currentAwards,
         [currentStep.id]: {
           ...currentAwards[currentStep.id],
-          [playerId]: nextValue,
+          [playerId]: {
+            ...(currentAwards[currentStep.id]?.[playerId] ?? {}),
+            __single: nextValue,
+          },
         },
       };
     });
   }
 
   function goToRound(index) {
-    stopSongPreview();
     setCurrentRoundIndex(index);
     setCurrentStepIndex(0);
     setRevealAnswers(false);
     setIsResultsOpen(false);
-    setIsSampleOpen(false);
   }
 
   function goToPrevious() {
-    stopSongPreview();
     if (currentStepIndex > 0) {
       setCurrentStepIndex((index) => index - 1);
       setRevealAnswers(false);
       setIsResultsOpen(false);
-      setIsSampleOpen(false);
       return;
     }
 
@@ -630,17 +644,14 @@ export default function MainGameShow({
       setCurrentStepIndex(previousRoundSteps.length - 1);
       setRevealAnswers(false);
       setIsResultsOpen(false);
-      setIsSampleOpen(false);
     }
   }
 
   function goToNext() {
-    stopSongPreview();
     if (currentStepIndex < currentSteps.length - 1) {
       setCurrentStepIndex((index) => index + 1);
       setRevealAnswers(false);
       setIsResultsOpen(false);
-      setIsSampleOpen(false);
       return;
     }
 
@@ -649,7 +660,6 @@ export default function MainGameShow({
       setCurrentStepIndex(0);
       setRevealAnswers(false);
       setIsResultsOpen(false);
-      setIsSampleOpen(false);
     }
   }
 
@@ -686,7 +696,6 @@ export default function MainGameShow({
   }
 
   function resetQuiz() {
-    stopSongPreview();
     setCurrentRoundIndex(0);
     setCurrentStepIndex(0);
     setRevealAnswers(false);
@@ -696,7 +705,6 @@ export default function MainGameShow({
     setHoldingOption(null);
     setPoppingOption(null);
     setIsResultsOpen(false);
-    setIsSampleOpen(false);
     setHostProfile((currentHost) => ({
       ...currentHost,
       scores: {
@@ -716,17 +724,12 @@ export default function MainGameShow({
     setScoreRefreshTick((value) => value + 1);
   }
 
-  useEffect(
-    () => () => {
-      stopSongPreview();
-    },
-    [],
-  );
-
   const menuActions = [
     { label: "Back Home", onClick: onBackHome },
     { label: "Reset Quiz", onClick: resetQuiz },
     { label: "Game Setup", onClick: () => setIsSetupOpen(true) },
+    { label: revealAnswers ? "Hide Results" : "Reveal Answer", onClick: revealAnswers ? hideRevealResults : revealCurrentAnswer },
+    { label: "Refresh Scores", onClick: () => setScoreRefreshTick((value) => value + 1) },
     {
       label: isAnswerTestMode ? "Exit Test Mode" : "Test Answers",
       onClick: () => setIsAnswerTestMode((currentValue) => !currentValue),
@@ -738,6 +741,8 @@ export default function MainGameShow({
     { label: "Scores", ariaLabel: "Jump to live scores", link: "#gameshow-scores" },
     { label: "Round", ariaLabel: "Jump to current round details", link: "#gameshow-round" },
     { label: "Choices", ariaLabel: "Jump to answer choices", link: "#gameshow-choices" },
+    { label: "Results", ariaLabel: "Open question results", onClick: openResults },
+    { label: "Next Question", ariaLabel: "Go to the next question", onClick: goToNext },
   ];
 
   function changeDesiredPlayerCount(nextValue) {
@@ -839,8 +844,13 @@ export default function MainGameShow({
               <div className="results-player-list">
                 {displayPlayers.map((player) => {
                   const canScore = playerCanScore(player, hostGetsScore, hostProfile.id);
-                  const playerGuess = getAssignedOption(player.id);
-                  const gotPoint = isAwarded(currentStep.id, player.id);
+                  const playerGuess = isFavoriteSongStep
+                    ? getAssignedOptions(player.id)
+                    : getAssignedOption(player.id);
+                  const gotPoint = isFavoriteSongStep
+                    ? getAwardedCount(currentStep.id, player.id) > 0
+                    : isAwarded(currentStep.id, player.id);
+                  const awardedCount = getAwardedCount(currentStep.id, player.id);
 
                   return (
                     <div className="results-player-row" key={player.id}>
@@ -852,6 +862,8 @@ export default function MainGameShow({
                         <p className="inline-score-meta">
                           {player.id === hostProfile.id && !hostGetsScore
                             ? "Host scoring disabled"
+                            : isFavoriteSongStep && Array.isArray(playerGuess) && playerGuess.length
+                              ? `Locked songs: ${playerGuess.join(", ")}`
                             : playerGuess
                               ? `Guess: ${playerGuess}`
                               : "No guess locked"}
@@ -860,16 +872,24 @@ export default function MainGameShow({
 
                       <div className="results-player-actions">
                         <span className={`results-status ${gotPoint ? "is-correct" : "is-missed"}`}>
-                          {gotPoint ? "Got point" : "No point"}
+                          {isFavoriteSongStep
+                            ? gotPoint
+                              ? `${awardedCount} point${awardedCount === 1 ? "" : "s"}`
+                              : "No points"
+                            : gotPoint
+                              ? "Got point"
+                              : "No point"}
                         </span>
-                        <button
-                          className={`score-toggle ${gotPoint ? "is-active" : ""}`}
-                          disabled={!canScore}
-                          onClick={() => togglePoint(player.id)}
-                          type="button"
-                        >
-                          {gotPoint ? "Remove point" : "Give point"}
-                        </button>
+                        {!isFavoriteSongStep ? (
+                          <button
+                            className={`score-toggle ${gotPoint ? "is-active" : ""}`}
+                            disabled={!canScore}
+                            onClick={() => togglePoint(player.id)}
+                            type="button"
+                          >
+                            {gotPoint ? "Remove point" : "Give point"}
+                          </button>
+                        ) : null}
                       </div>
                     </div>
                   );
@@ -892,41 +912,6 @@ export default function MainGameShow({
           </div>
         ) : null}
 
-        {isSampleOpen && hasLegacySampleVideo ? (
-          <div className="modal-overlay results-overlay" onClick={() => setIsSampleOpen(false)}>
-            <section
-              className="setup-modal sample-modal"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <div className="setup-header">
-                <div>
-                  <p className="panel-label">Song sample</p>
-                  <h2>{resolvedAnswer}</h2>
-                  <p className="setup-help">Listen to a short sample before guessing.</p>
-                </div>
-                <button
-                  className="ghost-button"
-                  onClick={() => setIsSampleOpen(false)}
-                  type="button"
-                >
-                  Close
-                </button>
-              </div>
-
-              <div className="sample-video-wrap">
-                <iframe
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="sample-video"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  src={`https://www.youtube.com/embed/${currentStep.sampleVideoId}?autoplay=1&start=30&end=50&rel=0`}
-                  title={`${resolvedAnswer} sample`}
-                />
-              </div>
-            </section>
-          </div>
-        ) : null}
-
         {activeGalleryImage ? (
           <div className="modal-overlay results-overlay" onClick={closePhotoViewer}>
             <section
@@ -934,10 +919,7 @@ export default function MainGameShow({
               onClick={(event) => event.stopPropagation()}
             >
               <div className="setup-header">
-                <div>
-                  <p className="panel-label">Photo viewer</p>
-                  <h2>{currentRound.groupName}</h2>
-                </div>
+                <p className="panel-label">Photo viewer</p>
                 <button className="ghost-button" onClick={closePhotoViewer} type="button">
                   Close
                 </button>
@@ -1200,7 +1182,6 @@ export default function MainGameShow({
                                 className="song-cover-image"
                                 src={image.src}
                               />
-                              <span className="song-cover-title">{image.name}</span>
                             </button>
                           ))}
                         </div>
@@ -1237,22 +1218,6 @@ export default function MainGameShow({
                         </button>
                       )}
 
-                      {hasLegacySampleVideo ? (
-                        <button
-                          className="sample-audio-button"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            setIsSampleOpen(true);
-                          }}
-                          type="button"
-                        >
-                          Listen to sample
-                        </button>
-                      ) : hasAutoSongPreview ? (
-                        <span className="sample-audio-button is-static">
-                          {revealAnswers ? "Preview playing" : "Preview plays on reveal"}
-                        </span>
-                      ) : null}
                     </div>
 
                     <div className="image-action-bar">
@@ -1335,7 +1300,8 @@ export default function MainGameShow({
                         const songChoice = currentStep.songChoices?.find((song) => song.title === option);
                         const assignedPlayers = getPlayersForOption(option);
                         const isCorrect =
-                          (revealAnswers || isAnswerTestMode) && resolvedAnswer === option;
+                          (revealAnswers || isAnswerTestMode) &&
+                          (isFavoriteSongStep ? resolvedAnswers.includes(option) : resolvedAnswer === option);
                         const shouldShowPreview =
                           previewPlayer &&
                           !assignedPlayers.some((player) => player.id === previewPlayer.id);

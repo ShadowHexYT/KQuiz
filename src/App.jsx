@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import HomeScreen from "./components/HomeScreen";
 import MainGameShow from "./components/MainGameShow";
+import ModeHub from "./components/ModeHub";
+import ModePrototype from "./components/ModePrototype";
+import { gameModes } from "./data/gameModeCatalog";
 import { createEmptyScores, GAME_SCORE_KEYS, normalizeScores } from "./data/scoreModel";
 
 const starterPlayers = [];
@@ -95,7 +98,22 @@ const groupQuizzes = [
 ];
 
 function getRouteFromHash(hashValue) {
-  return hashValue === "#/main-gameshow" ? "main-gameshow" : "home";
+  if (hashValue === "#/main-gameshow") {
+    return { name: "main-gameshow" };
+  }
+
+  if (hashValue === "#/mode-hub") {
+    return { name: "mode-hub" };
+  }
+
+  if (hashValue.startsWith("#/mode/")) {
+    return {
+      name: "mode-prototype",
+      modeId: hashValue.replace("#/mode/", ""),
+    };
+  }
+
+  return { name: "home" };
 }
 
 export default function App() {
@@ -257,57 +275,109 @@ export default function App() {
     window.location.hash = "/main-gameshow";
   }
 
+  function goToModeHub() {
+    window.location.hash = "/mode-hub";
+  }
+
+  function goToModePrototype(modeId) {
+    if (modeId === "main-game") {
+      goToMainShow();
+      return;
+    }
+
+    window.location.hash = `/mode/${modeId}`;
+  }
+
   function goHome() {
     window.location.hash = "";
   }
 
-  if (route === "main-gameshow") {
+  function renderHomeButton() {
     return (
-      <MainGameShow
-        players={players}
-        setPlayers={setPlayers}
-        hostProfile={hostProfile}
-        setHostProfile={setHostProfile}
-        hostGetsScore={hostGetsScore}
-        setHostGetsScore={setHostGetsScore}
-        playerName={playerName}
-        setPlayerName={setPlayerName}
-        desiredPlayerCount={desiredPlayerCount}
-        setDesiredPlayerCount={setDesiredPlayerCount}
-        addPlayer={addPlayer}
-        removePlayer={removePlayer}
-        scoreKey={GAME_SCORE_KEYS.mainShow}
-        onBackHome={goHome}
-      />
+      <button className="global-home-button" onClick={goHome} type="button">
+        Home
+      </button>
+    );
+  }
+
+  if (route.name === "main-gameshow") {
+    return (
+      <>
+        {renderHomeButton()}
+        <MainGameShow
+          players={players}
+          setPlayers={setPlayers}
+          hostProfile={hostProfile}
+          setHostProfile={setHostProfile}
+          hostGetsScore={hostGetsScore}
+          setHostGetsScore={setHostGetsScore}
+          playerName={playerName}
+          setPlayerName={setPlayerName}
+          desiredPlayerCount={desiredPlayerCount}
+          setDesiredPlayerCount={setDesiredPlayerCount}
+          addPlayer={addPlayer}
+          removePlayer={removePlayer}
+          scoreKey={GAME_SCORE_KEYS.mainShow}
+          onBackHome={goHome}
+        />
+      </>
+    );
+  }
+
+  if (route.name === "mode-hub") {
+    return (
+      <>
+        {renderHomeButton()}
+        <ModeHub onBackHome={goHome} onOpenMode={goToModePrototype} />
+      </>
+    );
+  }
+
+  if (route.name === "mode-prototype") {
+    return (
+      <>
+        {renderHomeButton()}
+        <ModePrototype
+          modeId={route.modeId}
+          onBackHome={goHome}
+          onOpenModeHub={goToModeHub}
+        />
+      </>
     );
   }
 
   return (
-    <HomeScreen
-      players={players}
-      hostProfile={hostProfile}
-      hostGetsScore={hostGetsScore}
-      selectedGroup={selectedGroup}
-      launchMessage={launchMessage}
-      playerName={playerName}
-      teams={teams}
-      teamsEnabled={teamsEnabled}
-      newPlayerTeamId={newPlayerTeamId}
-      playerIcons={playerIcons}
-      onHostGetsScoreChange={setHostGetsScore}
-      onAddPlayer={addPlayer}
-      onRemovePlayer={removePlayer}
-      onPlayerNameChange={setPlayerName}
-      onNewPlayerTeamChange={setNewPlayerTeamId}
-      onPlayerUpdate={updatePlayer}
-      onHostUpdate={updateHost}
-      onAssignPlayerAsHost={assignPlayerAsHost}
-      onRestoreDefaultHost={restoreDefaultHost}
-      onTeamCountChange={setTeamCount}
-      onTeamRename={renameTeam}
-      onTeamsEnabledChange={setTeamsEnabled}
-      onStartGroupQuiz={startGroupQuiz}
-      onStartMainShow={goToMainShow}
-    />
+    <>
+      {renderHomeButton()}
+      <HomeScreen
+        players={players}
+        hostProfile={hostProfile}
+        hostGetsScore={hostGetsScore}
+        selectedGroup={selectedGroup}
+        launchMessage={launchMessage}
+        playerName={playerName}
+        teams={teams}
+        teamsEnabled={teamsEnabled}
+        newPlayerTeamId={newPlayerTeamId}
+        playerIcons={playerIcons}
+        onHostGetsScoreChange={setHostGetsScore}
+        onAddPlayer={addPlayer}
+        onRemovePlayer={removePlayer}
+        onPlayerNameChange={setPlayerName}
+        onNewPlayerTeamChange={setNewPlayerTeamId}
+        onPlayerUpdate={updatePlayer}
+        onHostUpdate={updateHost}
+        onAssignPlayerAsHost={assignPlayerAsHost}
+        onRestoreDefaultHost={restoreDefaultHost}
+        onTeamCountChange={setTeamCount}
+        onTeamRename={renameTeam}
+        onTeamsEnabledChange={setTeamsEnabled}
+        onStartGroupQuiz={startGroupQuiz}
+        modeOptions={gameModes}
+        onOpenModeHub={goToModeHub}
+        onOpenMode={goToModePrototype}
+        onStartMainShow={goToMainShow}
+      />
+    </>
   );
 }

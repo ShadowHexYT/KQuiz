@@ -67,45 +67,18 @@ const groupQuizzes = [
 const menuItems = [
   { label: "Home", ariaLabel: "Jump to the top of the page", link: "#top" },
   { label: "Setup", ariaLabel: "Jump to the player setup area", link: "#top" },
+  { label: "Party Setup", ariaLabel: "Jump to party setup", link: "#top" },
+  { label: "Party Lineup", ariaLabel: "Jump to party lineup", link: "#top" },
   { label: "Main Modes", ariaLabel: "Jump to main quiz modes", link: "#modes" },
   { label: "Groups", ariaLabel: "Jump to group specific quizzes", link: "#groups" },
 ];
 
 const socialItems = [
-  { label: "Host View", link: "#top" },
+  { label: "Main Gameshow", link: "#modes" },
+  { label: "Game Lab", link: "#modes" },
   { label: "Random Group", link: "#groups" },
+  { label: "Party Lineup", link: "#top" },
   { label: "Top Modes", link: "#modes" },
-];
-
-const mainModes = [
-  {
-    id: "main-game",
-    title: "Are You Smarter Than a K-popper?",
-    description:
-      "The new gameshow route with member photos, group guesses, favorite songs, bias picks, and manual host scoring.",
-    actionLabel: "Open gameshow",
-  },
-  {
-    id: "jeopardy",
-    title: "Jeopardy",
-    description:
-      "A future board-style game mode with categories, point values, and host-led reveals.",
-    actionLabel: "Coming soon",
-  },
-  {
-    id: "wheel-of-fortune",
-    title: "Wheel of Fortune",
-    description:
-      "A future spin-based game mode for themed categories, puzzles, and bonus rounds.",
-    actionLabel: "Coming soon",
-  },
-  {
-    id: "song-guessing",
-    title: "Song Guessing",
-    description:
-      "A future song-identification mode for intros, choruses, and title recognition.",
-    actionLabel: "Coming soon",
-  },
 ];
 
 const backgroundImages = [
@@ -179,6 +152,9 @@ export default function HomeScreen({
   onTeamCountChange,
   onTeamRename,
   onTeamsEnabledChange,
+  modeOptions,
+  onOpenModeHub,
+  onOpenMode,
   onStartGroupQuiz,
   onStartMainShow,
 }) {
@@ -187,7 +163,7 @@ export default function HomeScreen({
   const [openEmojiMenuFor, setOpenEmojiMenuFor] = useState(null);
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [backgroundSet, setBackgroundSet] = useState(() => pickRandomBackgroundSet());
-  const activeMode = mainModes[activeModeIndex] ?? mainModes[0];
+  const activeMode = modeOptions[activeModeIndex] ?? modeOptions[0];
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
   const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null);
@@ -557,7 +533,7 @@ export default function HomeScreen({
                     autoplayDelay={5000}
                     baseWidth={280}
                     isPaused={isCarouselHovered}
-                    items={mainModes}
+                    items={modeOptions}
                     loop
                     onSelect={setActiveModeIndex}
                     pauseOnHover
@@ -566,12 +542,19 @@ export default function HomeScreen({
                 </div>
 
                 <div className="mode-play-row">
+                  <button className="ghost-button" onClick={onOpenModeHub} type="button">
+                    View all games
+                  </button>
                   <button
                     className="primary-button"
-                    onClick={activeMode.id === "main-game" ? onStartMainShow : undefined}
+                    onClick={
+                      activeMode.id === "main-game"
+                        ? onStartMainShow
+                        : () => onOpenMode(activeMode.id)
+                    }
                     type="button"
                   >
-                    {activeMode.id === "main-game" ? "Play" : "Coming Soon"}
+                    {activeMode.id === "main-game" ? "Play" : "Play Game"}
                   </button>
                 </div>
               </div>
