@@ -812,7 +812,7 @@ const groupSongFallbacks = {
   ILLIT: songMetaLibrary["ILLIT::Cherish (My Love)"],
 };
 
-function getSongMeta(groupName, title) {
+export function getSongMeta(groupName, title) {
   const exact = songMetaLibrary[`${groupName}::${title}`];
   const fallback = groupSongFallbacks[groupName] ?? {};
 

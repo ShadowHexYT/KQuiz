@@ -1968,6 +1968,252 @@ button {
     0 10px 24px rgba(0, 0, 0, 0.22);
 }
 
+.playlist-mode-screen {
+  display: grid;
+  gap: 1rem;
+}
+
+.playlist-game-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 1rem;
+}
+
+.playlist-toolbar,
+.playlist-status-row,
+.playlist-host-stack,
+.playlist-cover-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.playlist-toolbar,
+.playlist-status-row {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.playlist-count-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: #fff8ef;
+  font-weight: 700;
+}
+
+.playlist-count-picker select {
+  min-width: 88px;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(5, 10, 22, 0.76);
+  color: #fff8ef;
+}
+
+.playlist-status-pill {
+  padding: 0.45rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff8ef;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.playlist-prompt-shell {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.3rem;
+}
+
+.playlist-emoji-prompt,
+.playlist-lyric-card {
+  display: grid;
+  place-items: center;
+  min-height: 210px;
+  margin: 0;
+  padding: 1.5rem;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top, rgba(255, 217, 120, 0.1), transparent 45%),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+}
+
+.playlist-emoji-prompt {
+  font-size: clamp(2.4rem, 6vw, 4.6rem);
+  letter-spacing: 0.22em;
+}
+
+.playlist-lyric-card {
+  font-size: clamp(1.3rem, 3vw, 2.2rem);
+  line-height: 1.25;
+  color: #fff8ef;
+}
+
+.playlist-meta-line {
+  margin: 0;
+  color: rgba(255, 248, 239, 0.74);
+}
+
+.playlist-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.playlist-choice-wrap {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.playlist-choice-button {
+  display: grid;
+  gap: 0.4rem;
+  align-content: center;
+  min-height: 74px;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff8ef;
+  font-size: 1rem;
+  font-weight: 700;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.playlist-choice-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: rgba(255, 211, 111, 0.42);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.18);
+}
+
+.playlist-choice-button.is-holding {
+  transform: scale(0.985);
+  border-color: rgba(255, 211, 111, 0.6);
+}
+
+.playlist-choice-button.is-correct {
+  border-color: rgba(97, 220, 155, 0.65);
+  background: rgba(97, 220, 155, 0.18);
+}
+
+.playlist-choice-button.is-wrong {
+  border-color: rgba(255, 93, 143, 0.64);
+  background: rgba(255, 93, 143, 0.16);
+}
+
+.playlist-choice-title {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.playlist-choice-preview {
+  color: rgba(255, 248, 239, 0.72);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.playlist-choice-locks,
+.playlist-score-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.playlist-lock-pill,
+.playlist-score-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.38rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff8ef;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.playlist-score-chip {
+  cursor: pointer;
+}
+
+.playlist-score-chip.is-awarded {
+  border-color: rgba(97, 220, 155, 0.65);
+  background: rgba(97, 220, 155, 0.18);
+}
+
+.playlist-answer-panel {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.playlist-setup-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.playlist-answer-panel strong {
+  font-size: 1.2rem;
+  color: #fff8ef;
+}
+
+.playlist-cover-frame {
+  position: relative;
+  overflow: hidden;
+  min-height: 350px;
+  border-radius: 28px;
+  background: rgba(4, 8, 18, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.playlist-cover-image {
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  transition: transform 320ms ease;
+}
+
+.playlist-cover-image.is-revealed {
+  transform-origin: center center !important;
+}
+
+@media (max-width: 960px) {
+  .playlist-game-grid,
+  .mode-live-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .playlist-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .playlist-toolbar,
+  .playlist-status-row {
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  .playlist-cover-frame,
+  .playlist-cover-image {
+    min-height: 280px;
+    height: 280px;
+  }
+}
+
 .mode-field-list {
   display: flex;
   flex-wrap: wrap;

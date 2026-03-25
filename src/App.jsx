@@ -341,6 +341,19 @@ export default function App() {
           modeId={route.modeId}
           onBackHome={goHome}
           onOpenModeHub={goToModeHub}
+          players={players}
+          setPlayers={setPlayers}
+          hostProfile={hostProfile}
+          setHostProfile={setHostProfile}
+          hostGetsScore={hostGetsScore}
+          setHostGetsScore={setHostGetsScore}
+          playerName={playerName}
+          setPlayerName={setPlayerName}
+          desiredPlayerCount={desiredPlayerCount}
+          setDesiredPlayerCount={setDesiredPlayerCount}
+          addPlayer={addPlayer}
+          removePlayer={removePlayer}
+          scoreKey={GAME_SCORE_KEYS.songGuessing}
         />
       </>
     );
