@@ -6,9 +6,53 @@ import StaggeredMenu from "./StaggeredMenu";
 import { mainQuizRounds } from "../data/mainQuizRounds";
 import { createEmptyScores, normalizeScores } from "../data/scoreModel";
 
+const ANSWER_OVERRIDES_STORAGE_KEY = "kpop-quiz-main-answer-overrides-v1";
+
 function playerCanScore(player, hostGetsScore, hostId) {
   if (player.id !== hostId) return true;
   return hostGetsScore;
+}
+
+function getAnswerOverrideStorageKey(round, step) {
+  if (!round || !step) return null;
+
+  if (step.type === "member" && step.image) {
+    return `member-photo:${step.image}`;
+  }
+
+  if (step.type === "group") {
+    const collageSources = round.members.map((member) => member.image).filter(Boolean).join("|");
+    return `group-collage:${collageSources}`;
+  }
+
+  if (step.type === "extra") {
+    if (step.image) {
+      return `extra-photo:${step.image}`;
+    }
+
+    if (step.coverImage) {
+      return `extra-cover:${step.key ?? step.label}:${step.coverImage}`;
+    }
+
+    const collageSources = round.members.map((member) => member.image).filter(Boolean).join("|");
+    return `extra-collage:${step.key ?? step.label}:${collageSources}`;
+  }
+
+  return `step-id:${step.id}`;
+}
+
+function loadStoredAnswerOverrides() {
+  if (typeof window === "undefined") return {};
+
+  try {
+    const savedValue = window.localStorage.getItem(ANSWER_OVERRIDES_STORAGE_KEY);
+    if (!savedValue) return {};
+
+    const parsedValue = JSON.parse(savedValue);
+    return parsedValue && typeof parsedValue === "object" ? parsedValue : {};
+  } catch {
+    return {};
+  }
 }
 
 function buildRoundSteps(round) {
@@ -78,7 +122,7 @@ export default function MainGameShow({
   const [poppingOption, setPoppingOption] = useState(null);
   const [isResultsOpen, setIsResultsOpen] = useState(false);
   const [isAnswerTestMode, setIsAnswerTestMode] = useState(false);
-  const [answerOverrides, setAnswerOverrides] = useState({});
+  const [answerOverrides, setAnswerOverrides] = useState(() => loadStoredAnswerOverrides());
   const [photoViewerIndex, setPhotoViewerIndex] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isImageCarouselPaused, setIsImageCarouselPaused] = useState(false);
@@ -91,7 +135,13 @@ export default function MainGameShow({
   const currentRound = mainQuizRounds[currentRoundIndex];
   const currentSteps = useMemo(() => buildRoundSteps(currentRound), [currentRound]);
   const currentStep = currentSteps[currentStepIndex];
-  const resolvedAnswer = answerOverrides[currentStep.id] ?? currentStep.answer;
+  const currentAnswerOverrideKey = useMemo(
+    () => getAnswerOverrideStorageKey(currentRound, currentStep),
+    [currentRound, currentStep],
+  );
+  const resolvedAnswer =
+    (currentAnswerOverrideKey ? answerOverrides[currentAnswerOverrideKey] : null) ??
+    currentStep.answer;
   const resolvedAnswers = currentStep.answers ?? [resolvedAnswer];
   const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
   const eligiblePlayers = useMemo(
@@ -181,6 +231,19 @@ export default function MainGameShow({
     setActiveImageIndex(0);
     setIsImageCarouselPaused(false);
   }, [currentRound.id, currentStep.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      window.localStorage.setItem(
+        ANSWER_OVERRIDES_STORAGE_KEY,
+        JSON.stringify(answerOverrides),
+      );
+    } catch {
+      // Ignore storage failures so editing answers still works in-memory.
+    }
+  }, [answerOverrides]);
 
   useEffect(() => {
     if (!usesImageCarousel || isImageCarouselPaused || galleryImages.length <= 1) return undefined;
@@ -403,9 +466,11 @@ export default function MainGameShow({
   }
 
   function assignTestAnswer(option) {
+    if (!currentAnswerOverrideKey) return;
+
     setAnswerOverrides((currentOverrides) => ({
       ...currentOverrides,
-      [currentStep.id]: option,
+      [currentAnswerOverrideKey]: option,
     }));
     playCelebrateSound();
     setRevealAnswers(false);
