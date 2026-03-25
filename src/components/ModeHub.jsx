@@ -37,12 +37,24 @@ export default function ModeHub({ onBackHome, onOpenMode }) {
   }
 
   const resolvedMenuItems = menuItems.map((item) =>
-    item.label === "Open Selected" ? { ...item, onClick: () => selectedMode && onOpenMode(selectedMode.id) } : item,
+    item.label === "Open Selected"
+      ? {
+          ...item,
+          onClick: () =>
+            selectedMode && !selectedMode.comingSoon ? onOpenMode(selectedMode.id) : undefined,
+        }
+      : item,
   );
 
   const resolvedSocialItems = socialItems.map((item) => {
     if (item.label === "Back Home") return { ...item, onClick: onBackHome };
-    if (item.label === "Launch Game") return { ...item, onClick: () => selectedMode && onOpenMode(selectedMode.id) };
+    if (item.label === "Launch Game") {
+      return {
+        ...item,
+        onClick: () =>
+          selectedMode && !selectedMode.comingSoon ? onOpenMode(selectedMode.id) : undefined,
+      };
+    }
     return item;
   });
 
@@ -92,8 +104,13 @@ export default function ModeHub({ onBackHome, onOpenMode }) {
                 Back home
               </button>
               {selectedMode ? (
-                <button className="primary-button" onClick={() => onOpenMode(selectedMode.id)} type="button">
-                  Play {selectedMode.title}
+                <button
+                  className="primary-button"
+                  disabled={selectedMode.comingSoon}
+                  onClick={() => onOpenMode(selectedMode.id)}
+                  type="button"
+                >
+                  {selectedMode.comingSoon ? `${selectedMode.title} Coming Soon` : `Play Game ${selectedMode.title}`}
                 </button>
               ) : null}
             </div>
@@ -143,14 +160,19 @@ export default function ModeHub({ onBackHome, onOpenMode }) {
                     onClick={() => handleSelectMode(mode)}
                     type="button"
                   >
-                    <p className="panel-label">{mode.category}</p>
+                    <p className="panel-label">{mode.comingSoon ? `${mode.category} • Coming soon` : mode.category}</p>
                     <h3>{mode.title}</h3>
                     <p>{mode.tagline}</p>
                   </button>
 
                   <div className="mode-grid-card-footer">
-                    <button className="primary-button" onClick={() => onOpenMode(mode.id)} type="button">
-                      Play
+                    <button
+                      className="primary-button"
+                      disabled={mode.comingSoon}
+                      onClick={() => onOpenMode(mode.id)}
+                      type="button"
+                    >
+                      {mode.comingSoon ? "Coming Soon" : "Play Game"}
                     </button>
                   </div>
                 </article>

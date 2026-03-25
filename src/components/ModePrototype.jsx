@@ -9,17 +9,8 @@ import {
   playlistDifficultyOptions,
   playlistQuestionCountOptions,
 } from "../data/playlistGamePacks";
+import { buildJeopardyBoard, jeopardyBoardValues } from "../data/jeopardyQuestionBank";
 import { normalizeScores } from "../data/scoreModel";
-
-const jeopardyCategories = [
-  "Debut Songs",
-  "Lyrics",
-  "Albums",
-  "Bias Trivia",
-  "Lightsticks",
-];
-
-const jeopardyValues = [100, 200, 300, 400, 500];
 
 function getStableHash(value) {
   return Array.from(value).reduce((hash, char) => hash + char.charCodeAt(0), 0);
@@ -84,7 +75,6 @@ function PlaylistModeGame({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [selectedChoice, setSelectedChoice] = useState(null);
-  const [correctCount, setCorrectCount] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(0);
   const [guessAssignments, setGuessAssignments] = useState({});
   const [previewAssignments, setPreviewAssignments] = useState({});
@@ -112,6 +102,10 @@ function PlaylistModeGame({
   const currentQuestion = activeQuestions[currentIndex] ?? null;
   const stepId = currentQuestion?.id ?? null;
   const isLastQuestion = currentIndex >= activeQuestions.length - 1;
+  const promptHeading =
+    mode.id === "album-cover-zoom"
+      ? "Guess the album"
+      : currentQuestion?.title ?? "Waiting for setup";
   const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
   const lineupPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
   const playerSlotCount = Math.max(7, Number(desiredPlayerCount) || 0, lineupPlayers.length + 1);
@@ -146,7 +140,6 @@ function PlaylistModeGame({
     setCurrentIndex(0);
     setRevealed(false);
     setSelectedChoice(null);
-    setCorrectCount(0);
     setZoomLevel(0);
     setGuessAssignments({});
     setPreviewAssignments({});
@@ -350,33 +343,8 @@ function PlaylistModeGame({
     if (!currentQuestion || revealed) return;
 
     setSelectedChoice(currentQuestion.answer);
-    const hits = autoAwardCorrectGuesses();
-    if (hits.length) {
-      setCorrectCount((value) => value + hits.length);
-    }
+    autoAwardCorrectGuesses();
     setRevealed(true);
-  }
-
-  function togglePoint(playerId) {
-    if (!stepId || !revealed) return;
-
-    setAwardedPoints((currentAwards) => {
-      const wasAwarded = Boolean(currentAwards[stepId]?.[playerId]?.__single);
-      const nextValue = !wasAwarded;
-
-      updateScoreForPlayer(playerId, nextValue ? 1 : -1);
-
-      return {
-        ...currentAwards,
-        [stepId]: {
-          ...currentAwards[stepId],
-          [playerId]: {
-            ...(currentAwards[stepId]?.[playerId] ?? {}),
-            __single: nextValue,
-          },
-        },
-      };
-    });
   }
 
   function handleNextQuestion() {
@@ -657,7 +625,7 @@ function PlaylistModeGame({
                 <div className="image-question-bar">
                   <div className="image-question-copy">
                     <p className="flow-section-label">{mode.title}</p>
-                    <h2>{currentQuestion?.title ?? "Waiting for setup"}</h2>
+                    <h2>{promptHeading}</h2>
                   </div>
                 </div>
                 <div className="playlist-prompt-shell">
@@ -762,60 +730,285 @@ function PlaylistModeGame({
               </div>
             </div>
           </div>
-
-          <div className="mode-live-card">
-          <div className="playlist-toolbar">
-            <div className="playlist-status-pill">
-              Question {Math.min(currentIndex + 1, activeQuestions.length)} / {activeQuestions.length}
-            </div>
-            <div className="playlist-status-pill">Correct locks: {correctCount}</div>
-            {currentQuestion ? <div className="playlist-status-pill">{currentQuestion.artist}</div> : null}
-          </div>
-          <p className="panel-label">Host controls</p>
-
-          {currentQuestion ? (
-            <div className="playlist-answer-panel">
-              <p className="panel-label">Answer</p>
-              <strong>{currentQuestion.answer}</strong>
-              <p>
-                {revealed
-                  ? `Artist: ${currentQuestion.artist}`
-                  : "Hidden until the host reveals it."}
-              </p>
-            </div>
-          ) : null}
-
-          <div className="playlist-answer-panel">
-            <p className="panel-label">Manual points</p>
-            <div className="playlist-score-list">
-              {eligiblePlayers.map((player) => {
-                const isAwarded = Boolean(awardedPoints[stepId]?.[player.id]?.__single);
-
-                return (
-                  <button
-                    className={`playlist-score-chip ${isAwarded ? "is-awarded" : ""}`}
-                    disabled={!revealed}
-                    key={player.id}
-                    onClick={() => togglePoint(player.id)}
-                    type="button"
-                  >
-                    {player.name}: {normalizeScores(player.scores)[scoreKey] ?? 0}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="playlist-answer-panel">
-            <p className="panel-label">Playlist pack</p>
-            <p>
-              This set is seeded from your Spotify playlist. Male soloists stay allowed, and guy
-              groups stay out of these playlist-driven rounds.
-            </p>
-          </div>
-          </div>
         </section>
       </section>
+    </section>
+  );
+}
+
+function JeopardyModeGame({
+  mode,
+  players,
+  setPlayers,
+  hostProfile,
+  setHostProfile,
+  hostGetsScore,
+  scoreKey,
+}) {
+  const [boardSeed, setBoardSeed] = useState(0);
+  const [activeClueId, setActiveClueId] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+  const [usedClues, setUsedClues] = useState({});
+  const [clueAwards, setClueAwards] = useState({});
+  const board = useMemo(() => buildJeopardyBoard(boardSeed), [boardSeed]);
+  const displayPlayers = useMemo(
+    () => (hostGetsScore ? [hostProfile, ...players] : players),
+    [hostGetsScore, hostProfile, players],
+  );
+
+  const activeClue = useMemo(() => {
+    if (!activeClueId) return null;
+
+    return (
+      board
+        .flatMap((category) =>
+          category.boardQuestions.map((question) => ({
+            ...question,
+            categoryTitle: category.title,
+          })),
+        )
+        .find((question) => question.id === activeClueId) ?? null
+    );
+  }, [activeClueId, board]);
+
+  function updateScoreForPlayer(playerId, amount) {
+    if (!amount) return;
+
+    if (playerId === hostProfile.id) {
+      setHostProfile((currentHost) => ({
+        ...currentHost,
+        scores: {
+          ...normalizeScores(currentHost.scores),
+          [scoreKey]: (normalizeScores(currentHost.scores)[scoreKey] ?? 0) + amount,
+        },
+      }));
+      return;
+    }
+
+    setPlayers((currentPlayers) =>
+      currentPlayers.map((player) =>
+        player.id === playerId
+          ? {
+              ...player,
+              scores: {
+                ...normalizeScores(player.scores),
+                [scoreKey]: (normalizeScores(player.scores)[scoreKey] ?? 0) + amount,
+              },
+            }
+          : player,
+      ),
+    );
+  }
+
+  function setClueAward(playerId, nextAmount) {
+    if (!activeClue) return;
+
+    setClueAwards((currentAwards) => {
+      const clueEntry = currentAwards[activeClue.id] ?? {};
+      const previousAmount = clueEntry[playerId] ?? 0;
+      const delta = nextAmount - previousAmount;
+
+      updateScoreForPlayer(playerId, delta);
+
+      return {
+        ...currentAwards,
+        [activeClue.id]: {
+          ...clueEntry,
+          [playerId]: nextAmount,
+        },
+      };
+    });
+  }
+
+  function openClue(questionId) {
+    if (usedClues[questionId]) return;
+    setActiveClueId(questionId);
+    setRevealed(false);
+  }
+
+  function closeClue(markUsed = true) {
+    if (markUsed && activeClueId) {
+      setUsedClues((current) => ({
+        ...current,
+        [activeClueId]: true,
+      }));
+    }
+
+    setActiveClueId(null);
+    setRevealed(false);
+  }
+
+  function shuffleBoard() {
+    setBoardSeed((value) => value + 1);
+    setActiveClueId(null);
+    setRevealed(false);
+    setUsedClues({});
+  }
+
+  return (
+      <section className="jeopardy-screen">
+        <div className="jeopardy-topbar">
+          <div>
+            <h1>K-pop Jeopardy</h1>
+          </div>
+        <div className="jeopardy-host-stack">
+          <div className="jeopardy-host-pill">
+            <span className="jeopardy-host-label">Host</span>
+            <strong>
+              {hostProfile.icon ? `${hostProfile.icon} ` : ""}
+              {hostProfile.name}
+            </strong>
+          </div>
+          <button className="ghost-button" onClick={shuffleBoard} type="button">
+            Shuffle Board
+          </button>
+        </div>
+      </div>
+
+      <div className="jeopardy-board">
+        <div className="jeopardy-board-header">
+          {board.map((category) => (
+            <div className="jeopardy-category" key={category.id}>
+              {category.title}
+            </div>
+          ))}
+        </div>
+
+        <div className="jeopardy-board-grid">
+          {jeopardyBoardValues.flatMap((value) =>
+            board.map((category) => {
+              const clue = category.boardQuestions.find((question) => question.value === value);
+              const isUsed = clue ? usedClues[clue.id] : true;
+
+              return (
+                <button
+                  className={`jeopardy-tile ${isUsed ? "is-used" : ""}`}
+                  disabled={!clue || isUsed}
+                  key={`${category.id}-${value}`}
+                  onClick={() => openClue(clue.id)}
+                  type="button"
+                >
+                  {isUsed ? "DONE" : value}
+                </button>
+              );
+            }),
+          )}
+        </div>
+      </div>
+
+      <div className="jeopardy-player-strip">
+        {displayPlayers.map((player) => {
+          const isHost = player.id === hostProfile.id;
+
+          return (
+            <div className={`jeopardy-player-card ${isHost ? "is-host" : ""}`} key={player.id}>
+              <div>
+                <strong>
+                  {player.icon ? `${player.icon} ` : ""}
+                  {player.name}
+                </strong>
+                <p>{isHost ? "Host" : "Player"}</p>
+              </div>
+              <div className="jeopardy-player-score">
+                {normalizeScores(player.scores)[scoreKey] ?? 0}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {activeClue ? (
+        <div className="modal-overlay" role="presentation">
+          <section className="setup-modal jeopardy-clue-modal" role="dialog" aria-modal="true">
+            <div className="setup-header">
+              <div>
+                <p className="panel-label">{activeClue.categoryTitle}</p>
+                <h2>{activeClue.value}</h2>
+              </div>
+              <button className="ghost-button" onClick={() => closeClue(false)} type="button">
+                Close
+              </button>
+            </div>
+
+            <div className="jeopardy-clue-body">
+              <div className="jeopardy-clue-value">{activeClue.value}</div>
+              {activeClue.image ? (
+                <img
+                  alt={activeClue.answer}
+                  className="jeopardy-clue-image"
+                  src={activeClue.image}
+                />
+              ) : null}
+              <div className={`jeopardy-clue-prompt ${activeClue.promptType === "emoji" ? "is-emoji" : ""}`}>
+                {activeClue.prompt}
+              </div>
+              {activeClue.note ? <p className="playlist-meta-line">{activeClue.note}</p> : null}
+              {revealed ? (
+                <div className="playlist-answer-panel">
+                  <p className="panel-label">Answer</p>
+                  <strong>{activeClue.answer}</strong>
+                </div>
+              ) : null}
+
+              <div className="jeopardy-clue-player-strip">
+                {displayPlayers.map((player) => {
+                  const currentAward = clueAwards[activeClue.id]?.[player.id] ?? 0;
+
+                  return (
+                    <div
+                      className={`jeopardy-clue-player-card ${player.id === hostProfile.id ? "is-host" : ""}`}
+                      key={`${activeClue.id}-${player.id}`}
+                    >
+                      <div>
+                        <strong>
+                          {player.icon ? `${player.icon} ` : ""}
+                          {player.name}
+                        </strong>
+                        <p>{player.id === hostProfile.id ? "Host" : "Player"}</p>
+                      </div>
+                      <div className="jeopardy-clue-player-actions">
+                        <button
+                          className={`ghost-button score-toggle ${currentAward === activeClue.value ? "is-awarded" : ""}`}
+                          onClick={() =>
+                            setClueAward(
+                              player.id,
+                              currentAward === activeClue.value ? 0 : activeClue.value,
+                            )
+                          }
+                          type="button"
+                        >
+                          Correct +{activeClue.value}
+                        </button>
+                        <button
+                          className={`ghost-button score-toggle is-negative ${currentAward === -activeClue.value ? "is-awarded" : ""}`}
+                          onClick={() =>
+                            setClueAward(
+                              player.id,
+                              currentAward === -activeClue.value ? 0 : -activeClue.value,
+                            )
+                          }
+                          type="button"
+                        >
+                          Wrong -{activeClue.value}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="image-action-bar">
+              <button className="primary-button" onClick={() => setRevealed(true)} type="button">
+                Reveal Answer
+              </button>
+              <button className="ghost-button" onClick={() => closeClue(true)} type="button">
+                Mark Used
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -830,38 +1023,7 @@ function renderModeSurface(mode, modeProps) {
   }
 
   if (mode.id === "jeopardy") {
-    return (
-      <section className="jeopardy-screen">
-        <div className="jeopardy-topbar">
-          <p className="jeopardy-kicker">K-pop</p>
-          <h1>K-pop Jeopardy</h1>
-        </div>
-
-        <div className="jeopardy-board">
-          <div className="jeopardy-board-header">
-            {jeopardyCategories.map((category) => (
-              <div className="jeopardy-category" key={category}>
-                {category}
-              </div>
-            ))}
-          </div>
-
-          <div className="jeopardy-board-grid">
-            {jeopardyValues.flatMap((value) =>
-              jeopardyCategories.map((category) => (
-                <button
-                  className="jeopardy-tile"
-                  key={`${category}-${value}`}
-                  type="button"
-                >
-                  {value}
-                </button>
-              )),
-            )}
-          </div>
-        </div>
-      </section>
-    );
+    return <JeopardyModeGame mode={mode} {...modeProps} />;
   }
 
   return (

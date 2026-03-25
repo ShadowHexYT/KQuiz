@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import HomeScreen from "./components/HomeScreen";
 import MainGameShow from "./components/MainGameShow";
 import ModeHub from "./components/ModeHub";
-import ModePrototype from "./components/ModePrototype";
 import { gameModes } from "./data/gameModeCatalog";
 import { createEmptyScores, GAME_SCORE_KEYS, normalizeScores } from "./data/scoreModel";
+
+const ModePrototype = lazy(() => import("./components/ModePrototype"));
 
 const starterPlayers = [];
 const DEFAULT_TEAM_COUNT = 2;
@@ -337,24 +338,42 @@ export default function App() {
     return (
       <>
         {renderHomeButton()}
-        <ModePrototype
-          modeId={route.modeId}
-          onBackHome={goHome}
-          onOpenModeHub={goToModeHub}
-          players={players}
-          setPlayers={setPlayers}
-          hostProfile={hostProfile}
-          setHostProfile={setHostProfile}
-          hostGetsScore={hostGetsScore}
-          setHostGetsScore={setHostGetsScore}
-          playerName={playerName}
-          setPlayerName={setPlayerName}
-          desiredPlayerCount={desiredPlayerCount}
-          setDesiredPlayerCount={setDesiredPlayerCount}
-          addPlayer={addPlayer}
-          removePlayer={removePlayer}
-          scoreKey={GAME_SCORE_KEYS.songGuessing}
-        />
+        <Suspense
+          fallback={
+            <div className="page-shell">
+              <main className="app-frame">
+                <section className="game-show-hero">
+                  <div>
+                    <h1>Loading game...</h1>
+                  </div>
+                </section>
+              </main>
+            </div>
+          }
+        >
+          <ModePrototype
+            modeId={route.modeId}
+            onBackHome={goHome}
+            onOpenModeHub={goToModeHub}
+            players={players}
+            setPlayers={setPlayers}
+            hostProfile={hostProfile}
+            setHostProfile={setHostProfile}
+            hostGetsScore={hostGetsScore}
+            setHostGetsScore={setHostGetsScore}
+            playerName={playerName}
+            setPlayerName={setPlayerName}
+            desiredPlayerCount={desiredPlayerCount}
+            setDesiredPlayerCount={setDesiredPlayerCount}
+            addPlayer={addPlayer}
+            removePlayer={removePlayer}
+            scoreKey={
+              route.modeId === "jeopardy"
+                ? GAME_SCORE_KEYS.jeopardy
+                : GAME_SCORE_KEYS.songGuessing
+            }
+          />
+        </Suspense>
       </>
     );
   }

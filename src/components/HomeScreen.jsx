@@ -164,6 +164,7 @@ export default function HomeScreen({
   const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [backgroundSet, setBackgroundSet] = useState(() => pickRandomBackgroundSet());
   const activeMode = modeOptions[activeModeIndex] ?? modeOptions[0];
+  const canLaunchActiveMode = activeMode && !activeMode.comingSoon;
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
   const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null);
@@ -547,6 +548,7 @@ export default function HomeScreen({
                   </button>
                   <button
                     className="primary-button"
+                    disabled={!canLaunchActiveMode}
                     onClick={
                       activeMode.id === "main-game"
                         ? onStartMainShow
@@ -554,7 +556,9 @@ export default function HomeScreen({
                     }
                     type="button"
                   >
-                    {activeMode.id === "main-game" ? "Play" : "Play Game"}
+                    {activeMode.comingSoon
+                      ? "Coming Soon"
+                      : "Play Game"}
                   </button>
                 </div>
               </div>
