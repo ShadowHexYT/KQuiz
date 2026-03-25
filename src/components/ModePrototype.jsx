@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
 import StaggeredMenu from "./StaggeredMenu";
 import { getGameModeById } from "../data/gameModeCatalog";
@@ -750,6 +750,14 @@ function JeopardyModeGame({
   const [revealed, setRevealed] = useState(false);
   const [usedClues, setUsedClues] = useState({});
   const [clueAwards, setClueAwards] = useState({});
+  const [selectedRecipientId, setSelectedRecipientId] = useState(null);
+  const [showDailyDoubleIntro, setShowDailyDoubleIntro] = useState(false);
+  const [showWinnerSplash, setShowWinnerSplash] = useState(false);
+  const [showShuffleSplash, setShowShuffleSplash] = useState(false);
+  const audioContextRef = useRef(null);
+  const clueMusicRef = useRef(null);
+  const shuffleSoundRef = useRef(null);
+  const clueAwardsRef = useRef({});
   const board = useMemo(() => buildJeopardyBoard(boardSeed), [boardSeed]);
   const displayPlayers = useMemo(
     () => (hostGetsScore ? [hostProfile, ...players] : players),
@@ -770,6 +778,234 @@ function JeopardyModeGame({
         .find((question) => question.id === activeClueId) ?? null
     );
   }, [activeClueId, board]);
+
+  const dailyDoubleClueId = useMemo(() => {
+    const eligibleClues = board
+      .flatMap((category) => category.boardQuestions)
+      .filter((question) => question.value >= 300);
+
+    if (!eligibleClues.length) return null;
+
+    return sortWithSeed(eligibleClues, `daily-double-${boardSeed}`)[0]?.id ?? null;
+  }, [board, boardSeed]);
+
+  const boardClueIds = useMemo(
+    () => board.flatMap((category) => category.boardQuestions.map((question) => question.id)),
+    [board],
+  );
+
+  const isBoardCleared =
+    boardClueIds.length > 0 && boardClueIds.every((questionId) => usedClues[questionId]);
+
+  const winnerProfile = useMemo(() => {
+    if (!displayPlayers.length) return null;
+
+    return [...displayPlayers].sort((left, right) => {
+      const scoreDelta =
+        (normalizeScores(right.scores)[scoreKey] ?? 0) - (normalizeScores(left.scores)[scoreKey] ?? 0);
+      if (scoreDelta !== 0) return scoreDelta;
+      return left.name.localeCompare(right.name);
+    })[0];
+  }, [displayPlayers, scoreKey]);
+
+  useEffect(() => {
+    if (!activeClue || !displayPlayers.length) {
+      setSelectedRecipientId(null);
+      return;
+    }
+
+    setSelectedRecipientId((currentId) =>
+      displayPlayers.some((player) => player.id === currentId) ? currentId : displayPlayers[0].id,
+    );
+  }, [activeClue, displayPlayers]);
+
+  useEffect(() => {
+    clueAwardsRef.current = clueAwards;
+  }, [clueAwards]);
+
+  useEffect(() => {
+    if (!activeClueId || showDailyDoubleIntro || revealed) {
+      stopClueLoop();
+      return undefined;
+    }
+
+    startClueLoop();
+
+    return () => {
+      stopClueLoop();
+    };
+  }, [activeClueId, revealed, showDailyDoubleIntro]);
+
+  useEffect(() => {
+    if (!showDailyDoubleIntro) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setShowDailyDoubleIntro(false);
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [showDailyDoubleIntro]);
+
+  useEffect(() => {
+    if (!isBoardCleared || activeClueId || showWinnerSplash) return;
+
+    setShowWinnerSplash(true);
+    playWinnerSound();
+  }, [activeClueId, isBoardCleared, showWinnerSplash]);
+
+  function getAudioContext() {
+    if (typeof window === "undefined") return null;
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContextClass();
+    }
+
+    if (audioContextRef.current.state === "suspended") {
+      audioContextRef.current.resume().catch(() => {});
+    }
+
+    return audioContextRef.current;
+  }
+
+  function playClueLoopPass() {
+    if (!clueMusicRef.current) {
+      clueMusicRef.current = new Audio("/audio/happy-happy-game-show.mp3");
+      clueMusicRef.current.loop = true;
+      clueMusicRef.current.volume = 0.22;
+    }
+  }
+
+  function startClueLoop() {
+    stopClueLoop();
+    playClueLoopPass();
+    clueMusicRef.current?.play().catch(() => {});
+  }
+
+  function stopClueLoop() {
+    if (clueMusicRef.current) {
+      clueMusicRef.current.pause();
+      clueMusicRef.current.currentTime = 0;
+    }
+  }
+
+  function playResultSound(result) {
+    const context = getAudioContext();
+    if (!context) return;
+
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    const startTime = context.currentTime;
+    const noteMap =
+      result === "correct"
+        ? [
+            [880, startTime],
+            [1174.66, startTime + 0.12],
+          ]
+        : [
+            [392, startTime],
+            [261.63, startTime + 0.14],
+          ];
+
+    oscillator.type = "triangle";
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    gainNode.gain.setValueAtTime(0.001, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.12, startTime + 0.02);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + 0.32);
+
+    noteMap.forEach(([frequency, time]) => {
+      oscillator.frequency.setValueAtTime(frequency, time);
+    });
+
+    oscillator.start(startTime);
+    oscillator.stop(startTime + 0.34);
+  }
+
+  function playRevealSound() {
+    const context = getAudioContext();
+    if (!context) return;
+
+    const startTime = context.currentTime;
+    const frequencies = [659.25, 783.99, 987.77];
+
+    frequencies.forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
+      const noteStart = startTime + index * 0.04;
+
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(frequency, noteStart);
+      gainNode.gain.setValueAtTime(0.0001, noteStart);
+      gainNode.gain.exponentialRampToValueAtTime(0.1, noteStart + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.24);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(context.destination);
+      oscillator.start(noteStart);
+      oscillator.stop(noteStart + 0.26);
+    });
+  }
+
+  function playWinnerSound() {
+    const context = getAudioContext();
+    if (!context) return;
+
+    const startTime = context.currentTime;
+    const frequencies = [523.25, 659.25, 783.99, 1046.5];
+
+    frequencies.forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      const gainNode = context.createGain();
+      const noteStart = startTime + index * 0.08;
+
+      oscillator.type = "triangle";
+      oscillator.frequency.setValueAtTime(frequency, noteStart);
+      gainNode.gain.setValueAtTime(0.0001, noteStart);
+      gainNode.gain.exponentialRampToValueAtTime(0.11, noteStart + 0.03);
+      gainNode.gain.exponentialRampToValueAtTime(0.0001, noteStart + 0.34);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(context.destination);
+      oscillator.start(noteStart);
+      oscillator.stop(noteStart + 0.36);
+    });
+  }
+
+  function playShuffleSound() {
+    if (!shuffleSoundRef.current) {
+      shuffleSoundRef.current = new Audio("/audio/pixabay-riffle-shuffle.mp3");
+      shuffleSoundRef.current.volume = 0.95;
+    }
+
+    shuffleSoundRef.current.pause();
+    shuffleSoundRef.current.currentTime = 0;
+    shuffleSoundRef.current.play().catch(() => {});
+  }
+
+  function resetJeopardyScores() {
+    setHostProfile((currentHost) => ({
+      ...currentHost,
+      scores: {
+        ...normalizeScores(currentHost.scores),
+        [scoreKey]: 0,
+      },
+    }));
+
+    setPlayers((currentPlayers) =>
+      currentPlayers.map((player) => ({
+        ...player,
+        scores: {
+          ...normalizeScores(player.scores),
+          [scoreKey]: 0,
+        },
+      })),
+    );
+  }
 
   function updateScoreForPlayer(playerId, amount) {
     if (!amount) return;
@@ -803,30 +1039,37 @@ function JeopardyModeGame({
   function setClueAward(playerId, nextAmount) {
     if (!activeClue) return;
 
-    setClueAwards((currentAwards) => {
-      const clueEntry = currentAwards[activeClue.id] ?? {};
-      const previousAmount = clueEntry[playerId] ?? 0;
-      const delta = nextAmount - previousAmount;
+    const currentAwards = clueAwardsRef.current;
+    const clueEntry = currentAwards[activeClue.id] ?? {};
+    const previousAmount = clueEntry[playerId] ?? 0;
+    const delta = nextAmount - previousAmount;
 
+    if (delta) {
       updateScoreForPlayer(playerId, delta);
+    }
 
-      return {
-        ...currentAwards,
-        [activeClue.id]: {
-          ...clueEntry,
-          [playerId]: nextAmount,
-        },
-      };
-    });
+    const nextAwards = {
+      ...currentAwards,
+      [activeClue.id]: {
+        ...clueEntry,
+        [playerId]: nextAmount,
+      },
+    };
+
+    clueAwardsRef.current = nextAwards;
+    setClueAwards(nextAwards);
   }
 
   function openClue(questionId) {
-    if (usedClues[questionId]) return;
+    if (usedClues[questionId] || showShuffleSplash) return;
     setActiveClueId(questionId);
     setRevealed(false);
+    setShowDailyDoubleIntro(questionId === dailyDoubleClueId);
   }
 
   function closeClue(markUsed = true) {
+    stopClueLoop();
+
     if (markUsed && activeClueId) {
       setUsedClues((current) => ({
         ...current,
@@ -836,21 +1079,72 @@ function JeopardyModeGame({
 
     setActiveClueId(null);
     setRevealed(false);
+    setShowDailyDoubleIntro(false);
   }
 
   function shuffleBoard() {
-    setBoardSeed((value) => value + 1);
+    stopClueLoop();
+    playShuffleSound();
+    setShowShuffleSplash(true);
     setActiveClueId(null);
     setRevealed(false);
-    setUsedClues({});
+    setShowDailyDoubleIntro(false);
+    setShowWinnerSplash(false);
+
+    window.setTimeout(() => {
+      resetJeopardyScores();
+      setBoardSeed((value) => value + 1);
+      setUsedClues({});
+      setClueAwards({});
+      setShowShuffleSplash(false);
+    }, 1450);
+  }
+
+  function handleCorrect() {
+    if (!activeClue || !selectedRecipientId) return;
+
+    const clueValue = activeClue.id === dailyDoubleClueId ? activeClue.value * 2 : activeClue.value;
+
+    setClueAward(selectedRecipientId, clueValue);
+    stopClueLoop();
+    playResultSound("correct");
+    closeClue(true);
+  }
+
+  function handleIncorrect() {
+    if (!activeClueId) return;
+
+    stopClueLoop();
+    playResultSound("incorrect");
+    closeClue(true);
+  }
+
+  function handleRevealAnswer() {
+    stopClueLoop();
+    setRevealed(true);
+    playRevealSound();
   }
 
   return (
       <section className="jeopardy-screen">
-        <div className="jeopardy-topbar">
-          <div>
+      <div className="jeopardy-topbar">
+        <div className="jeopardy-title-wrap">
+          <div className="jeopardy-title-row">
             <h1>K-pop Jeopardy</h1>
+            <button
+              aria-label="Shuffle Jeopardy board"
+              className="jeopardy-icon-button"
+              onClick={shuffleBoard}
+              title="Shuffle board"
+              type="button"
+            >
+              ↻
+            </button>
           </div>
+          <p className="jeopardy-description">
+            Pick a category, reveal the clue, then lock it in as correct or incorrect before moving on.
+          </p>
+        </div>
         <div className="jeopardy-host-stack">
           <div className="jeopardy-host-pill">
             <span className="jeopardy-host-label">Host</span>
@@ -859,13 +1153,18 @@ function JeopardyModeGame({
               {hostProfile.name}
             </strong>
           </div>
-          <button className="ghost-button" onClick={shuffleBoard} type="button">
-            Shuffle Board
-          </button>
         </div>
       </div>
 
       <div className="jeopardy-board">
+        {showShuffleSplash ? (
+          <div className="shuffle-splash" role="presentation">
+            <div className="shuffle-splash-card">
+              <p className="panel-label">Shuffling Board</p>
+              <strong>Dealing a New Round</strong>
+            </div>
+          </div>
+        ) : null}
         <div className="jeopardy-board-header">
           {board.map((category) => (
             <div className="jeopardy-category" key={category.id}>
@@ -883,7 +1182,7 @@ function JeopardyModeGame({
               return (
                 <button
                   className={`jeopardy-tile ${isUsed ? "is-used" : ""}`}
-                  disabled={!clue || isUsed}
+                  disabled={!clue || isUsed || showShuffleSplash}
                   key={`${category.id}-${value}`}
                   onClick={() => openClue(clue.id)}
                   type="button"
@@ -894,117 +1193,157 @@ function JeopardyModeGame({
             }),
           )}
         </div>
+
+        <div className="jeopardy-board-footer">
+          <p className="panel-label">Scores</p>
+          <div className="jeopardy-player-strip">
+            {displayPlayers.map((player) => {
+              const isHost = player.id === hostProfile.id;
+
+              return (
+                <div className={`jeopardy-player-card ${isHost ? "is-host" : ""}`} key={player.id}>
+                  <div>
+                    <strong>
+                      {player.icon ? `${player.icon} ` : ""}
+                      {player.name}
+                    </strong>
+                  </div>
+                  <div className="jeopardy-player-score">
+                    {normalizeScores(player.scores)[scoreKey] ?? 0}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
-      <div className="jeopardy-player-strip">
-        {displayPlayers.map((player) => {
-          const isHost = player.id === hostProfile.id;
-
-          return (
-            <div className={`jeopardy-player-card ${isHost ? "is-host" : ""}`} key={player.id}>
-              <div>
-                <strong>
-                  {player.icon ? `${player.icon} ` : ""}
-                  {player.name}
-                </strong>
-                <p>{isHost ? "Host" : "Player"}</p>
-              </div>
-              <div className="jeopardy-player-score">
-                {normalizeScores(player.scores)[scoreKey] ?? 0}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {showWinnerSplash && winnerProfile ? (
+        <div className="winner-splash" role="presentation">
+          <div className="winner-splash-card">
+            <p className="panel-label">Winner Is...</p>
+            <strong>
+              {winnerProfile.icon ? `${winnerProfile.icon} ` : ""}
+              {winnerProfile.name}
+            </strong>
+          </div>
+        </div>
+      ) : null}
 
       {activeClue ? (
         <div className="modal-overlay" role="presentation">
           <section className="setup-modal jeopardy-clue-modal" role="dialog" aria-modal="true">
-            <div className="setup-header">
-              <div>
-                <p className="panel-label">{activeClue.categoryTitle}</p>
-                <h2>{activeClue.value}</h2>
-              </div>
+            <div className="setup-header jeopardy-clue-header">
               <button className="ghost-button" onClick={() => closeClue(false)} type="button">
-                Close
+                Back
               </button>
             </div>
 
             <div className="jeopardy-clue-body">
-              <div className="jeopardy-clue-value">{activeClue.value}</div>
-              {activeClue.image ? (
-                <img
-                  alt={activeClue.answer}
-                  className="jeopardy-clue-image"
-                  src={activeClue.image}
-                />
-              ) : null}
-              <div className={`jeopardy-clue-prompt ${activeClue.promptType === "emoji" ? "is-emoji" : ""}`}>
-                {activeClue.prompt}
-              </div>
-              {activeClue.note ? <p className="playlist-meta-line">{activeClue.note}</p> : null}
-              {revealed ? (
-                <div className="playlist-answer-panel">
-                  <p className="panel-label">Answer</p>
-                  <strong>{activeClue.answer}</strong>
+              {showDailyDoubleIntro ? (
+                <div className="daily-double-splash">
+                  <p className="panel-label">Special Clue</p>
+                  <strong>Daily Double</strong>
+                  <span>{activeClue.categoryTitle}</span>
                 </div>
-              ) : null}
-
-              <div className="jeopardy-clue-player-strip">
-                {displayPlayers.map((player) => {
-                  const currentAward = clueAwards[activeClue.id]?.[player.id] ?? 0;
-
-                  return (
-                    <div
-                      className={`jeopardy-clue-player-card ${player.id === hostProfile.id ? "is-host" : ""}`}
-                      key={`${activeClue.id}-${player.id}`}
-                    >
-                      <div>
-                        <strong>
-                          {player.icon ? `${player.icon} ` : ""}
-                          {player.name}
-                        </strong>
-                        <p>{player.id === hostProfile.id ? "Host" : "Player"}</p>
-                      </div>
-                      <div className="jeopardy-clue-player-actions">
-                        <button
-                          className={`ghost-button score-toggle ${currentAward === activeClue.value ? "is-awarded" : ""}`}
-                          onClick={() =>
-                            setClueAward(
-                              player.id,
-                              currentAward === activeClue.value ? 0 : activeClue.value,
-                            )
-                          }
-                          type="button"
-                        >
-                          Correct +{activeClue.value}
-                        </button>
-                        <button
-                          className={`ghost-button score-toggle is-negative ${currentAward === -activeClue.value ? "is-awarded" : ""}`}
-                          onClick={() =>
-                            setClueAward(
-                              player.id,
-                              currentAward === -activeClue.value ? 0 : -activeClue.value,
-                            )
-                          }
-                          type="button"
-                        >
-                          Wrong -{activeClue.value}
-                        </button>
-                      </div>
+              ) : (
+                <>
+                  <div className="jeopardy-clue-meta">
+                    <p className="panel-label">
+                      {activeClue.categoryTitle}
+                      {activeClue.id === dailyDoubleClueId ? " • Daily Double" : ""}
+                    </p>
+                    <div className="jeopardy-clue-value">{activeClue.value}</div>
+                  </div>
+                  {activeClue.image ? (
+                    <img
+                      alt={activeClue.answer}
+                      className="jeopardy-clue-image"
+                      src={activeClue.image}
+                    />
+                  ) : null}
+                  <div
+                    className={`jeopardy-clue-prompt ${activeClue.promptType === "emoji" ? "is-emoji" : ""}`}
+                  >
+                    {activeClue.prompt}
+                  </div>
+                  {activeClue.note ? <p className="playlist-meta-line">{activeClue.note}</p> : null}
+                  {revealed ? (
+                    <div className="playlist-answer-panel">
+                      <p className="panel-label">Answer</p>
+                      <strong>{activeClue.answer}</strong>
                     </div>
-                  );
-                })}
-              </div>
+                  ) : null}
+
+                  {revealed ? (
+                    <div className="jeopardy-clue-player-strip">
+                      {displayPlayers.map((player) => {
+                        const currentAward = clueAwards[activeClue.id]?.[player.id] ?? 0;
+                        const isSelected = player.id === selectedRecipientId;
+                        const awardLabel = currentAward > 0 ? `+${currentAward}` : null;
+
+                        return (
+                          <button
+                            className={`jeopardy-player-card jeopardy-clue-player-card ${player.id === hostProfile.id ? "is-host" : ""} ${isSelected ? "is-selected" : ""}`}
+                            key={`${activeClue.id}-${player.id}`}
+                            onClick={() => setSelectedRecipientId(player.id)}
+                            type="button"
+                          >
+                            <div>
+                              <strong>
+                                {player.icon ? `${player.icon} ` : ""}
+                                {player.name}
+                              </strong>
+                              <p>{player.id === hostProfile.id ? "Host" : "Player"}</p>
+                            </div>
+                            <div className="jeopardy-player-score">
+                              {awardLabel ? (
+                                <span className="jeopardy-clue-award-pill is-positive">
+                                  {awardLabel}
+                                </span>
+                              ) : (
+                                normalizeScores(player.scores)[scoreKey] ?? 0
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </>
+              )}
             </div>
 
-            <div className="image-action-bar">
-              <button className="primary-button" onClick={() => setRevealed(true)} type="button">
-                Reveal Answer
-              </button>
-              <button className="ghost-button" onClick={() => closeClue(true)} type="button">
-                Mark Used
-              </button>
+            <div className="image-action-bar jeopardy-result-bar">
+              {showDailyDoubleIntro ? null : !revealed ? (
+                <>
+                  <button className="primary-button" onClick={handleRevealAnswer} type="button">
+                    Reveal Answer
+                  </button>
+                  <button className="ghost-button" onClick={() => closeClue(false)} type="button">
+                    Close
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="primary-button jeopardy-result-button"
+                    disabled={!selectedRecipientId}
+                    onClick={handleCorrect}
+                    type="button"
+                  >
+                    Correct +
+                    {activeClue.id === dailyDoubleClueId ? activeClue.value * 2 : activeClue.value}
+                  </button>
+                  <button
+                    className="ghost-button jeopardy-result-button is-incorrect"
+                    onClick={handleIncorrect}
+                    type="button"
+                  >
+                    Incorrect
+                  </button>
+                </>
+              )}
             </div>
           </section>
         </div>
