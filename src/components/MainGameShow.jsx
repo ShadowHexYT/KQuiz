@@ -28,7 +28,7 @@ function buildRoundSteps(round) {
       type: "member",
       label: `Match member ${index + 1} of ${round.members.length}`,
       answer: member.name,
-      choices: memberNames,
+      choices: member.choices ?? memberNames,
       image: member.image,
       description: "Pick the correct member name for the photo shown.",
     })),
@@ -36,10 +36,19 @@ function buildRoundSteps(round) {
       id: `${round.id}-${extra.key}`,
       type: "extra",
       key: extra.key,
+      kind: extra.kind,
       label: extra.label,
       answer: extra.answer,
       choices: extra.choices,
-      coverImage: extra.coverImage,
+      coverImage:
+        extra.coverImage ??
+        extra.songChoices?.find((song) => song.title === extra.answer)?.coverImage ??
+        null,
+      previewUrl:
+        extra.previewUrl ??
+        extra.songChoices?.find((song) => song.title === extra.answer)?.previewUrl ??
+        null,
+      songChoices: extra.songChoices,
       sampleVideoId: extra.sampleVideoId,
       description: "Finish the round with the extra personal questions.",
     })),
@@ -83,6 +92,7 @@ export default function MainGameShow({
   const imageDragRef = useRef({ startX: 0, active: false });
   const audioContextRef = useRef(null);
   const popResetTimerRef = useRef(null);
+  const songPreviewRef = useRef(null);
 
   const currentRound = mainQuizRounds[currentRoundIndex];
   const currentSteps = useMemo(() => buildRoundSteps(currentRound), [currentRound]);
@@ -93,17 +103,29 @@ export default function MainGameShow({
     () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore, hostProfile.id)),
     [displayPlayers, hostGetsScore, hostProfile.id],
   );
+  const isFavoriteSongStep =
+    currentStep.type === "extra" &&
+    (currentStep.kind === "favoriteSong" || currentStep.key.startsWith("favoriteSong"));
   const usesGroupCollage =
     currentStep.type === "group" ||
     (currentStep.type === "extra" &&
       ["leader", "maknae", "bias"].includes(currentStep.key));
+  const usesSongChoiceGallery = isFavoriteSongStep && (currentStep.songChoices?.length ?? 0) > 0;
   const usesAlbumCover =
-    currentStep.type === "extra" && currentStep.key === "favoriteSong" && currentStep.coverImage;
-  const hasSongSample =
-    currentStep.type === "extra" &&
-    currentStep.key === "favoriteSong" &&
-    currentStep.sampleVideoId;
+    isFavoriteSongStep && !usesSongChoiceGallery && currentStep.coverImage;
+  const hasAutoSongPreview = isFavoriteSongStep && Boolean(currentStep.previewUrl);
+  const hasLegacySampleVideo = Boolean(currentStep.sampleVideoId) && !currentStep.previewUrl;
   const galleryImages = useMemo(() => {
+    if (usesSongChoiceGallery) {
+      return currentStep.songChoices
+        .filter((song) => song.coverImage)
+        .map((song) => ({
+          src: song.coverImage,
+          alt: `${song.title} cover art`,
+          name: song.title,
+        }));
+    }
+
     if (usesAlbumCover) {
       return [
         {
@@ -118,15 +140,57 @@ export default function MainGameShow({
       alt: `${member.name} from ${currentRound.groupName}`,
       name: member.name,
     }));
-  }, [currentRound, currentStep.coverImage, currentRound.groupName, resolvedAnswer, usesAlbumCover]);
+  }, [
+    currentRound,
+    currentStep.coverImage,
+    currentStep.songChoices,
+    currentRound.groupName,
+    resolvedAnswer,
+    usesAlbumCover,
+    usesSongChoiceGallery,
+  ]);
   const usesImageCarousel = usesGroupCollage && galleryImages.length > 1;
   const activeGalleryImage =
     photoViewerIndex !== null ? galleryImages[photoViewerIndex] ?? null : null;
+
+  function stopSongPreview() {
+    if (!songPreviewRef.current) return;
+
+    songPreviewRef.current.pause();
+    songPreviewRef.current.currentTime = 0;
+    songPreviewRef.current = null;
+  }
 
   useEffect(() => {
     setActiveImageIndex(0);
     setIsImageCarouselPaused(false);
   }, [currentRound.id, currentStep.id]);
+
+  useEffect(() => {
+    stopSongPreview();
+    setIsSampleOpen(false);
+  }, [currentStep.id]);
+
+  useEffect(() => {
+    if (!revealAnswers || !hasAutoSongPreview || !currentStep.previewUrl) {
+      stopSongPreview();
+      return undefined;
+    }
+
+    const preview = new Audio(currentStep.previewUrl);
+    preview.volume = 0.85;
+    songPreviewRef.current = preview;
+    preview.play().catch(() => {});
+
+    return () => {
+      if (songPreviewRef.current === preview) {
+        stopSongPreview();
+      } else {
+        preview.pause();
+        preview.currentTime = 0;
+      }
+    };
+  }, [currentStep.previewUrl, hasAutoSongPreview, revealAnswers]);
 
   useEffect(() => {
     if (!usesImageCarousel || isImageCarouselPaused || galleryImages.length <= 1) return undefined;
@@ -541,6 +605,7 @@ export default function MainGameShow({
   }
 
   function goToRound(index) {
+    stopSongPreview();
     setCurrentRoundIndex(index);
     setCurrentStepIndex(0);
     setRevealAnswers(false);
@@ -549,6 +614,7 @@ export default function MainGameShow({
   }
 
   function goToPrevious() {
+    stopSongPreview();
     if (currentStepIndex > 0) {
       setCurrentStepIndex((index) => index - 1);
       setRevealAnswers(false);
@@ -569,6 +635,7 @@ export default function MainGameShow({
   }
 
   function goToNext() {
+    stopSongPreview();
     if (currentStepIndex < currentSteps.length - 1) {
       setCurrentStepIndex((index) => index + 1);
       setRevealAnswers(false);
@@ -619,6 +686,7 @@ export default function MainGameShow({
   }
 
   function resetQuiz() {
+    stopSongPreview();
     setCurrentRoundIndex(0);
     setCurrentStepIndex(0);
     setRevealAnswers(false);
@@ -647,6 +715,13 @@ export default function MainGameShow({
     );
     setScoreRefreshTick((value) => value + 1);
   }
+
+  useEffect(
+    () => () => {
+      stopSongPreview();
+    },
+    [],
+  );
 
   const menuActions = [
     { label: "Back Home", onClick: onBackHome },
@@ -817,7 +892,7 @@ export default function MainGameShow({
           </div>
         ) : null}
 
-        {isSampleOpen && hasSongSample ? (
+        {isSampleOpen && hasLegacySampleVideo ? (
           <div className="modal-overlay results-overlay" onClick={() => setIsSampleOpen(false)}>
             <section
               className="setup-modal sample-modal"
@@ -1111,6 +1186,24 @@ export default function MainGameShow({
                             })}
                           </div>
                         </div>
+                      ) : usesSongChoiceGallery ? (
+                        <div className="song-cover-collage">
+                          {galleryImages.map((image, index) => (
+                            <button
+                              className="song-cover-card image-viewer-trigger"
+                              key={image.src}
+                              onClick={() => openPhotoViewer(index)}
+                              type="button"
+                            >
+                              <img
+                                alt={image.alt}
+                                className="song-cover-image"
+                                src={image.src}
+                              />
+                              <span className="song-cover-title">{image.name}</span>
+                            </button>
+                          ))}
+                        </div>
                       ) : usesAlbumCover ? (
                         <button
                           className="member-image-stage image-viewer-trigger"
@@ -1144,7 +1237,7 @@ export default function MainGameShow({
                         </button>
                       )}
 
-                      {hasSongSample ? (
+                      {hasLegacySampleVideo ? (
                         <button
                           className="sample-audio-button"
                           onClick={(event) => {
@@ -1155,6 +1248,10 @@ export default function MainGameShow({
                         >
                           Listen to sample
                         </button>
+                      ) : hasAutoSongPreview ? (
+                        <span className="sample-audio-button is-static">
+                          {revealAnswers ? "Preview playing" : "Preview plays on reveal"}
+                        </span>
                       ) : null}
                     </div>
 
@@ -1235,6 +1332,7 @@ export default function MainGameShow({
                         const previewPlayer = eligiblePlayers.find(
                           (player) => player.id === previewPlayerId,
                         );
+                        const songChoice = currentStep.songChoices?.find((song) => song.title === option);
                         const assignedPlayers = getPlayersForOption(option);
                         const isCorrect =
                           (revealAnswers || isAnswerTestMode) && resolvedAnswer === option;
@@ -1271,7 +1369,18 @@ export default function MainGameShow({
                                   ) : null}
                                 </span>
                               ) : null}
-                              <span className="flow-choice-label">{option}</span>
+                              {songChoice?.coverImage ? (
+                                <span className="flow-choice-media">
+                                  <img
+                                    alt={`${option} cover`}
+                                    className="flow-choice-cover"
+                                    src={songChoice.coverImage}
+                                  />
+                                  <span className="flow-choice-label">{option}</span>
+                                </span>
+                              ) : (
+                                <span className="flow-choice-label">{option}</span>
+                              )}
                             </button>
                           </div>
                         );

@@ -31,6 +31,34 @@ const groupQuizzes = [
     description: "Member recognition, bold title tracks, and vocal-heavy quiz moments.",
   },
   {
+    label: "ILLIT",
+    description: "Cherish (My Love), dreamy member trivia, maknae picks, and bias rounds.",
+  },
+  {
+    label: "KiiiKiii",
+    description: "404 (New Era), member recognition, leader picks, and bias trivia.",
+  },
+  {
+    label: "Meovv",
+    description: "Burning Up, member visuals, maknae trivia, and bias picks.",
+  },
+  {
+    label: "Hearts2Hearts",
+    description: "Rude!, large-group member trivia, leader picks, and bias rounds.",
+  },
+  {
+    label: "XG",
+    description: "Hypnotize, standout member recognition, leader trivia, and bias picks.",
+  },
+  {
+    label: "Baby DONT Cry",
+    description: "I Dont Care, member recognition, leader trivia, and bias rounds.",
+  },
+  {
+    label: "KPDH",
+    description: "Fictional trio member trivia with leader, maknae, and bias picks.",
+  },
+  {
     label: "Kiss of Life",
     description: "Performance charisma, member trivia, and recent comeback questions.",
   },
