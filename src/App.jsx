@@ -295,7 +295,7 @@ export default function App() {
 
   function startGroupQuiz(group) {
     setSelectedGroup(group);
-    setLaunchMessage(`Ready to start the ${group.label} quiz.`);
+    setLaunchMessage(`${group.label} is selected for the next round.`);
   }
 
   function goToMainShow() {

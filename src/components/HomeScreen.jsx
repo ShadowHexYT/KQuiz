@@ -66,9 +66,8 @@ const groupQuizzes = [
 
 const menuItems = [
   { label: "Home", ariaLabel: "Jump to the top of the page", link: "#top" },
-  { label: "Setup", ariaLabel: "Jump to the player setup area", link: "#top" },
-  { label: "Party Setup", ariaLabel: "Jump to party setup", link: "#top" },
-  { label: "Party Lineup", ariaLabel: "Jump to party lineup", link: "#top" },
+  { label: "Setup", ariaLabel: "Jump to the player setup area", link: "#party-setup" },
+  { label: "Party Lineup", ariaLabel: "Jump to party lineup", link: "#party-lineup" },
   { label: "Main Modes", ariaLabel: "Jump to main quiz modes", link: "#modes" },
   { label: "Groups", ariaLabel: "Jump to group specific quizzes", link: "#groups" },
 ];
@@ -77,7 +76,7 @@ const socialItems = [
   { label: "Main Gameshow", link: "#modes" },
   { label: "Game Lab", link: "#modes" },
   { label: "Random Group", link: "#groups" },
-  { label: "Party Lineup", link: "#top" },
+  { label: "Party Lineup", link: "#party-lineup" },
   { label: "Top Modes", link: "#modes" },
 ];
 
@@ -170,6 +169,19 @@ export default function HomeScreen({
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
   const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null);
+  const launchActiveMode = () => {
+    if (!activeMode || activeMode.comingSoon) return;
+
+    if (activeMode.id === "main-game") {
+      onStartMainShow();
+      return;
+    }
+
+    onOpenMode(activeMode.id);
+  };
+  const launchButtonLabel = activeMode?.comingSoon
+    ? `${activeMode.title} Coming Soon`
+    : `Launch ${activeMode?.title ?? "Selected Game"}`;
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -275,11 +287,11 @@ export default function HomeScreen({
                 <p className="eyebrow">Family game night</p>
                 <h1>Kpop Quiz Games</h1>
                 <p className="hero-text">
-                  Set the vibe, pick your mode, build your party, and drop into your
-                  favorite group quiz when the room is ready.
+                  Build the room, choose the format, and launch a K-pop quiz night that
+                  feels organized before the first question appears.
                 </p>
 
-                <div className="hero-lineup-panel">
+                <div className="hero-lineup-panel" id="party-lineup">
                   <div className="hero-lineup-header">
                     <div>
                       <p className="panel-label">Party lineup</p>
@@ -330,14 +342,19 @@ export default function HomeScreen({
                   </div>
 
                   <div className="hero-actions">
-                    <button className="primary-button" onClick={onStartMainShow} type="button">
-                      Start Are You Smarter Than a K-popper?
+                    <button
+                      className="primary-button"
+                      disabled={!canLaunchActiveMode}
+                      onClick={launchActiveMode}
+                      type="button"
+                    >
+                      {launchButtonLabel}
                     </button>
                   </div>
                 </div>
               </div>
 
-              <aside className="hero-setup-panel">
+              <aside className="hero-setup-panel" id="party-setup">
                 <div className="host-panel-header">
                   <div>
                     <p className="panel-label">Party setup</p>
@@ -410,7 +427,7 @@ export default function HomeScreen({
                       className="primary-button player-add-button"
                       type="submit"
                     >
-                      +
+                      Add
                     </button>
                   </div>
                 </form>
@@ -538,8 +555,8 @@ export default function HomeScreen({
                 <p className="panel-label">How to start</p>
                 <h2>Choose your game mode</h2>
                 <p className="mode-instructions-text">
-                  Let the cards cycle, tap the one you want, and look for the
-                  selected check before pressing play.
+                  Let the cards cycle, tap the one you want, and set the next game
+                  before launching it from the party lineup above.
                 </p>
                 <div className="mode-instruction-list">
                   <div className="mode-instruction-item">
@@ -552,7 +569,7 @@ export default function HomeScreen({
                   </div>
                   <div className="mode-instruction-item">
                     <strong>3</strong>
-                    <span>Press play below the carousel to launch that mode.</span>
+                    <span>Launch the selected game from the party lineup section.</span>
                   </div>
                 </div>
                 <div className="mode-current-pick">
@@ -588,16 +605,12 @@ export default function HomeScreen({
                   <button
                     className="primary-button"
                     disabled={!canLaunchActiveMode}
-                    onClick={
-                      activeMode.id === "main-game"
-                        ? onStartMainShow
-                        : () => onOpenMode(activeMode.id)
-                    }
+                    onClick={() => {}}
                     type="button"
                   >
                     {activeMode.comingSoon
                       ? "Coming Soon"
-                      : "Play Game"}
+                      : `Select ${activeMode.title}`}
                   </button>
                 </div>
               </div>
@@ -783,7 +796,7 @@ export default function HomeScreen({
                   onClick={() => onStartGroupQuiz(selectedGroup)}
                   type="button"
                 >
-                  Start {selectedGroup.label} Quiz
+                  Select {selectedGroup.label}
                 </button>
                 {launchMessage ? <p className="group-launch-note">{launchMessage}</p> : null}
               </div>
