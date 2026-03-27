@@ -3,6 +3,7 @@ import { useEffect, useMemo } from "react";
 export default function Carousel({
   items = [],
   activeIndex = 0,
+  selectedIndex = null,
   onSelect,
   baseWidth = 280,
   autoplay = false,
@@ -69,11 +70,12 @@ export default function Carousel({
       <div className="carousel-track" role="listbox" aria-label="Game modes">
         {visibleItems.map(({ item, index, offset }) => {
           const isActive = index === safeIndex;
+          const isSelected = index === selectedIndex;
 
           return (
             <button
-              aria-selected={isActive}
-              className={`carousel-card ${isActive ? "is-active" : ""}`}
+              aria-selected={isSelected}
+              className={`carousel-card ${isActive ? "is-active" : ""} ${isSelected ? "is-chosen" : ""}`}
               key={item.id ?? item.title ?? index}
               onClick={() => onSelect?.(index)}
               style={{
@@ -87,9 +89,9 @@ export default function Carousel({
               <p className="mode-label">Game mode</p>
               <h3>{item.title}</h3>
               <p>{item.description}</p>
-              <span className={`carousel-status ${isActive ? "is-selected" : ""}`}>
-                {isActive ? "Selected" : "Tap to select"}
-              </span>
+              {isSelected ? (
+                <span className="carousel-status is-selected">Selected</span>
+              ) : null}
             </button>
           );
         })}

@@ -128,6 +128,34 @@ function pickRandomBackgroundSet() {
   return shuffled.slice(0, 4);
 }
 
+function getDifficultyOptionsForMode(modeId) {
+  if (modeId === "main-game") {
+    return ["Party", "Standard", "Chaos"];
+  }
+
+  if (modeId === "jeopardy") {
+    return ["Easy", "Medium", "Hard"];
+  }
+
+  if (modeId === "finish-the-lyric") {
+    return ["Easy", "Medium", "Hard"];
+  }
+
+  if (modeId === "emoji-song-guess") {
+    return ["Easy", "Medium", "Hard"];
+  }
+
+  if (modeId === "album-cover-zoom") {
+    return ["Easy", "Medium", "Hard"];
+  }
+
+  if (modeId === "lightstick-silhouette-guess") {
+    return ["Easy", "Medium", "Hard"];
+  }
+
+  return ["Standard"];
+}
+
 export default function HomeScreen({
   players,
   hostProfile,
@@ -159,13 +187,21 @@ export default function HomeScreen({
   onStartGroupQuiz,
   onStartMainShow,
 }) {
-  const [activeModeIndex, setActiveModeIndex] = useState(0);
+  const [carouselModeIndex, setCarouselModeIndex] = useState(0);
+  const [selectedModeIndex, setSelectedModeIndex] = useState(0);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
   const [openEmojiMenuFor, setOpenEmojiMenuFor] = useState(null);
-  const [isTeamMenuOpen, setIsTeamMenuOpen] = useState(false);
   const [backgroundSet, setBackgroundSet] = useState(() => pickRandomBackgroundSet());
-  const activeMode = modeOptions[activeModeIndex] ?? modeOptions[0];
+  const [modeDifficulties, setModeDifficulties] = useState(() =>
+    Object.fromEntries(modeOptions.map((mode) => [mode.id, getDifficultyOptionsForMode(mode.id)[0]])),
+  );
+  const previewMode = modeOptions[carouselModeIndex] ?? modeOptions[0];
+  const activeMode = modeOptions[selectedModeIndex] ?? modeOptions[0];
   const canLaunchActiveMode = activeMode && !activeMode.comingSoon;
+  const isPreviewModeSelected = previewMode?.id === activeMode?.id;
+  const activeDifficultyOptions = getDifficultyOptionsForMode(activeMode?.id);
+  const activeDifficulty =
+    (activeMode?.id ? modeDifficulties[activeMode.id] : null) ?? activeDifficultyOptions[0];
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
   const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null);
@@ -182,6 +218,8 @@ export default function HomeScreen({
   const launchButtonLabel = activeMode?.comingSoon
     ? `${activeMode.title} Coming Soon`
     : `Launch ${activeMode?.title ?? "Selected Game"}`;
+  const currentPlayersLabel = `Current Players: ${lineupPlayers.length}`;
+  const formatLabel = teamsEnabled ? `${teams.length} teams` : "Free-for-all";
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -219,9 +257,15 @@ export default function HomeScreen({
 
   function handleTeamsEnabledChange(isEnabled) {
     onTeamsEnabledChange(isEnabled);
-    if (!isEnabled) {
-      setIsTeamMenuOpen(false);
-    }
+  }
+
+  function handleDifficultyChange(option) {
+    if (!activeMode?.id) return;
+
+    setModeDifficulties((currentValues) => ({
+      ...currentValues,
+      [activeMode.id]: option,
+    }));
   }
 
   function handleTeamCountSelect(count) {
@@ -284,20 +328,19 @@ export default function HomeScreen({
           >
             <section className="hero-card hero-card-banner">
               <div className="hero-copy">
-                <p className="eyebrow">Family game night</p>
-                <h1>Kpop Quiz Games</h1>
-                <p className="hero-text">
-                  Build the room, choose the format, and launch a K-pop quiz night that
-                  feels organized before the first question appears.
-                </p>
+                <div className="hero-brand" aria-label="Kpop Quiz Games">
+                  <span className="hero-brand-mark" aria-hidden="true">
+                    <span className="hero-brand-icon">🫰</span>
+                  </span>
+                  <h1>Kpop Quiz Games</h1>
+                </div>
 
                 <div className="hero-lineup-panel" id="party-lineup">
                   <div className="hero-lineup-header">
-                    <div>
-                      <p className="panel-label">Party lineup</p>
-                      <h2>Current players</h2>
+                    <div className="hero-lineup-title">
+                      <h2>Party lineup</h2>
                     </div>
-                    <span className="player-count">{lineupPlayers.length} total</span>
+                    <span className="player-count">{currentPlayersLabel}</span>
                   </div>
 
                 <div className="hero-lineup-grid">
@@ -360,7 +403,6 @@ export default function HomeScreen({
                     <p className="panel-label">Party setup</p>
                     <h2>Build your game night</h2>
                   </div>
-                  <span className="player-count">{players.length} joined</span>
                 </div>
 
                 <form className="player-form" onSubmit={onAddPlayer}>
@@ -434,102 +476,90 @@ export default function HomeScreen({
 
                 <div className="party-settings-grid">
                   <div className="party-setting-card">
-                    <p className="panel-label">Current host</p>
-                    <strong>{hostProfile.icon} {hostProfile.name}</strong>
-                    <p>Running the room tonight.</p>
-                  </div>
-
-                  <div className="party-setting-card party-format-card">
-                    <p className="panel-label">Party format</p>
-                    <strong>{teamsEnabled ? `${teams.length} teams` : "Free-for-all"}</strong>
-                    <p>{teamsEnabled ? "Grouped play is on." : "Everyone plays solo."}</p>
-
-                    {teamsEnabled ? (
-                      <div className="team-dropdown-wrap team-dropdown-wrap-compact">
-                        <button
-                          aria-expanded={isTeamMenuOpen}
-                          className="team-dropdown-trigger team-dropdown-trigger-compact"
-                          onClick={() => setIsTeamMenuOpen((currentValue) => !currentValue)}
-                          type="button"
-                        >
-                          <span>Team structure</span>
-                          <strong>{teams.length} {teams.length === 1 ? "team" : "teams"}</strong>
-                        </button>
-
-                        {isTeamMenuOpen ? (
-                          <div className="team-dropdown-menu">
-                            {[2, 3, 4].map((count) => (
-                              <button
-                                className={`team-dropdown-option ${teams.length === count ? "is-active" : ""}`}
-                                key={count}
-                                onClick={() => handleTeamCountSelect(count)}
-                                type="button"
-                              >
-                                {count} {count === 1 ? "team" : "teams"}
-                              </button>
-                            ))}
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
+                    <p className="panel-label">Selected game</p>
+                    <strong>{activeMode?.title ?? "No game selected"}</strong>
                   </div>
                 </div>
 
-                <div className="party-settings-grid party-settings-grid-secondary">
-                  <div className="team-structure-card party-setting-feature party-control-card">
-                    <div className="team-structure-header">
-                      <label className="setup-inline-label" htmlFor="hostGetsScore">
-                        Host scoring
-                      </label>
-                      <label className="toggle-row compact-toggle toggle-card">
+                <div className="party-controls-panel">
+                  <div className="party-control-group">
+                    <span className="panel-label">Game setup</span>
+                    <div className="party-inline-actions">
+                      <button className="ghost-button party-chip-button" onClick={onOpenModeHub} type="button">
+                        All games
+                      </button>
+                      <button
+                        className="ghost-button party-chip-button"
+                        onClick={() => window.location.hash = "#modes"}
+                        type="button"
+                      >
+                        Carousel
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="party-control-group">
+                    <span className="panel-label">Difficulty</span>
+                    <div className="party-segmented-row">
+                      {activeDifficultyOptions.map((option) => (
+                        <button
+                          className={`ghost-button party-segment-button ${activeDifficulty === option ? "is-active" : ""}`}
+                          key={option}
+                          onClick={() => handleDifficultyChange(option)}
+                          type="button"
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="party-control-group">
+                    <span className="panel-label">Team structure</span>
+                    <div className="party-segmented-row">
+                      {[2, 3, 4].map((count) => (
+                        <button
+                          className={`ghost-button party-segment-button ${teams.length === count ? "is-active" : ""}`}
+                          disabled={!teamsEnabled}
+                          key={count}
+                          onClick={() => handleTeamCountSelect(count)}
+                          type="button"
+                        >
+                          {count}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="party-control-group party-toggle-group">
+                    <span className="panel-label">Toggles</span>
+                    <div className="party-toggle-row">
+                      <label className="party-toggle-pill" htmlFor="hostGetsScore">
+                        <span>Host scoring</span>
+                        <span className={`toggle-switch ${hostGetsScore ? "is-active" : ""}`} aria-hidden="true">
+                          <span className="toggle-knob" />
+                        </span>
                         <input
                           id="hostGetsScore"
                           checked={hostGetsScore}
                           type="checkbox"
                           onChange={(event) => onHostGetsScoreChange(event.target.checked)}
                         />
-                        <span className={`toggle-switch ${hostGetsScore ? "is-active" : ""}`} aria-hidden="true">
+                      </label>
+
+                      <label className="party-toggle-pill" htmlFor="teamsEnabled">
+                        <span>Teams</span>
+                        <span className={`toggle-switch ${teamsEnabled ? "is-active" : ""}`} aria-hidden="true">
                           <span className="toggle-knob" />
                         </span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="team-structure-card hero-team-card party-setting-feature party-control-card">
-                    <div className="team-structure-header">
-                      <label className="setup-inline-label" htmlFor="teamsEnabled">
-                        Teams
-                      </label>
-                      <label className="toggle-row compact-toggle toggle-card">
                         <input
                           id="teamsEnabled"
                           checked={teamsEnabled}
                           type="checkbox"
                           onChange={(event) => handleTeamsEnabledChange(event.target.checked)}
                         />
-                        <span className={`toggle-switch ${teamsEnabled ? "is-active" : ""}`} aria-hidden="true">
-                          <span className="toggle-knob" />
-                        </span>
                       </label>
                     </div>
-                  </div>
-                </div>
-
-                <div className="party-settings-grid party-settings-grid-tertiary">
-                  <div className="party-setting-card">
-                    <p className="panel-label">Players ready</p>
-                    <strong>{lineupPlayers.length} {lineupPlayers.length === 1 ? "player" : "players"}</strong>
-                    <p>{players.length ? "Party lineup is filling up." : "Start by adding your first player."}</p>
-                  </div>
-
-                  <div className="party-setting-card">
-                    <p className="panel-label">Team names</p>
-                    <strong>{teamsEnabled ? "Edit in lineup" : "Teams are off"}</strong>
-                    <p>
-                      {teamsEnabled
-                        ? "Rename teams in the party lineup section."
-                        : "Turn teams on to create and name teams."}
-                    </p>
                   </div>
                 </div>
               </aside>
@@ -585,14 +615,15 @@ export default function HomeScreen({
                   onMouseLeave={() => setIsCarouselHovered(false)}
                 >
                   <Carousel
-                    activeIndex={activeModeIndex}
+                    activeIndex={carouselModeIndex}
                     autoplay
                     autoplayDelay={5000}
                     baseWidth={280}
                     isPaused={isCarouselHovered}
                     items={modeOptions}
                     loop
-                    onSelect={setActiveModeIndex}
+                    selectedIndex={selectedModeIndex}
+                    onSelect={setCarouselModeIndex}
                     pauseOnHover
                     round={false}
                   />
@@ -604,13 +635,15 @@ export default function HomeScreen({
                   </button>
                   <button
                     className="primary-button"
-                    disabled={!canLaunchActiveMode}
-                    onClick={() => {}}
+                    disabled={!previewMode || previewMode.comingSoon || isPreviewModeSelected}
+                    onClick={() => setSelectedModeIndex(carouselModeIndex)}
                     type="button"
                   >
-                    {activeMode.comingSoon
+                    {previewMode?.comingSoon
                       ? "Coming Soon"
-                      : `Select ${activeMode.title}`}
+                      : isPreviewModeSelected
+                        ? `${previewMode.title} Selected`
+                        : `Select ${previewMode?.title ?? "Game"}`}
                   </button>
                 </div>
               </div>
