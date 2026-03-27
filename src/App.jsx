@@ -17,7 +17,32 @@ export const defaultHostProfile = {
   teamId: "team-1",
   scores: createEmptyScores(),
 };
-export const playerIcons = ["🎤", "💖", "🌟", "🎧", "🪩", "🔥", "🎵", "💎"];
+export const playerIcons = [
+  "🎤",
+  "🎧",
+  "🎵",
+  "🎶",
+  "🎸",
+  "🥁",
+  "🪩",
+  "🌟",
+  "✨",
+  "💖",
+  "💎",
+  "🔥",
+  "⚡",
+  "🌈",
+  "🦋",
+  "🍓",
+  "🍒",
+  "🫧",
+  "🌙",
+  "☀️",
+  "🐯",
+  "🐰",
+  "🐻",
+  "🦊",
+];
 
 function resetProfileScores(profile) {
   return {
@@ -127,6 +152,7 @@ export default function App() {
     scores: createEmptyScores(),
   });
   const [playerName, setPlayerName] = useState("");
+  const [newPlayerIcon, setNewPlayerIcon] = useState(playerIcons[0]);
   const [teams, setTeams] = useState(initialTeams);
   const [teamsEnabled, setTeamsEnabled] = useState(false);
   const [newPlayerTeamId, setNewPlayerTeamId] = useState(initialTeams[0].id);
@@ -154,7 +180,7 @@ export default function App() {
     const newPlayer = {
       id: Date.now(),
       name: trimmedName,
-      icon: playerIcons[0],
+      icon: newPlayerIcon,
       teamId: teamsEnabled ? newPlayerTeamId || fallbackTeamId : null,
       scores: createEmptyScores(),
     };
@@ -314,6 +340,9 @@ export default function App() {
           setHostGetsScore={setHostGetsScore}
           playerName={playerName}
           setPlayerName={setPlayerName}
+          newPlayerIcon={newPlayerIcon}
+          setNewPlayerIcon={setNewPlayerIcon}
+          playerIcons={playerIcons}
           desiredPlayerCount={desiredPlayerCount}
           setDesiredPlayerCount={setDesiredPlayerCount}
           addPlayer={addPlayer}
@@ -363,6 +392,8 @@ export default function App() {
             setHostGetsScore={setHostGetsScore}
             playerName={playerName}
             setPlayerName={setPlayerName}
+            newPlayerIcon={newPlayerIcon}
+            setNewPlayerIcon={setNewPlayerIcon}
             desiredPlayerCount={desiredPlayerCount}
             setDesiredPlayerCount={setDesiredPlayerCount}
             addPlayer={addPlayer}
@@ -388,6 +419,7 @@ export default function App() {
         selectedGroup={selectedGroup}
         launchMessage={launchMessage}
         playerName={playerName}
+        newPlayerIcon={newPlayerIcon}
         teams={teams}
         teamsEnabled={teamsEnabled}
         newPlayerTeamId={newPlayerTeamId}
@@ -396,6 +428,7 @@ export default function App() {
         onAddPlayer={addPlayer}
         onRemovePlayer={removePlayer}
         onPlayerNameChange={setPlayerName}
+        onNewPlayerIconChange={setNewPlayerIcon}
         onNewPlayerTeamChange={setNewPlayerTeamId}
         onPlayerUpdate={updatePlayer}
         onHostUpdate={updateHost}

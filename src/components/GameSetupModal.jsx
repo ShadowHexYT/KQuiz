@@ -1,3 +1,4 @@
+import { useState } from "react";
 import AnimatedContent from "./AnimatedContent";
 
 export default function GameSetupModal({
@@ -6,14 +7,19 @@ export default function GameSetupModal({
   hostProfile,
   hostGetsScore,
   playerName,
+  newPlayerIcon,
+  playerIcons,
   desiredPlayerCount,
   onClose,
   onPlayerNameChange,
+  onNewPlayerIconChange,
   onDesiredPlayerCountChange,
   onAddPlayer,
   onRemovePlayer,
   onHostGetsScoreChange,
 }) {
+  const [isEmojiMenuOpen, setIsEmojiMenuOpen] = useState(false);
+
   if (!isOpen) return null;
 
   return (
@@ -84,6 +90,36 @@ export default function GameSetupModal({
 
           <div className="setup-card">
             <form className="setup-player-form" onSubmit={onAddPlayer}>
+              <div className="player-icon-menu-wrap player-form-icon-wrap">
+                <button
+                  aria-expanded={isEmojiMenuOpen}
+                  aria-label="Choose emoji for new player"
+                  className="player-icon-select"
+                  onClick={() => setIsEmojiMenuOpen((currentValue) => !currentValue)}
+                  type="button"
+                >
+                  <span className="player-slot-icon">{newPlayerIcon}</span>
+                  <span className="player-icon-caret">⌄</span>
+                </button>
+
+                {isEmojiMenuOpen ? (
+                  <div className="player-icon-menu player-icon-menu-wide">
+                    {playerIcons.map((icon) => (
+                      <button
+                        className={`player-icon-option ${newPlayerIcon === icon ? "is-active" : ""}`}
+                        key={`setup-${icon}`}
+                        onClick={() => {
+                          onNewPlayerIconChange(icon);
+                          setIsEmojiMenuOpen(false);
+                        }}
+                        type="button"
+                      >
+                        {icon}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
               <div>
                 <label className="setup-label" htmlFor="newPlayer">
                   Add player
@@ -97,8 +133,12 @@ export default function GameSetupModal({
                   onChange={(event) => onPlayerNameChange(event.target.value)}
                 />
               </div>
-              <button className="primary-button" type="submit">
-                Add player
+              <button
+                aria-label="Add player"
+                className="primary-button player-add-button"
+                type="submit"
+              >
+                +
               </button>
             </form>
 

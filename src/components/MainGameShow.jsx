@@ -104,6 +104,9 @@ export default function MainGameShow({
   setHostGetsScore,
   playerName,
   setPlayerName,
+  newPlayerIcon,
+  setNewPlayerIcon,
+  playerIcons,
   desiredPlayerCount,
   setDesiredPlayerCount,
   addPlayer,
@@ -226,6 +229,10 @@ export default function MainGameShow({
   }, [activeImageIndex, galleryImages, usesImageCarousel]);
   const activeGalleryImage =
     photoViewerIndex !== null ? galleryImages[photoViewerIndex] ?? null : null;
+  const activeGalleryOption = activeGalleryImage ? getImageOption(activeGalleryImage) : null;
+  const activeGalleryAssignedPlayers = activeGalleryOption
+    ? getPlayersForOption(activeGalleryOption)
+    : [];
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -279,6 +286,11 @@ export default function MainGameShow({
 
   function getPlayersForOption(option) {
     return eligiblePlayers.filter((player) => getAssignedOptions(player.id).includes(option));
+  }
+
+  function getImageOption(image) {
+    if (!image?.name) return null;
+    return currentStep.choices.includes(image.name) ? image.name : null;
   }
 
   function getAvailablePlayersForOption(option) {
@@ -397,7 +409,40 @@ export default function MainGameShow({
     cyclePreviewPlayer(option);
   }
 
+  function lockGuessForPlayer(option, playerId) {
+    if (!option || !playerId) return;
+
+    setPreviewAssignments((currentAssignments) =>
+      updatePreviewForOption(currentAssignments, option, playerId),
+    );
+
+    setGuessAssignments((currentAssignments) => ({
+      ...currentAssignments,
+      [currentStep.id]: {
+        ...currentAssignments[currentStep.id],
+        [playerId]: isFavoriteSongStep
+          ? (() => {
+              const currentSelections = currentAssignments[currentStep.id]?.[playerId];
+              const nextSelections = Array.isArray(currentSelections)
+                ? currentSelections
+                : currentSelections
+                  ? [currentSelections]
+                  : [];
+
+              return nextSelections.includes(option)
+                ? nextSelections.filter((item) => item !== option)
+                : [...nextSelections, option];
+            })()
+          : option,
+      },
+    }));
+
+    playPopSound();
+    triggerPopAnimation(option);
+  }
+
   function openPhotoViewer(index) {
+    setActiveImageIndex(index);
     setPhotoViewerIndex(index);
   }
 
@@ -407,16 +452,21 @@ export default function MainGameShow({
 
   function showPreviousPhoto() {
     if (photoViewerIndex === null || galleryImages.length <= 1) return;
-    setPhotoViewerIndex((currentIndex) =>
-      currentIndex === null ? 0 : (currentIndex - 1 + galleryImages.length) % galleryImages.length,
-    );
+    setPhotoViewerIndex((currentIndex) => {
+      const nextIndex =
+        currentIndex === null ? 0 : (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+      setActiveImageIndex(nextIndex);
+      return nextIndex;
+    });
   }
 
   function showNextPhoto() {
     if (photoViewerIndex === null || galleryImages.length <= 1) return;
-    setPhotoViewerIndex((currentIndex) =>
-      currentIndex === null ? 0 : (currentIndex + 1) % galleryImages.length,
-    );
+    setPhotoViewerIndex((currentIndex) => {
+      const nextIndex = currentIndex === null ? 0 : (currentIndex + 1) % galleryImages.length;
+      setActiveImageIndex(nextIndex);
+      return nextIndex;
+    });
   }
 
   function showPreviousCarouselImage() {
@@ -897,9 +947,12 @@ export default function MainGameShow({
         hostProfile={hostProfile}
         hostGetsScore={hostGetsScore}
         playerName={playerName}
+        newPlayerIcon={newPlayerIcon}
+        playerIcons={playerIcons}
         desiredPlayerCount={desiredPlayerCount}
         onClose={() => setIsSetupOpen(false)}
         onPlayerNameChange={setPlayerName}
+        onNewPlayerIconChange={setNewPlayerIcon}
         onDesiredPlayerCountChange={changeDesiredPlayerCount}
         onAddPlayer={addPlayer}
         onRemovePlayer={removePlayer}
@@ -1009,7 +1062,10 @@ export default function MainGameShow({
               onClick={(event) => event.stopPropagation()}
             >
               <div className="setup-header">
-                <p className="panel-label">Photo viewer</p>
+                <div>
+                  <p className="panel-label">Photo viewer</p>
+                  {activeGalleryOption ? <h2>{activeGalleryOption}</h2> : null}
+                </div>
                 <button className="ghost-button" onClick={closePhotoViewer} type="button">
                   Close
                 </button>
@@ -1046,6 +1102,53 @@ export default function MainGameShow({
                   </button>
                 ) : null}
               </div>
+
+              {activeGalleryOption ? (
+                <div className="photo-viewer-actions">
+                  <div className="photo-viewer-actions-copy">
+                    <p className="setup-help">
+                      Choose a player below to lock in this photo as their answer.
+                    </p>
+                    {activeGalleryAssignedPlayers.length ? (
+                      <p className="photo-viewer-status">
+                        Locked by {activeGalleryAssignedPlayers.map((player) => player.name).join(", ")}
+                      </p>
+                    ) : (
+                      <p className="photo-viewer-status">No one has locked this photo yet.</p>
+                    )}
+                  </div>
+                  <div className="photo-viewer-player-grid">
+                    {eligiblePlayers.map((player) => {
+                      const isLockedToPhoto = activeGalleryAssignedPlayers.some(
+                        (assignedPlayer) => assignedPlayer.id === player.id,
+                      );
+                      const currentPlayerOption = getAssignedOption(player.id);
+                      const isLockedElsewhere =
+                        !isFavoriteSongStep &&
+                        currentPlayerOption &&
+                        currentPlayerOption !== activeGalleryOption;
+
+                      return (
+                        <button
+                          className={`choice-button photo-viewer-player-button ${isLockedToPhoto ? "is-active" : ""}`}
+                          key={`photo-lock-${player.id}`}
+                          onClick={() => lockGuessForPlayer(activeGalleryOption, player.id)}
+                          type="button"
+                        >
+                          <strong>{player.icon ? `${player.icon} ` : ""}{player.name}</strong>
+                          <span>
+                            {isLockedToPhoto
+                              ? "Locked on this photo"
+                              : isLockedElsewhere
+                                ? `Move from ${currentPlayerOption}`
+                                : "Lock this answer"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
             </section>
           </div>
         ) : null}
@@ -1216,6 +1319,11 @@ export default function MainGameShow({
                         <div className="image-question-copy">
                           <p className="flow-section-label">Group {currentRoundIndex + 1}</p>
                           <h2>{currentStep.label}</h2>
+                          {usesGroupCollage && galleryImages.some((image) => getImageOption(image)) ? (
+                            <p className="image-selection-help">
+                              Open a photo, then use the player buttons in the viewer to lock it in.
+                            </p>
+                          ) : null}
                         </div>
                       </div>
                       {usesGroupCollage ? (
@@ -1233,10 +1341,19 @@ export default function MainGameShow({
                           <div className="image-carousel-track">
                             {wrappedGalleryImages.map((image) => {
                               const isActive = image.index === activeImageIndex;
+                              const option = getImageOption(image);
+                              const assignedPlayers = option ? getPlayersForOption(option) : [];
+                              const isCorrect =
+                                option &&
+                                (revealAnswers || isAnswerTestMode) &&
+                                (isFavoriteSongStep
+                                  ? resolvedAnswers.includes(option)
+                                  : resolvedAnswer === option);
 
                               return (
                                 <button
-                                  className={`image-carousel-card ${isActive ? "is-active" : ""}`}
+                                  aria-pressed={option ? assignedPlayers.length > 0 : undefined}
+                                  className={`image-carousel-card ${isActive ? "is-active" : ""} ${option ? "is-selectable" : ""} ${isCorrect ? "is-correct" : ""}`}
                                   key={image.src}
                                   onClick={() => openPhotoViewer(image.index)}
                                   style={{
@@ -1252,6 +1369,26 @@ export default function MainGameShow({
                                     className="image-carousel-image"
                                     src={image.src}
                                   />
+                                  {option ? (
+                                    <span className="image-carousel-copy">
+                                      {assignedPlayers.length ? (
+                                        <span className="image-carousel-tags">
+                                          {assignedPlayers.map((player) => (
+                                            <span
+                                              className="flow-choice-tag is-locked"
+                                              key={`${option}-${player.id}-photo`}
+                                            >
+                                              {player.icon ? `${player.icon} ` : ""}
+                                              {player.name}
+                                            </span>
+                                          ))}
+                                        </span>
+                                      ) : null}
+                                      <span className="image-carousel-caption">
+                                        {option}
+                                      </span>
+                                    </span>
+                                  ) : null}
                                 </button>
                               );
                             })}
@@ -1310,6 +1447,15 @@ export default function MainGameShow({
                     </div>
 
                     <div className="image-action-bar">
+                      {usesGroupCollage ? (
+                        <button
+                          className="ghost-button"
+                          onClick={() => openPhotoViewer(activeImageIndex)}
+                          type="button"
+                        >
+                          View photo
+                        </button>
+                      ) : null}
                       <button
                         className="primary-button"
                         onClick={revealAnswers ? openResults : revealCurrentAnswer}
@@ -1400,9 +1546,10 @@ export default function MainGameShow({
                             <button
                               className={`choice-button flow-choice-button ${currentStep.choices.length % 2 !== 0 ? "is-list-view" : ""} ${isCorrect ? "is-correct" : ""} ${holdingOption === option ? "is-holding" : ""} ${poppingOption === option ? "is-popping" : ""}`}
                               onClick={() => handleChoiceClick(option)}
-                              onMouseDown={() => handleChoicePointerDown(option)}
-                              onMouseLeave={handleChoicePointerUp}
-                              onMouseUp={handleChoicePointerUp}
+                              onPointerCancel={handleChoicePointerUp}
+                              onPointerDown={() => handleChoicePointerDown(option)}
+                              onPointerLeave={handleChoicePointerUp}
+                              onPointerUp={handleChoicePointerUp}
                               type="button"
                             >
                               {(assignedPlayers.length || shouldShowPreview) ? (

@@ -958,7 +958,9 @@ button {
 
 .player-form-stack {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   gap: 0.75rem;
+  align-items: end;
 }
 
 .player-team-slot {
@@ -1029,6 +1031,19 @@ button {
 .player-form-row button,
 .player-form-stack button {
   border-radius: 12px;
+}
+
+.player-add-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  padding: 0;
+  border-radius: 999px;
+  color: #fff8ef;
+  font-size: 1.55rem;
+  line-height: 1;
 }
 
 .team-structure-card {
@@ -1615,6 +1630,11 @@ button {
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.3);
 }
 
+.player-icon-menu.player-icon-menu-wide {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  width: 14.8rem;
+}
+
 .player-icon-option {
   display: inline-flex;
   align-items: center;
@@ -1636,6 +1656,30 @@ button {
 .lineup-control-group {
   display: grid;
   gap: 0.55rem;
+}
+
+.player-form-icon-wrap {
+  align-self: end;
+}
+
+.player-form-icon-wrap .player-icon-select {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 999px;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+}
+
+.player-form-icon-wrap .player-slot-icon {
+  width: 2rem;
+  height: 2rem;
+  background: transparent;
+  font-size: 1.1rem;
+}
+
+.player-form-icon-wrap .player-icon-caret {
+  display: none;
 }
 
 .player-slot-actions {
@@ -3492,6 +3536,13 @@ button {
   gap: 0.35rem;
 }
 
+.image-selection-help {
+  margin: 0;
+  color: rgba(255, 248, 239, 0.72);
+  font-size: 0.94rem;
+  line-height: 1.5;
+}
+
 .image-question-bar .flow-section-label {
   margin: 0;
   font-size: 0.95rem;
@@ -3581,12 +3632,33 @@ button {
   transition:
     transform 380ms cubic-bezier(0.22, 1, 0.36, 1),
     opacity 280ms ease,
-    border-color 220ms ease;
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    background 220ms ease;
   overflow: hidden;
 }
 
 .image-carousel-card.is-active {
   border-color: rgba(255, 141, 102, 0.42);
+}
+
+.image-carousel-card.is-selectable {
+  cursor: pointer;
+}
+
+.image-carousel-card.is-selectable.is-correct {
+  border-color: rgba(97, 220, 155, 0.6);
+  background:
+    radial-gradient(circle at top, rgba(97, 220, 155, 0.16), transparent 38%),
+    rgba(15, 22, 40, 0.88);
+}
+
+.image-carousel-card.is-selectable.is-holding {
+  animation: choiceShake 0.18s linear infinite;
+}
+
+.image-carousel-card.is-selectable.is-popping {
+  animation: choicePop 0.2s ease;
 }
 
 .image-carousel-image {
@@ -3598,10 +3670,24 @@ button {
   background: rgba(255, 255, 255, 0.02);
 }
 
-.image-carousel-caption {
+.image-carousel-copy {
   position: absolute;
-  left: 1rem;
-  bottom: 1rem;
+  inset: auto 1rem 1rem 1rem;
+  display: grid;
+  gap: 0.45rem;
+  justify-items: start;
+  pointer-events: none;
+}
+
+.image-carousel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  max-width: 100%;
+}
+
+.image-carousel-caption {
+  position: static;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4125,6 +4211,64 @@ button {
   font-size: 1.1rem;
 }
 
+.photo-viewer-actions {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    radial-gradient(circle at top, rgba(255, 141, 102, 0.08), transparent 52%),
+    rgba(10, 16, 29, 0.76);
+}
+
+.photo-viewer-actions-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.photo-viewer-actions-copy .setup-help {
+  margin: 0;
+}
+
+.photo-viewer-status {
+  margin: 0;
+  color: rgba(255, 248, 239, 0.72);
+  font-size: 0.94rem;
+}
+
+.photo-viewer-player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.75rem;
+}
+
+.photo-viewer-player-button {
+  display: grid;
+  gap: 0.35rem;
+  min-height: 88px;
+  padding: 1rem;
+  border-radius: 20px;
+}
+
+.photo-viewer-player-button strong {
+  font-size: 1rem;
+}
+
+.photo-viewer-player-button span {
+  color: rgba(255, 248, 239, 0.72);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.photo-viewer-player-button.is-active {
+  border-color: rgba(255, 211, 111, 0.5);
+  background:
+    linear-gradient(180deg, rgba(255, 211, 111, 0.12), rgba(255, 211, 111, 0.04)),
+    rgba(15, 22, 40, 0.9);
+}
+
 .score-toggle {
   padding: 0.75rem 0.85rem;
   text-transform: capitalize;
@@ -4225,7 +4369,7 @@ button {
 
 .setup-player-form {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 0.8rem;
   align-items: end;
 }
@@ -4335,6 +4479,7 @@ button {
   .prompt-grid,
   .round-flow-choices,
   .choice-grid,
+  .player-form-stack,
   .setup-player-form {
     grid-template-columns: 1fr;
   }

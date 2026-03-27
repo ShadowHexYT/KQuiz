@@ -136,6 +136,7 @@ export default function HomeScreen({
   selectedGroup,
   launchMessage,
   playerName,
+  newPlayerIcon,
   teams,
   teamsEnabled,
   newPlayerTeamId,
@@ -144,6 +145,7 @@ export default function HomeScreen({
   onAddPlayer,
   onRemovePlayer,
   onPlayerNameChange,
+  onNewPlayerIconChange,
   onNewPlayerTeamChange,
   onPlayerUpdate,
   onHostUpdate,
@@ -347,6 +349,39 @@ export default function HomeScreen({
                 <form className="player-form" onSubmit={onAddPlayer}>
                   <label htmlFor="playerName">Add player</label>
                   <div className="player-form-stack">
+                    <div className="player-icon-menu-wrap player-form-icon-wrap">
+                      <button
+                        aria-label="Choose emoji for new player"
+                        className="player-icon-select"
+                        onClick={() =>
+                          setOpenEmojiMenuFor((currentValue) =>
+                            currentValue === "new-player" ? null : "new-player",
+                          )
+                        }
+                        type="button"
+                      >
+                        <span className="player-slot-icon">{newPlayerIcon}</span>
+                        <span className="player-icon-caret">⌄</span>
+                      </button>
+
+                      {openEmojiMenuFor === "new-player" ? (
+                        <div className="player-icon-menu player-icon-menu-wide">
+                          {playerIcons.map((icon) => (
+                            <button
+                              className={`player-icon-option ${newPlayerIcon === icon ? "is-active" : ""}`}
+                              key={`new-player-${icon}`}
+                              onClick={() => {
+                                onNewPlayerIconChange(icon);
+                                setOpenEmojiMenuFor(null);
+                              }}
+                              type="button"
+                            >
+                              {icon}
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
                     <input
                       className="player-text-input"
                       id="playerName"
@@ -370,8 +405,12 @@ export default function HomeScreen({
                         ))}
                       </select>
                     </div>
-                    <button className="primary-button" type="submit">
-                      Add player
+                    <button
+                      aria-label="Add player"
+                      className="primary-button player-add-button"
+                      type="submit"
+                    >
+                      +
                     </button>
                   </div>
                 </form>
