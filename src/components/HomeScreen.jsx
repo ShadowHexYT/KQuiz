@@ -515,7 +515,6 @@ export default function HomeScreen({
               <aside className="hero-setup-panel" id="party-setup">
                 <div className="host-panel-header">
                   <div>
-                    <p className="panel-label">Party setup</p>
                     <h2>Build your game night</h2>
                   </div>
                 </div>
@@ -791,8 +790,8 @@ export default function HomeScreen({
             <aside className="player-slots-panel player-lineup-wide">
               <div className="host-panel-header">
                 <div>
-                  <p className="panel-label">Party lineup</p>
-                  <h2>Player lineup</h2>
+                  <p className="panel-label">Party</p>
+                  <h2>Party</h2>
                 </div>
                 <span className="player-count">{lineupPlayers.length} total</span>
               </div>

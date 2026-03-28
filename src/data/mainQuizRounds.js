@@ -1789,26 +1789,10 @@ const rounds = [
     groupName: "Girlset",
     groupChoices: ["Girlset", "KATSEYE", "ILLIT", "Kiss of Life"],
     members: [
-      {
-        name: "Lexi",
-        image:
-          "https://static.wikia.nocookie.net/vcha/images/0/0f/Lexi_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305211957",
-      },
-      {
-        name: "Kendall",
-        image:
-          "https://static.wikia.nocookie.net/vcha/images/7/71/Kendall_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305212018",
-      },
-      {
-        name: "Camila",
-        image:
-          "https://static.wikia.nocookie.net/vcha/images/9/9f/Camila_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305211939",
-      },
-      {
-        name: "Savanna",
-        image:
-          "https://static.wikia.nocookie.net/vcha/images/b/bb/Savanna_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305212037",
-      },
+      { name: "Lexi", image: "/quiz-media/Lexi.jpg" },
+      { name: "Kendall", image: "/quiz-media/Kendall.jpg" },
+      { name: "Camila", image: "/quiz-media/Camila.jpg" },
+      { name: "Savanna", image: "/quiz-media/Savanna.jpg" },
     ],
     extras: [
       ...buildFavoriteSongExtras({

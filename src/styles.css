@@ -1,6 +1,12 @@
 :root {
-  --font-body: "Manrope", "Segoe UI", sans-serif;
-  --font-display: "Syne", "Avenir Next", sans-serif;
+  --font-body: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  --font-display: "Sora", "Avenir Next", sans-serif;
+  --type-1: clamp(0.76rem, 0.74rem + 0.08vw, 0.82rem);
+  --type-2: clamp(0.94rem, 0.91rem + 0.12vw, 1rem);
+  --type-3: clamp(1.08rem, 1.02rem + 0.18vw, 1.2rem);
+  --type-4: clamp(1.32rem, 1.18rem + 0.52vw, 1.7rem);
+  --type-5: clamp(1.9rem, 1.58rem + 1.1vw, 2.7rem);
+  --type-6: clamp(2.85rem, 2.2rem + 2.25vw, 4.8rem);
   --surface-strong: rgba(10, 16, 29, 0.84);
   --surface-medium: rgba(15, 22, 40, 0.74);
   --surface-soft: rgba(255, 255, 255, 0.05);
@@ -51,6 +57,7 @@ body {
   min-height: 100svh;
   scroll-behavior: smooth;
   font-family: var(--font-body);
+  font-size: var(--type-2);
   background:
     radial-gradient(circle at top, rgba(255, 126, 95, 0.24), transparent 30%),
     radial-gradient(circle at 15% 20%, rgba(255, 108, 152, 0.12), transparent 28%),
@@ -97,6 +104,9 @@ a:focus-visible {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  opacity: 0.42;
+  -webkit-mask-image: radial-gradient(circle at center, transparent 0%, transparent 33%, rgba(0, 0, 0, 0.8) 52%, #000 100%);
+  mask-image: radial-gradient(circle at center, transparent 0%, transparent 33%, rgba(0, 0, 0, 0.8) 52%, #000 100%);
 }
 
 .kpop-background-grid {
@@ -110,7 +120,7 @@ a:focus-visible {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 28px;
   opacity: 0;
-  filter: saturate(1.18);
+  filter: saturate(1.06);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
   animation: backgroundPulse 8s ease-in-out infinite;
 }
@@ -125,36 +135,36 @@ a:focus-visible {
 }
 
 .kpop-background-card-1 {
-  top: 8%;
-  left: -7%;
-  width: clamp(180px, 20vw, 300px);
+  top: 6%;
+  left: -12%;
+  width: clamp(150px, 16vw, 240px);
   aspect-ratio: 4 / 5;
   transform: rotate(-10deg);
   animation-delay: 0s;
 }
 
 .kpop-background-card-2 {
-  top: 12%;
-  right: -4%;
-  width: clamp(170px, 18vw, 280px);
+  top: 8%;
+  right: -10%;
+  width: clamp(145px, 15vw, 225px);
   aspect-ratio: 4 / 5;
   transform: rotate(8deg);
   animation-delay: 1.3s;
 }
 
 .kpop-background-card-3 {
-  bottom: 10%;
-  left: -5%;
-  width: clamp(190px, 22vw, 320px);
+  bottom: 7%;
+  left: -11%;
+  width: clamp(160px, 18vw, 250px);
   aspect-ratio: 16 / 10;
   transform: rotate(7deg);
   animation-delay: 2.6s;
 }
 
 .kpop-background-card-4 {
-  right: -8%;
-  bottom: 9%;
-  width: clamp(200px, 24vw, 360px);
+  right: -13%;
+  bottom: 6%;
+  width: clamp(170px, 19vw, 270px);
   aspect-ratio: 16 / 10;
   transform: rotate(-8deg);
   animation-delay: 3.9s;
@@ -181,13 +191,13 @@ a:focus-visible {
   padding: 0.45rem 0.85rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 248, 239, 0.64);
+  background: rgba(255, 255, 255, 0.035);
+  color: rgba(255, 248, 239, 0.52);
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
   animation: floatTag 18s ease-in-out infinite;
 }
 
@@ -221,73 +231,73 @@ a:focus-visible {
 
 .kpop-floating-tag-1 {
   top: 9%;
-  left: 3%;
+  left: -1.5%;
   animation-delay: 0s;
 }
 
 .kpop-floating-tag-2 {
   top: 18%;
-  right: 5%;
+  right: -1%;
   animation-delay: 2s;
 }
 
 .kpop-floating-tag-3 {
   top: 38%;
-  left: 1%;
+  left: -3%;
   animation-delay: 4s;
 }
 
 .kpop-floating-tag-4 {
   top: 52%;
-  right: 2%;
+  right: -2.5%;
   animation-delay: 6s;
 }
 
 .kpop-floating-tag-5 {
   bottom: 20%;
-  left: 5%;
+  left: -1%;
   animation-delay: 8s;
 }
 
 .kpop-floating-tag-6 {
   bottom: 10%;
-  right: 7%;
+  right: -1%;
   animation-delay: 10s;
 }
 
 .kpop-floating-tag-7 {
   top: 15%;
-  left: 10%;
+  left: 4%;
   animation-delay: 1s;
 }
 
 .kpop-floating-tag-8 {
   top: 28%;
-  right: 10%;
+  right: 4%;
   animation-delay: 3s;
 }
 
 .kpop-floating-tag-9 {
   top: 62%;
-  left: 3%;
+  left: -0.5%;
   animation-delay: 5s;
 }
 
 .kpop-floating-tag-10 {
   top: 70%;
-  right: 3%;
+  right: -1.5%;
   animation-delay: 7s;
 }
 
 .kpop-floating-tag-11 {
   bottom: 28%;
-  left: 9%;
+  left: 2%;
   animation-delay: 9s;
 }
 
 .kpop-floating-tag-12 {
   bottom: 6%;
-  right: 11%;
+  right: 2%;
   animation-delay: 11s;
 }
 
@@ -468,6 +478,7 @@ a:focus-visible {
   background: transparent;
   color: rgba(255, 248, 239, 0.86);
   font-weight: 700;
+  font-size: var(--type-3);
   letter-spacing: 0.02em;
 }
 
@@ -486,6 +497,7 @@ a:focus-visible {
   position: relative;
   display: flex;
   align-items: center;
+  flex: 0 0 42px;
 }
 
 .pill-nav-search-toggle {
@@ -508,18 +520,17 @@ a:focus-visible {
 }
 
 .pill-nav-search-icon {
-  font-size: 1.45rem;
+  font-size: 1.8rem;
   line-height: 1;
 }
 
 .pill-nav-search-panel {
   position: absolute;
   top: 50%;
-  left: calc(100% + 0.55rem);
-  display: grid;
-  gap: 0.65rem;
+  left: calc(100% + 0.6rem);
   width: min(360px, calc(100vw - 2rem));
   transform: translateY(-50%);
+  z-index: 30;
 }
 
 .pill-nav-search-input {
@@ -533,27 +544,38 @@ a:focus-visible {
     rgba(8, 14, 28, 0.95);
   box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
   color: #fff8ef;
-  animation: pillSearchExpand 220ms ease;
+  transform-origin: left center;
+  animation: pillSearchExpand 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes pillSearchExpand {
   from {
-    width: 64px;
-    opacity: 0.55;
+    opacity: 0.35;
+    transform: scaleX(0.18);
   }
 
   to {
-    width: 100%;
     opacity: 1;
+    transform: scaleX(1);
   }
 }
 
 .pill-nav-search-results {
+  position: absolute;
+  top: calc(100% + 0.65rem);
+  left: 0;
+  width: 100%;
   display: grid;
   gap: 0.45rem;
   max-height: 260px;
   overflow-y: auto;
-  padding: 0.3rem 0.2rem 0 0.2rem;
+  padding: 0.3rem 0.2rem 0.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03)),
+    rgba(8, 14, 28, 0.94);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
 }
 
 .pill-nav-search-result {
@@ -1029,7 +1051,7 @@ a:focus-visible {
 .player-role {
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  font-size: 0.72rem;
+  font-size: var(--type-1);
 }
 
 .eyebrow,
@@ -1050,13 +1072,17 @@ a:focus-visible {
 .hero-brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.9rem;
   min-height: 72px;
+  width: 100%;
+  text-align: center;
 }
 
 .hero-brand-title {
   display: flex;
   align-items: flex-end;
+  justify-content: center;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
@@ -1068,24 +1094,25 @@ a:focus-visible {
 
 .hero-brand-icon {
   display: block;
-  font-size: 4.15rem;
+  font-size: var(--type-6);
   line-height: 1;
   filter: saturate(1.05);
 }
 
 .hero-copy h1 {
   font-family: var(--font-display);
-  font-size: clamp(2.8rem, 4.6vw, 4.6rem);
+  font-size: var(--type-6);
   line-height: 1;
   letter-spacing: -0.04em;
   max-width: none;
   white-space: nowrap;
+  font-weight: 700;
 }
 
 .hero-brand-byline {
   padding-bottom: 0.45rem;
   color: rgba(255, 248, 239, 0.72);
-  font-size: clamp(0.95rem, 1.3vw, 1.15rem);
+  font-size: var(--type-2);
   font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
@@ -1147,13 +1174,14 @@ a:focus-visible {
 
 .hero-lineup-header h2 {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 3vw, 2.5rem);
+  font-size: var(--type-5);
   line-height: 0.95;
   letter-spacing: -0.04em;
+  font-weight: 700;
 }
 
 .hero-lineup-chip strong {
-  font-size: 1.18rem;
+  font-size: var(--type-3);
   line-height: 1.08;
 }
 
@@ -1511,7 +1539,7 @@ a:focus-visible {
 .host-panel {
   align-self: start;
   height: 100%;
-  padding: 1.25rem;
+  padding: 0.95rem 1.1rem 1.1rem;
   border-radius: 24px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.03));
 }
@@ -1546,7 +1574,7 @@ a:focus-visible {
 
 .player-form,
 .host-select-wrap {
-  margin-top: 0.5rem;
+  margin-top: 0.35rem;
 }
 
 .icon-picker-wrap {
@@ -1806,15 +1834,17 @@ a:focus-visible {
 .mode-instructions-card h2 {
   margin-top: 0.25rem;
   max-width: 11ch;
-  font-size: clamp(1.6rem, 2.6vw, 2.3rem);
+  font-size: var(--type-5);
   line-height: 0.98;
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .mode-instructions-text {
   margin-top: 0.85rem;
   max-width: 30ch;
   color: var(--text-secondary);
-  font-size: 1rem;
+  font-size: var(--type-3);
 }
 
 .mode-instruction-list {
@@ -1871,7 +1901,7 @@ a:focus-visible {
   border-radius: 999px;
   background: rgba(97, 220, 155, 0.14);
   color: #8ef0ba;
-  font-size: 0.78rem;
+  font-size: var(--type-1);
   font-weight: 700;
 }
 
@@ -1988,8 +2018,10 @@ a:focus-visible {
 
 .carousel-card h3 {
   margin-top: 0.35rem;
-  font-size: clamp(1.6rem, 2.4vw, 2.15rem);
+  font-size: var(--type-5);
   line-height: 1.02;
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .carousel-card p + p {
@@ -2005,7 +2037,7 @@ a:focus-visible {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 248, 239, 0.82);
-  font-size: 0.82rem;
+  font-size: var(--type-1);
   font-weight: 700;
 }
 
@@ -2089,8 +2121,9 @@ a:focus-visible {
 }
 
 .player-slot-card strong {
-  font-size: 1.08rem;
+  font-size: var(--type-3);
   line-height: 1.1;
+  font-weight: 700;
 }
 
 .player-slot-card.is-filled {
@@ -2342,7 +2375,9 @@ a:focus-visible {
 .mode-summary-card strong {
   display: block;
   margin-top: 0.35rem;
-  font-size: 1.35rem;
+  font-size: var(--type-4);
+  font-family: var(--font-display);
+  font-weight: 700;
 }
 
 .mode-summary-card p:last-child {

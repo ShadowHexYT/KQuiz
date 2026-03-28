@@ -5,6 +5,7 @@ function getFirstWord(label) {
 }
 
 const EXCLUDED_ROTATING_LOGOS = new Set([
+  "Girlset",
   "Hearts2Hearts",
   "KiiiKiii",
   "ILLIT",
