@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
-import StaggeredMenu from "./StaggeredMenu";
 import { getGameModeById } from "../data/gameModeCatalog";
 import {
   albumCoverZoomQuestions,
@@ -11,6 +10,7 @@ import {
 } from "../data/playlistGamePacks";
 import { buildJeopardyBoard, jeopardyBoardValues } from "../data/jeopardyQuestionBank";
 import { normalizeScores } from "../data/scoreModel";
+import { buildGameEntities } from "../data/teamModeHelpers";
 
 function getStableHash(value) {
   return Array.from(value).reduce((hash, char) => hash + char.charCodeAt(0), 0);
@@ -56,6 +56,8 @@ function PlaylistModeGame({
   setPlayers,
   hostProfile,
   setHostProfile,
+  teams,
+  teamsEnabled,
   hostGetsScore,
   setHostGetsScore,
   playerName,
@@ -106,17 +108,25 @@ function PlaylistModeGame({
     mode.id === "album-cover-zoom"
       ? "Guess the album"
       : currentQuestion?.title ?? "Waiting for setup";
-  const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
+  const displayPlayers = useMemo(
+    () =>
+      buildGameEntities({
+        players,
+        hostProfile,
+        teams,
+        teamsEnabled,
+        hostGetsScore,
+        scoreKey,
+      }),
+    [hostGetsScore, hostProfile, players, scoreKey, teams, teamsEnabled],
+  );
   const lineupPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
   const playerSlotCount = Math.max(7, Number(desiredPlayerCount) || 0, lineupPlayers.length + 1);
   const playerSlots = useMemo(
     () => Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null),
     [lineupPlayers, playerSlotCount],
   );
-  const eligiblePlayers = useMemo(
-    () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore, hostProfile.id)),
-    [displayPlayers, hostGetsScore, hostProfile.id],
-  );
+  const eligiblePlayers = useMemo(() => displayPlayers.filter((player) => player.isScoring), [displayPlayers]);
   const visibleChoices = useMemo(
     () =>
       currentQuestion
@@ -129,6 +139,10 @@ function PlaylistModeGame({
   );
 
   function getPlayerSubtitle(player) {
+    if (player.kind === "team") {
+      return player.memberNames.join(", ");
+    }
+
     if (player.id === hostProfile.id) {
       return hostGetsScore ? "Host and player" : "Host";
     }
@@ -170,7 +184,10 @@ function PlaylistModeGame({
   }
 
   function updateScoreForPlayer(playerId, amount) {
-    if (playerId === hostProfile.id) {
+    const scoreTargetId =
+      displayPlayers.find((player) => player.id === playerId)?.representativeId ?? playerId;
+
+    if (scoreTargetId === hostProfile.id) {
       setHostProfile((currentHost) => ({
         ...currentHost,
         scores: {
@@ -183,7 +200,7 @@ function PlaylistModeGame({
 
     setPlayers((currentPlayers) =>
       currentPlayers.map((player) =>
-        player.id === playerId
+        player.id === scoreTargetId
           ? {
               ...player,
               scores: {
@@ -594,8 +611,8 @@ function PlaylistModeGame({
 
         <div className="score-strip">
           {displayPlayers.map((player) => {
-            const isHost = player.id === hostProfile.id;
-            const isScoring = playerCanScore(player, hostGetsScore, hostProfile.id);
+            const isHost = !teamsEnabled && player.id === hostProfile.id;
+            const isScoring = player.isScoring;
 
             return (
               <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>
@@ -605,11 +622,17 @@ function PlaylistModeGame({
                     {player.name}
                   </strong>
                   <p>
-                    {isHost ? (hostGetsScore ? "Host and player" : "Host only") : "Player"}
+                    {player.kind === "team"
+                      ? player.memberNames.join(", ")
+                      : isHost
+                        ? hostGetsScore
+                          ? "Host and player"
+                          : "Host only"
+                        : "Player"}
                   </p>
                 </div>
                 <div className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
-                  {normalizeScores(player.scores)[scoreKey] ?? 0}
+                  {player.scoreTotal ?? 0}
                 </div>
               </div>
             );
@@ -742,6 +765,8 @@ function JeopardyModeGame({
   setPlayers,
   hostProfile,
   setHostProfile,
+  teams,
+  teamsEnabled,
   hostGetsScore,
   scoreKey,
 }) {
@@ -760,8 +785,16 @@ function JeopardyModeGame({
   const clueAwardsRef = useRef({});
   const board = useMemo(() => buildJeopardyBoard(boardSeed), [boardSeed]);
   const displayPlayers = useMemo(
-    () => (hostGetsScore ? [hostProfile, ...players] : players),
-    [hostGetsScore, hostProfile, players],
+    () =>
+      buildGameEntities({
+        players,
+        hostProfile,
+        teams,
+        teamsEnabled,
+        hostGetsScore,
+        scoreKey,
+      }).filter((player) => player.isScoring),
+    [hostGetsScore, hostProfile, players, scoreKey, teams, teamsEnabled],
   );
 
   const activeClue = useMemo(() => {
@@ -801,8 +834,7 @@ function JeopardyModeGame({
     if (!displayPlayers.length) return null;
 
     return [...displayPlayers].sort((left, right) => {
-      const scoreDelta =
-        (normalizeScores(right.scores)[scoreKey] ?? 0) - (normalizeScores(left.scores)[scoreKey] ?? 0);
+      const scoreDelta = (right.scoreTotal ?? 0) - (left.scoreTotal ?? 0);
       if (scoreDelta !== 0) return scoreDelta;
       return left.name.localeCompare(right.name);
     })[0];
@@ -1010,7 +1042,10 @@ function JeopardyModeGame({
   function updateScoreForPlayer(playerId, amount) {
     if (!amount) return;
 
-    if (playerId === hostProfile.id) {
+    const scoreTargetId =
+      displayPlayers.find((player) => player.id === playerId)?.representativeId ?? playerId;
+
+    if (scoreTargetId === hostProfile.id) {
       setHostProfile((currentHost) => ({
         ...currentHost,
         scores: {
@@ -1023,7 +1058,7 @@ function JeopardyModeGame({
 
     setPlayers((currentPlayers) =>
       currentPlayers.map((player) =>
-        player.id === playerId
+        player.id === scoreTargetId
           ? {
               ...player,
               scores: {
@@ -1198,7 +1233,7 @@ function JeopardyModeGame({
           <p className="panel-label">Scores</p>
           <div className="jeopardy-player-strip">
             {displayPlayers.map((player) => {
-              const isHost = player.id === hostProfile.id;
+              const isHost = !teamsEnabled && player.id === hostProfile.id;
 
               return (
                 <div className={`jeopardy-player-card ${isHost ? "is-host" : ""}`} key={player.id}>
@@ -1208,9 +1243,7 @@ function JeopardyModeGame({
                       {player.name}
                     </strong>
                   </div>
-                  <div className="jeopardy-player-score">
-                    {normalizeScores(player.scores)[scoreKey] ?? 0}
-                  </div>
+                  <div className="jeopardy-player-score">{player.scoreTotal ?? 0}</div>
                 </div>
               );
             })}
@@ -1284,7 +1317,7 @@ function JeopardyModeGame({
 
                         return (
                           <button
-                            className={`jeopardy-player-card jeopardy-clue-player-card ${player.id === hostProfile.id ? "is-host" : ""} ${isSelected ? "is-selected" : ""}`}
+                            className={`jeopardy-player-card jeopardy-clue-player-card ${!teamsEnabled && player.id === hostProfile.id ? "is-host" : ""} ${isSelected ? "is-selected" : ""}`}
                             key={`${activeClue.id}-${player.id}`}
                             onClick={() => setSelectedRecipientId(player.id)}
                             type="button"
@@ -1294,7 +1327,7 @@ function JeopardyModeGame({
                                 {player.icon ? `${player.icon} ` : ""}
                                 {player.name}
                               </strong>
-                              <p>{player.id === hostProfile.id ? "Host" : "Player"}</p>
+                              <p>{player.kind === "team" ? player.memberNames.join(", ") : player.id === hostProfile.id ? "Host" : "Player"}</p>
                             </div>
                             <div className="jeopardy-player-score">
                               {awardLabel ? (
@@ -1302,7 +1335,7 @@ function JeopardyModeGame({
                                   {awardLabel}
                                 </span>
                               ) : (
-                                normalizeScores(player.scores)[scoreKey] ?? 0
+                                player.scoreTotal ?? 0
                               )}
                             </div>
                           </button>
@@ -1404,6 +1437,8 @@ export default function ModePrototype({
   setPlayers,
   hostProfile,
   setHostProfile,
+  teams,
+  teamsEnabled,
   hostGetsScore,
   setHostGetsScore,
   playerName,
@@ -1443,28 +1478,6 @@ export default function ModePrototype({
     <div className="page-shell" id="top">
       <div className="background-orb background-orb-left" />
       <div className="background-orb background-orb-right" />
-      <StaggeredMenu
-        position="right"
-        items={[
-          { label: "Home", ariaLabel: "Return home", link: "#top" },
-          { label: "Game", ariaLabel: "Jump to game screen", link: "#mode-game" },
-          { label: "All Games", ariaLabel: "Open all games", onClick: onOpenModeHub },
-        ]}
-        socialItems={[
-          { label: "Back Home", onClick: onBackHome },
-          { label: "All Games", onClick: onOpenModeHub },
-          { label: "Top", link: "#top" },
-        ]}
-        itemSectionLabel="Game menu"
-        socialSectionLabel="Navigation"
-        displaySocials
-        displayItemNumbering
-        menuButtonColor="#fff8ef"
-        openMenuButtonColor="#fff8ef"
-        changeMenuColorOnOpen
-        colors={["#ff8d66", "#ff5d8f"]}
-        accentColor="#ff5d8f"
-      />
 
       <main className="app-frame">
         <AnimatedContent
@@ -1485,6 +1498,8 @@ export default function ModePrototype({
               setPlayers,
               hostProfile,
               setHostProfile,
+              teams,
+              teamsEnabled,
               hostGetsScore,
               setHostGetsScore,
               playerName,

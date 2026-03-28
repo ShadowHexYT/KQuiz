@@ -2,6 +2,8 @@ import { Suspense, lazy, useEffect, useState } from "react";
 import HomeScreen from "./components/HomeScreen";
 import MainGameShow from "./components/MainGameShow";
 import ModeHub from "./components/ModeHub";
+import PillNav from "./components/PillNav";
+import { groupQuizzes } from "./data/groupQuizzes";
 import { gameModes } from "./data/gameModeCatalog";
 import { createEmptyScores, GAME_SCORE_KEYS, normalizeScores } from "./data/scoreModel";
 
@@ -10,6 +12,7 @@ const ModePrototype = lazy(() => import("./components/ModePrototype"));
 const starterPlayers = [];
 const DEFAULT_TEAM_COUNT = 2;
 export const HOST_ID = "hunter-host";
+const FIXED_LINEUP_TEAM_SEQUENCE = [0, 1, 0, 1, 2, 2];
 export const defaultHostProfile = {
   id: HOST_ID,
   name: "Hunter",
@@ -64,64 +67,28 @@ function buildTeams(count, currentTeams = []) {
   );
 }
 
-const groupQuizzes = [
-  {
-    label: "TWICE",
-    description: "Title tracks, choreography highlights, and member trivia.",
-  },
-  {
-    label: "LE SSERAFIM",
-    description: "Fearless concepts, choreography moments, member visuals, and comeback rounds.",
-  },
-  {
-    label: "NewJeans",
-    description: "Debut-era details, visuals, styling, and song recognition.",
-  },
-  {
-    label: "IVE",
-    description: "Concepts, catchy hooks, member facts, and comeback rounds.",
-  },
-  {
-    label: "aespa",
-    description: "Virtual-era concepts, standout visuals, and song recognition rounds.",
-  },
-  {
-    label: "NMIXX",
-    description: "Member recognition, bold title tracks, and vocal-heavy quiz moments.",
-  },
-  {
-    label: "ILLIT",
-    description: "Cherish (My Love), dreamy member trivia, maknae picks, and bias rounds.",
-  },
-  {
-    label: "KiiiKiii",
-    description: "404 (New Era), member recognition, leader picks, and bias trivia.",
-  },
-  {
-    label: "Meovv",
-    description: "Burning Up, member visuals, maknae trivia, and bias picks.",
-  },
-  {
-    label: "Hearts2Hearts",
-    description: "Rude!, large-group member trivia, leader picks, and bias rounds.",
-  },
-  {
-    label: "XG",
-    description: "Hypnotize, standout member recognition, leader trivia, and bias picks.",
-  },
-  {
-    label: "Baby DONT Cry",
-    description: "I Dont Care, member recognition, leader trivia, and bias rounds.",
-  },
-  {
-    label: "KPDH",
-    description: "Fictional trio member trivia with leader, maknae, and bias picks.",
-  },
-  {
-    label: "Kiss of Life",
-    description: "Performance charisma, member trivia, and recent comeback questions.",
-  },
-];
+function getFixedTeamIdForSlot(slotNumber, teams) {
+  const teamIndex = FIXED_LINEUP_TEAM_SEQUENCE[Math.max(0, slotNumber - 1)] ?? 0;
+  return teams[teamIndex]?.id ?? teams[0]?.id ?? "team-1";
+}
+
+function getResolvedLineupSlot(player, index) {
+  return player.lineupSlot ?? index + 1;
+}
+
+function getNextAvailableLineupSlot(players) {
+  for (let slotNumber = 1; slotNumber <= 6; slotNumber += 1) {
+    const isTaken = players.some(
+      (player, index) => getResolvedLineupSlot(player, index) === slotNumber,
+    );
+
+    if (!isTaken) {
+      return slotNumber;
+    }
+  }
+
+  return players.length + 1;
+}
 
 function getRouteFromHash(hashValue) {
   if (hashValue === "#/main-gameshow") {
@@ -159,7 +126,7 @@ export default function App() {
   const [hostGetsScore, setHostGetsScore] = useState(false);
   const [desiredPlayerCount, setDesiredPlayerCount] = useState(starterPlayers.length);
   const [selectedGroup, setSelectedGroup] = useState(groupQuizzes[0]);
-  const [launchMessage, setLaunchMessage] = useState("");
+  const [selectedLaunchTarget, setSelectedLaunchTarget] = useState(null);
 
   useEffect(() => {
     function handleHashChange() {
@@ -176,12 +143,13 @@ export default function App() {
     const trimmedName = playerName.trim();
     if (!trimmedName) return;
 
-    const fallbackTeamId = teams[0]?.id ?? "team-1";
+    const lineupSlot = getNextAvailableLineupSlot(players);
     const newPlayer = {
       id: Date.now(),
       name: trimmedName,
       icon: newPlayerIcon,
-      teamId: teamsEnabled ? newPlayerTeamId || fallbackTeamId : null,
+      lineupSlot,
+      teamId: teamsEnabled ? getFixedTeamIdForSlot(lineupSlot, teams) : null,
       scores: createEmptyScores(),
     };
 
@@ -235,11 +203,20 @@ export default function App() {
       nextTeamIds.has(currentTeamId) ? currentTeamId : fallbackTeamId,
     );
     setPlayers((currentPlayers) =>
-      currentPlayers.map((player) => ({
-        ...player,
-        teamId: nextTeamIds.has(player.teamId) ? player.teamId : fallbackTeamId,
-        scores: normalizeScores(player.scores),
-      })),
+      currentPlayers.map((player, index) => {
+        const lineupSlot = getResolvedLineupSlot(player, index);
+
+        return {
+          ...player,
+          lineupSlot,
+          teamId: teamsEnabled
+            ? getFixedTeamIdForSlot(lineupSlot, nextTeams)
+            : nextTeamIds.has(player.teamId)
+              ? player.teamId
+              : fallbackTeamId,
+          scores: normalizeScores(player.scores),
+        };
+      }),
     );
     setHostProfile((currentHost) => ({
       ...currentHost,
@@ -263,6 +240,7 @@ export default function App() {
     if (hostProfile.id !== HOST_ID) {
       nextPlayers.push({
         ...hostProfile,
+        lineupSlot: getNextAvailableLineupSlot(nextPlayers),
         scores: normalizeScores(hostProfile.scores),
       });
     }
@@ -282,6 +260,7 @@ export default function App() {
       ...currentPlayers.map(resetProfileScores),
       resetProfileScores({
         ...hostProfile,
+        lineupSlot: getNextAvailableLineupSlot(currentPlayers),
         scores: normalizeScores(hostProfile.scores),
       }),
     ]);
@@ -293,9 +272,67 @@ export default function App() {
     });
   }
 
-  function startGroupQuiz(group) {
+  function movePlayerToLineupSlot(playerId, targetSlot) {
+    setPlayers((currentPlayers) => {
+      const sourcePlayer = currentPlayers.find((player) => player.id === playerId);
+      if (!sourcePlayer) return currentPlayers;
+
+      const sourceIndex = currentPlayers.findIndex((player) => player.id === playerId);
+      const sourceSlot = getResolvedLineupSlot(sourcePlayer, sourceIndex);
+      if (sourceSlot === targetSlot) return currentPlayers;
+
+      const targetPlayer = currentPlayers.find(
+        (player, index) => getResolvedLineupSlot(player, index) === targetSlot,
+      );
+      const sourceTeamId = getFixedTeamIdForSlot(sourceSlot, teams);
+      const targetTeamId = getFixedTeamIdForSlot(targetSlot, teams);
+
+      const nextPlayers = currentPlayers.map((player, index) => {
+        const lineupSlot = getResolvedLineupSlot(player, index);
+
+        if (player.id === playerId) {
+          return {
+            ...player,
+            lineupSlot: targetSlot,
+            teamId: teamsEnabled ? targetTeamId : player.teamId,
+          };
+        }
+
+        if (targetPlayer && player.id === targetPlayer.id) {
+          return {
+            ...player,
+            lineupSlot: sourceSlot,
+            teamId: teamsEnabled ? sourceTeamId : player.teamId,
+          };
+        }
+
+        return {
+          ...player,
+          lineupSlot,
+        };
+      });
+
+      return nextPlayers.sort(
+        (leftPlayer, rightPlayer) =>
+          (leftPlayer.lineupSlot ?? 999) - (rightPlayer.lineupSlot ?? 999),
+      );
+    });
+  }
+
+  function startGroupQuiz(group, options = {}) {
     setSelectedGroup(group);
-    setLaunchMessage(`${group.label} is selected for the next round.`);
+    if (options.silent) return;
+    setSelectedLaunchTarget({ type: "group", id: group.label });
+  }
+
+  function openGroupQuizFromNav(group) {
+    setSelectedGroup(group);
+    setSelectedLaunchTarget({ type: "group", id: group.label });
+    goHome();
+  }
+
+  function selectLaunchTarget(target) {
+    setSelectedLaunchTarget(target);
   }
 
   function goToMainShow() {
@@ -319,23 +356,52 @@ export default function App() {
     window.location.hash = "";
   }
 
-  function renderHomeButton() {
-    return (
-      <button className="global-home-button" onClick={goHome} type="button">
-        Home
-      </button>
-    );
+  function resetApp() {
+    const resetTeams = buildTeams(DEFAULT_TEAM_COUNT);
+    setPlayers(starterPlayers);
+    setHostProfile({
+      ...defaultHostProfile,
+      teamId: resetTeams[0].id,
+      scores: createEmptyScores(),
+    });
+    setPlayerName("");
+    setNewPlayerIcon(playerIcons[0]);
+    setTeams(resetTeams);
+    setTeamsEnabled(false);
+    setNewPlayerTeamId(resetTeams[0].id);
+    setHostGetsScore(false);
+    setDesiredPlayerCount(starterPlayers.length);
+    setSelectedGroup(groupQuizzes[0]);
+    setSelectedLaunchTarget(null);
+    goHome();
   }
+
+  const activeNavKey = route.name === "home" ? "home" : "games";
+
+  const topNav = (
+    <PillNav
+      activeKey={activeNavKey}
+      gameModes={gameModes}
+      groupQuizzes={groupQuizzes}
+      onGoHome={goHome}
+      onOpenModeHub={goToModeHub}
+      onOpenMode={goToModePrototype}
+      onOpenGroupQuiz={openGroupQuizFromNav}
+      onResetApp={resetApp}
+    />
+  );
 
   if (route.name === "main-gameshow") {
     return (
       <>
-        {renderHomeButton()}
+        {topNav}
         <MainGameShow
           players={players}
           setPlayers={setPlayers}
           hostProfile={hostProfile}
           setHostProfile={setHostProfile}
+          teams={teams}
+          teamsEnabled={teamsEnabled}
           hostGetsScore={hostGetsScore}
           setHostGetsScore={setHostGetsScore}
           playerName={playerName}
@@ -357,7 +423,7 @@ export default function App() {
   if (route.name === "mode-hub") {
     return (
       <>
-        {renderHomeButton()}
+        {topNav}
         <ModeHub onBackHome={goHome} onOpenMode={goToModePrototype} />
       </>
     );
@@ -366,7 +432,7 @@ export default function App() {
   if (route.name === "mode-prototype") {
     return (
       <>
-        {renderHomeButton()}
+        {topNav}
         <Suspense
           fallback={
             <div className="page-shell">
@@ -388,6 +454,8 @@ export default function App() {
             setPlayers={setPlayers}
             hostProfile={hostProfile}
             setHostProfile={setHostProfile}
+            teams={teams}
+            teamsEnabled={teamsEnabled}
             hostGetsScore={hostGetsScore}
             setHostGetsScore={setHostGetsScore}
             playerName={playerName}
@@ -411,13 +479,13 @@ export default function App() {
 
   return (
     <>
-      {renderHomeButton()}
+      {topNav}
       <HomeScreen
         players={players}
         hostProfile={hostProfile}
         hostGetsScore={hostGetsScore}
         selectedGroup={selectedGroup}
-        launchMessage={launchMessage}
+        selectedLaunchTarget={selectedLaunchTarget}
         playerName={playerName}
         newPlayerIcon={newPlayerIcon}
         teams={teams}
@@ -437,7 +505,9 @@ export default function App() {
         onTeamCountChange={setTeamCount}
         onTeamRename={renameTeam}
         onTeamsEnabledChange={setTeamsEnabled}
+        onMovePlayerToLineupSlot={movePlayerToLineupSlot}
         onStartGroupQuiz={startGroupQuiz}
+        onSelectLaunchTarget={selectLaunchTarget}
         modeOptions={gameModes}
         onOpenModeHub={goToModeHub}
         onOpenMode={goToModePrototype}

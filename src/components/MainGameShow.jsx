@@ -2,9 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
 import Counter from "./Counter";
 import GameSetupModal from "./GameSetupModal";
-import StaggeredMenu from "./StaggeredMenu";
 import { mainQuizRounds } from "../data/mainQuizRounds";
 import { createEmptyScores, normalizeScores } from "../data/scoreModel";
+import { buildGameEntities } from "../data/teamModeHelpers";
 
 const ANSWER_OVERRIDES_STORAGE_KEY = "kpop-quiz-main-answer-overrides-v1";
 
@@ -100,6 +100,8 @@ export default function MainGameShow({
   setPlayers,
   hostProfile,
   setHostProfile,
+  teams,
+  teamsEnabled,
   hostGetsScore,
   setHostGetsScore,
   playerName,
@@ -146,10 +148,21 @@ export default function MainGameShow({
     (currentAnswerOverrideKey ? answerOverrides[currentAnswerOverrideKey] : null) ??
     currentStep.answer;
   const resolvedAnswers = currentStep.answers ?? [resolvedAnswer];
-  const displayPlayers = useMemo(() => [hostProfile, ...players], [hostProfile, players]);
+  const displayPlayers = useMemo(
+    () =>
+      buildGameEntities({
+        players,
+        hostProfile,
+        teams,
+        teamsEnabled,
+        hostGetsScore,
+        scoreKey,
+      }),
+    [hostGetsScore, hostProfile, players, scoreKey, teams, teamsEnabled],
+  );
   const eligiblePlayers = useMemo(
-    () => displayPlayers.filter((player) => playerCanScore(player, hostGetsScore, hostProfile.id)),
-    [displayPlayers, hostGetsScore, hostProfile.id],
+    () => displayPlayers.filter((player) => player.isScoring),
+    [displayPlayers],
   );
   const isFavoriteSongStep =
     currentStep.type === "extra" &&
@@ -647,7 +660,10 @@ export default function MainGameShow({
   }
 
   function updateScoreForPlayer(playerId, amount) {
-    if (playerId === hostProfile.id) {
+    const scoreTargetId =
+      displayPlayers.find((player) => player.id === playerId)?.representativeId ?? playerId;
+
+    if (scoreTargetId === hostProfile.id) {
       setHostProfile((currentHost) => ({
         ...currentHost,
         scores: {
@@ -660,7 +676,7 @@ export default function MainGameShow({
 
     setPlayers((currentPlayers) =>
       currentPlayers.map((player) =>
-        player.id === playerId
+        player.id === scoreTargetId
           ? {
               ...player,
               scores: {
@@ -926,20 +942,6 @@ export default function MainGameShow({
     <div className="page-shell game-show-shell" id="gameshow-top">
       <div className="background-orb background-orb-left" />
       <div className="background-orb background-orb-right" />
-      <StaggeredMenu
-        position="right"
-        items={menuActions}
-        socialItems={menuNavigation}
-        itemSectionLabel="Main options"
-        socialSectionLabel="Navigation"
-        displaySocials
-        displayItemNumbering
-        menuButtonColor="#fff8ef"
-        openMenuButtonColor="#fff8ef"
-        changeMenuColorOnOpen
-        colors={["#ff8d66", "#ff5d8f"]}
-        accentColor="#ff5d8f"
-      />
 
       <GameSetupModal
         isOpen={isSetupOpen}
@@ -986,7 +988,7 @@ export default function MainGameShow({
 
               <div className="results-player-list">
                 {displayPlayers.map((player) => {
-                  const canScore = playerCanScore(player, hostGetsScore, hostProfile.id);
+                  const canScore = player.isScoring;
                   const playerGuess = isFavoriteSongStep
                     ? getAssignedOptions(player.id)
                     : getAssignedOption(player.id);
@@ -1003,13 +1005,17 @@ export default function MainGameShow({
                           {player.name}
                         </strong>
                         <p className="inline-score-meta">
-                          {player.id === hostProfile.id && !hostGetsScore
-                            ? "Host scoring disabled"
-                            : isFavoriteSongStep && Array.isArray(playerGuess) && playerGuess.length
-                              ? `Locked songs: ${playerGuess.join(", ")}`
-                            : playerGuess
-                              ? `Guess: ${playerGuess}`
-                              : "No guess locked"}
+                          {!player.isScoring
+                            ? "Scoring disabled"
+                            : player.kind === "team"
+                              ? `Team members: ${player.memberNames.join(", ")}`
+                              : player.id === hostProfile.id && !hostGetsScore
+                                ? "Host scoring disabled"
+                                : isFavoriteSongStep && Array.isArray(playerGuess) && playerGuess.length
+                                  ? `Locked songs: ${playerGuess.join(", ")}`
+                                  : playerGuess
+                                    ? `Guess: ${playerGuess}`
+                                    : "No guess locked"}
                         </p>
                       </div>
 
@@ -1261,8 +1267,8 @@ export default function MainGameShow({
 
                 <div className="score-strip">
                   {displayPlayers.map((player) => {
-                    const isHost = player.id === hostProfile.id;
-                    const isScoring = playerCanScore(player, hostGetsScore, hostProfile.id);
+                    const isHost = !teamsEnabled && player.id === hostProfile.id;
+                    const isScoring = player.isScoring;
 
                     return (
                       <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>
@@ -1272,11 +1278,13 @@ export default function MainGameShow({
                             {player.name}
                           </strong>
                           <p>
-                            {isHost
-                              ? hostGetsScore
-                                ? "Host and player"
-                                : "Host only"
-                              : "Player"}
+                            {player.kind === "team"
+                              ? player.memberNames.join(", ")
+                              : isHost
+                                ? hostGetsScore
+                                  ? "Host and player"
+                                  : "Host only"
+                                : "Player"}
                           </p>
                         </div>
                         <div className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
@@ -1288,7 +1296,7 @@ export default function MainGameShow({
                             places={[100, 10, 1]}
                             textColor={!isScoring ? "rgba(255, 248, 239, 0.56)" : "#ffd978"}
                             trigger={scoreRefreshTick}
-                            value={normalizeScores(player.scores)[scoreKey] ?? 0}
+                            value={player.scoreTotal ?? 0}
                           />
                         </div>
                       </div>

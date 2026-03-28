@@ -197,6 +197,15 @@ const groupReference = {
     debutSong: "I DO ME",
     nameMeaning: "The sound of giggling and keeping joy alive.",
   },
+  Girlset: {
+    company: "JYP Entertainment / Republic Records",
+    debutDate: "August 29, 2025",
+    fandom: "LOCKETS",
+    debutSong: "Commas",
+    originStory: "The group rebranded from VCHA after A2K's original lineup changed.",
+    achievementPrompt: "What was Girlset's group name before the 2025 rebrand?",
+    achievementAnswer: "VCHA",
+  },
 };
 
 function getStableHash(value) {

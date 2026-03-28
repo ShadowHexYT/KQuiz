@@ -14,6 +14,7 @@ function getOffset(distance, direction, reverse) {
 
 export default function AnimatedContent({
   children,
+  className = "",
   distance = 100,
   direction = "vertical",
   reverse = false,
@@ -24,6 +25,7 @@ export default function AnimatedContent({
   scale = 1,
   threshold = 0.1,
   delay = 0,
+  animateKey,
 }) {
   const ref = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -45,7 +47,7 @@ export default function AnimatedContent({
     observer.observe(node);
 
     return () => observer.disconnect();
-  }, [threshold]);
+  }, [animateKey, threshold]);
 
   const style = useMemo(
     () => ({
@@ -74,7 +76,7 @@ export default function AnimatedContent({
   );
 
   return (
-    <div ref={ref} style={style}>
+    <div className={className} ref={ref} style={style}>
       {children}
     </div>
   );

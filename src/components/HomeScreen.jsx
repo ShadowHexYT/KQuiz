@@ -1,84 +1,9 @@
 import { useEffect, useState } from "react";
 import { HOST_ID } from "../App";
+import { groupQuizzes } from "../data/groupQuizzes";
 import AnimatedContent from "./AnimatedContent";
 import AnimatedList from "./AnimatedList";
 import Carousel from "./Carousel";
-import StaggeredMenu from "./StaggeredMenu";
-
-const groupQuizzes = [
-  {
-    label: "TWICE",
-    description: "Title tracks, choreography highlights, and member trivia.",
-  },
-  {
-    label: "LE SSERAFIM",
-    description: "Fearless concepts, choreography moments, member visuals, and comeback rounds.",
-  },
-  {
-    label: "NewJeans",
-    description: "Debut-era details, visuals, styling, and song recognition.",
-  },
-  {
-    label: "IVE",
-    description: "Concepts, catchy hooks, member facts, and comeback rounds.",
-  },
-  {
-    label: "aespa",
-    description: "Virtual-era concepts, standout visuals, and song recognition rounds.",
-  },
-  {
-    label: "NMIXX",
-    description: "Member recognition, bold title tracks, and vocal-heavy quiz moments.",
-  },
-  {
-    label: "ILLIT",
-    description: "Cherish (My Love), dreamy member trivia, maknae picks, and bias rounds.",
-  },
-  {
-    label: "KiiiKiii",
-    description: "404 (New Era), member recognition, leader picks, and bias trivia.",
-  },
-  {
-    label: "Meovv",
-    description: "Burning Up, member visuals, maknae trivia, and bias picks.",
-  },
-  {
-    label: "Hearts2Hearts",
-    description: "Rude!, large-group member trivia, leader picks, and bias rounds.",
-  },
-  {
-    label: "XG",
-    description: "Hypnotize, standout member recognition, leader trivia, and bias picks.",
-  },
-  {
-    label: "Baby DONT Cry",
-    description: "I Dont Care, member recognition, leader trivia, and bias rounds.",
-  },
-  {
-    label: "KPDH",
-    description: "Fictional trio member trivia with leader, maknae, and bias picks.",
-  },
-  {
-    label: "Kiss of Life",
-    description: "Performance charisma, member trivia, and recent comeback questions.",
-  },
-];
-
-const menuItems = [
-  { label: "Home", ariaLabel: "Jump to the top of the page", link: "#top" },
-  { label: "Setup", ariaLabel: "Jump to the player setup area", link: "#party-setup" },
-  { label: "Party Lineup", ariaLabel: "Jump to party lineup", link: "#party-lineup" },
-  { label: "Main Modes", ariaLabel: "Jump to main quiz modes", link: "#modes" },
-  { label: "Groups", ariaLabel: "Jump to group specific quizzes", link: "#groups" },
-];
-
-const socialItems = [
-  { label: "Main Gameshow", link: "#modes" },
-  { label: "Game Lab", link: "#modes" },
-  { label: "Random Group", link: "#groups" },
-  { label: "Party Lineup", link: "#party-lineup" },
-  { label: "Top Modes", link: "#modes" },
-];
 
 const backgroundImages = [
   "/quiz-media/image1.jpg",
@@ -156,12 +81,35 @@ function getDifficultyOptionsForMode(modeId) {
   return ["Standard"];
 }
 
+const TEAM_ACCENTS = [
+  {
+    border: "rgba(255, 108, 152, 0.62)",
+    glow: "rgba(255, 108, 152, 0.18)",
+    wash: "rgba(255, 108, 152, 0.1)",
+  },
+  {
+    border: "rgba(142, 240, 186, 0.56)",
+    glow: "rgba(142, 240, 186, 0.18)",
+    wash: "rgba(97, 220, 155, 0.1)",
+  },
+  {
+    border: "rgba(137, 225, 255, 0.56)",
+    glow: "rgba(137, 225, 255, 0.18)",
+    wash: "rgba(88, 204, 255, 0.08)",
+  },
+  {
+    border: "rgba(255, 141, 102, 0.56)",
+    glow: "rgba(255, 141, 102, 0.18)",
+    wash: "rgba(255, 141, 102, 0.08)",
+  },
+];
+
 export default function HomeScreen({
   players,
   hostProfile,
   hostGetsScore,
   selectedGroup,
-  launchMessage,
+  selectedLaunchTarget,
   playerName,
   newPlayerIcon,
   teams,
@@ -181,30 +129,67 @@ export default function HomeScreen({
   onTeamCountChange,
   onTeamRename,
   onTeamsEnabledChange,
+  onMovePlayerToLineupSlot,
   modeOptions,
+  onSelectLaunchTarget,
   onOpenModeHub,
   onOpenMode,
   onStartGroupQuiz,
   onStartMainShow,
 }) {
   const [carouselModeIndex, setCarouselModeIndex] = useState(0);
-  const [selectedModeIndex, setSelectedModeIndex] = useState(0);
   const [isCarouselHovered, setIsCarouselHovered] = useState(false);
   const [openEmojiMenuFor, setOpenEmojiMenuFor] = useState(null);
+  const [draggedLineupPlayerId, setDraggedLineupPlayerId] = useState(null);
+  const [activeTeamDropZoneId, setActiveTeamDropZoneId] = useState(null);
+  const [swapAnimation, setSwapAnimation] = useState(null);
   const [backgroundSet, setBackgroundSet] = useState(() => pickRandomBackgroundSet());
+  const [activeTeamEditorId, setActiveTeamEditorId] = useState("team-1");
   const [modeDifficulties, setModeDifficulties] = useState(() =>
     Object.fromEntries(modeOptions.map((mode) => [mode.id, getDifficultyOptionsForMode(mode.id)[0]])),
   );
+  const displayedTeams = teams.slice(0, 3);
+  const fixedTeamSlotTeams = [
+    displayedTeams[0] ?? null,
+    displayedTeams[1] ?? null,
+    displayedTeams[0] ?? null,
+    displayedTeams[1] ?? null,
+    displayedTeams[2] ?? null,
+    displayedTeams[2] ?? null,
+  ];
+  const selectedModeIndex = (() => {
+    if (selectedLaunchTarget?.type !== "mode") return null;
+    const matchedIndex = modeOptions.findIndex((mode) => mode.id === selectedLaunchTarget.id);
+    return matchedIndex >= 0 ? matchedIndex : null;
+  })();
   const previewMode = modeOptions[carouselModeIndex] ?? modeOptions[0];
-  const activeMode = modeOptions[selectedModeIndex] ?? modeOptions[0];
-  const canLaunchActiveMode = activeMode && !activeMode.comingSoon;
-  const isPreviewModeSelected = previewMode?.id === activeMode?.id;
-  const activeDifficultyOptions = getDifficultyOptionsForMode(activeMode?.id);
+  const activeMode =
+    selectedModeIndex === null ? null : (modeOptions[selectedModeIndex] ?? null);
+  const difficultyMode = activeMode ?? previewMode;
+  const hasSelectedMode = selectedModeIndex !== null;
+  const hasSelectedGroup = selectedLaunchTarget?.type === "group";
+  const isAdvertisedGroupSelected = hasSelectedGroup && selectedLaunchTarget.id === selectedGroup.label;
+  const canLaunchActiveMode = Boolean(activeMode && !activeMode.comingSoon);
+  const hasPlayableModeSelected = selectedLaunchTarget?.type === "mode" && canLaunchActiveMode;
+  const isPreviewModeSelected = hasSelectedMode && previewMode?.id === activeMode?.id;
+  const activeDifficultyOptions = getDifficultyOptionsForMode(difficultyMode?.id);
   const activeDifficulty =
-    (activeMode?.id ? modeDifficulties[activeMode.id] : null) ?? activeDifficultyOptions[0];
+    (difficultyMode?.id ? modeDifficulties[difficultyMode.id] : null) ?? activeDifficultyOptions[0];
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
   const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null);
+  const slottedPlayers = players
+    .map((player, index) => ({
+      ...player,
+      resolvedLineupSlot: player.lineupSlot ?? index + 1,
+    }))
+    .sort((leftPlayer, rightPlayer) => leftPlayer.resolvedLineupSlot - rightPlayer.resolvedLineupSlot);
+  const visibleTeamSlots = Array.from({ length: 6 }, (_, index) => {
+    const slotNumber = index + 1;
+    return slottedPlayers.find((player) => player.resolvedLineupSlot === slotNumber) ?? null;
+  });
+  const activeEditorTeam =
+    displayedTeams.find((team) => team.id === activeTeamEditorId) ?? displayedTeams[0] ?? null;
   const launchActiveMode = () => {
     if (!activeMode || activeMode.comingSoon) return;
 
@@ -217,7 +202,11 @@ export default function HomeScreen({
   };
   const launchButtonLabel = activeMode?.comingSoon
     ? `${activeMode.title} Coming Soon`
-    : `Launch ${activeMode?.title ?? "Selected Game"}`;
+    : activeMode
+      ? `Launch ${activeMode.title}`
+      : hasSelectedGroup
+        ? `${selectedLaunchTarget.id} quiz coming soon`
+        : "Select a game or group";
   const currentPlayersLabel = `Current Players: ${lineupPlayers.length}`;
   const formatLabel = teamsEnabled ? `${teams.length} teams` : "Free-for-all";
 
@@ -228,6 +217,21 @@ export default function HomeScreen({
 
     return () => window.clearInterval(intervalId);
   }, []);
+
+  useEffect(() => {
+    if (teamsEnabled && teams.length !== 3) {
+      onTeamCountChange("3");
+    }
+  }, [onTeamCountChange, teams.length, teamsEnabled]);
+
+  useEffect(() => {
+    if (!displayedTeams.length) return;
+
+    const hasActiveTeam = displayedTeams.some((team) => team.id === activeTeamEditorId);
+    if (!hasActiveTeam) {
+      setActiveTeamEditorId(displayedTeams[0].id);
+    }
+  }, [activeTeamEditorId, displayedTeams]);
 
   function getTeamName(teamId) {
     return teams.find((team) => team.id === teamId)?.name ?? "Unassigned";
@@ -245,6 +249,11 @@ export default function HomeScreen({
     return "";
   }
 
+  function getTeamAccent(teamId) {
+    const teamIndex = displayedTeams.findIndex((team) => team?.id === teamId);
+    return TEAM_ACCENTS[teamIndex] ?? TEAM_ACCENTS[0];
+  }
+
   function updatePlayerIcon(player, icon) {
     if (player.id === hostProfile.id) {
       onHostUpdate({ icon });
@@ -260,18 +269,44 @@ export default function HomeScreen({
   }
 
   function handleDifficultyChange(option) {
-    if (!activeMode?.id) return;
+    if (!difficultyMode?.id) return;
 
     setModeDifficulties((currentValues) => ({
       ...currentValues,
-      [activeMode.id]: option,
+      [difficultyMode.id]: option,
     }));
   }
 
   function handleTeamCountSelect(count) {
     onTeamCountChange(String(count));
-    setIsTeamMenuOpen(false);
   }
+
+  function handleLineupDrop(targetSlotNumber) {
+    if (!draggedLineupPlayerId) return;
+    onMovePlayerToLineupSlot?.(draggedLineupPlayerId, targetSlotNumber);
+    setDraggedLineupPlayerId(null);
+    setActiveTeamDropZoneId(null);
+  }
+
+  function handleLineupDragStart(playerId) {
+    setDraggedLineupPlayerId(playerId);
+    setOpenEmojiMenuFor(null);
+  }
+
+  function handleLineupDragEnd() {
+    setDraggedLineupPlayerId(null);
+    setActiveTeamDropZoneId(null);
+  }
+
+  useEffect(() => {
+    if (!swapAnimation) return undefined;
+
+    const timer = window.setTimeout(() => {
+      setSwapAnimation(null);
+    }, 380);
+
+    return () => window.clearTimeout(timer);
+  }, [swapAnimation]);
 
   return (
     <div className="page-shell" id="top">
@@ -297,21 +332,6 @@ export default function HomeScreen({
           ))}
         </div>
       </div>
-      <StaggeredMenu
-        position="right"
-        items={menuItems}
-        socialItems={socialItems}
-        itemSectionLabel="Main options"
-        socialSectionLabel="Navigation"
-        displaySocials
-        displayItemNumbering
-        menuButtonColor="#fff8ef"
-        openMenuButtonColor="#fff8ef"
-        changeMenuColorOnOpen
-        colors={["#ff8d66", "#ff5d8f"]}
-        accentColor="#ff5d8f"
-      />
-
       <main className="app-frame">
         <section className="hero-showcase hero-showcase-banner">
           <AnimatedContent
@@ -332,7 +352,10 @@ export default function HomeScreen({
                   <span className="hero-brand-mark" aria-hidden="true">
                     <span className="hero-brand-icon">🫰</span>
                   </span>
-                  <h1>Kpop Quiz Games</h1>
+                  <div className="hero-brand-title">
+                    <h1>KQuiz Games</h1>
+                    <span className="hero-brand-byline">by Hunter</span>
+                  </div>
                 </div>
 
                 <div className="hero-lineup-panel" id="party-lineup">
@@ -344,49 +367,141 @@ export default function HomeScreen({
                   </div>
 
                 <div className="hero-lineup-grid">
-                  {teamsEnabled ? (
-                    <div className="hero-team-name-grid">
-                      {teams.map((team) => (
-                        <label className="hero-team-name-card" key={team.id}>
-                          <span className="panel-label">Team name</span>
-                          <input
-                            className="player-text-input hero-team-name-input"
-                            type="text"
-                            value={team.name}
-                            onChange={(event) => onTeamRename(team.id, event.target.value)}
-                          />
+                  {lineupPlayers[0] ? (
+                    <div
+                      className={`hero-lineup-chip ${lineupPlayers[0].id === hostProfile.id ? "is-host" : ""} ${
+                        teamsEnabled && hostProfile.teamId ? "has-team-outline" : ""
+                      }`}
+                      key={lineupPlayers[0].id}
+                      style={
+                        teamsEnabled && hostProfile.teamId
+                          ? {
+                              "--team-outline": getTeamAccent(hostProfile.teamId).border,
+                              "--team-glow": getTeamAccent(hostProfile.teamId).glow,
+                              "--team-wash": getTeamAccent(hostProfile.teamId).wash,
+                            }
+                          : undefined
+                      }
+                    >
+                      <span className="hero-lineup-icon">{lineupPlayers[0].icon}</span>
+                      <div className="hero-lineup-copy">
+                        <strong>{lineupPlayers[0].name}</strong>
+                        {getPlayerSubtitle(lineupPlayers[0]) ? <p>{getPlayerSubtitle(lineupPlayers[0])}</p> : null}
+                      </div>
+                      {teamsEnabled && hostGetsScore ? (
+                        <label className="hero-host-team-picker">
+                          <select
+                            className="hero-host-team-select"
+                            value={hostProfile.teamId ?? displayedTeams[0]?.id ?? ""}
+                            onChange={(event) => onHostUpdate({ teamId: event.target.value })}
+                          >
+                            {displayedTeams.map((team) => (
+                              <option key={team.id} value={team.id}>
+                                {team.name}
+                              </option>
+                            ))}
+                          </select>
                         </label>
-                      ))}
+                      ) : null}
                     </div>
                   ) : null}
 
-                  {playerSlots.slice(0, 7).map((player, index) =>
-                      player ? (
-                        <div
-                          className={`hero-lineup-chip ${player.id === hostProfile.id ? "is-host" : ""}`}
-                          key={player.id}
-                        >
-                          <span className="hero-lineup-icon">{player.icon}</span>
-                          <div>
-                            <strong>{player.name}</strong>
-                            {getPlayerSubtitle(player) ? <p>{getPlayerSubtitle(player)}</p> : null}
-                          </div>
+                  {visibleTeamSlots.map((player, index) => {
+                    const slotNumber = index + 1;
+                    const slotTeam = teamsEnabled ? fixedTeamSlotTeams[index] : null;
+                    const slotAccent = slotTeam ? getTeamAccent(slotTeam.id) : null;
+                    const activeDropKey = `slot-${slotNumber}`;
+
+                    return player ? (
+                      <div
+                        className={`hero-lineup-chip ${player.id === hostProfile.id ? "is-host" : ""} ${
+                          teamsEnabled && slotTeam ? "has-team-outline" : ""
+                        } ${draggedLineupPlayerId === player.id ? "is-dragging" : ""} ${
+                          activeTeamDropZoneId === activeDropKey ? "is-drop-target" : ""
+                        }`}
+                        key={player.id}
+                        draggable={teamsEnabled}
+                        onDragEnd={handleLineupDragEnd}
+                        onDragStart={() => handleLineupDragStart(player.id)}
+                        onDragOver={(event) => {
+                          if (!teamsEnabled) return;
+                          event.preventDefault();
+                          setActiveTeamDropZoneId(activeDropKey);
+                        }}
+                        onDragLeave={() => {
+                          setActiveTeamDropZoneId((currentValue) =>
+                            currentValue === activeDropKey ? null : currentValue,
+                          );
+                        }}
+                        onDrop={(event) => {
+                          if (!teamsEnabled) return;
+                          event.preventDefault();
+                          handleLineupDrop(slotNumber);
+                        }}
+                        style={
+                          teamsEnabled && slotAccent
+                            ? {
+                                "--team-outline": slotAccent.border,
+                                "--team-glow": slotAccent.glow,
+                                "--team-wash": slotAccent.wash,
+                              }
+                            : undefined
+                        }
+                      >
+                        <span className="hero-lineup-icon">{player.icon}</span>
+                        <div>
+                          <strong>{player.name}</strong>
+                          {teamsEnabled && slotTeam ? (
+                            <p>{slotTeam.name}</p>
+                          ) : getPlayerSubtitle(player) ? (
+                            <p>{getPlayerSubtitle(player)}</p>
+                          ) : null}
                         </div>
-                      ) : (
-                        <div className="hero-lineup-chip is-empty" key={`hero-empty-${index}`}>
-                          <span className="hero-lineup-icon">+</span>
-                          <div>
-                            <strong>Open slot</strong>
-                            <p>Add a player</p>
-                          </div>
+                      </div>
+                    ) : (
+                      <div
+                        className={`hero-lineup-chip is-empty ${
+                          activeTeamDropZoneId === activeDropKey ? "is-drop-target" : ""
+                        } ${teamsEnabled && slotTeam ? "has-team-outline" : ""}`}
+                        key={`hero-empty-${index}`}
+                        onDragOver={(event) => {
+                          if (!teamsEnabled) return;
+                          event.preventDefault();
+                          setActiveTeamDropZoneId(activeDropKey);
+                        }}
+                        onDragLeave={() => {
+                          setActiveTeamDropZoneId((currentValue) =>
+                            currentValue === activeDropKey ? null : currentValue,
+                          );
+                        }}
+                        onDrop={(event) => {
+                          if (!teamsEnabled) return;
+                          event.preventDefault();
+                          handleLineupDrop(slotNumber);
+                        }}
+                        style={
+                          teamsEnabled && slotAccent
+                            ? {
+                                "--team-outline": slotAccent.border,
+                                "--team-glow": slotAccent.glow,
+                                "--team-wash": slotAccent.wash,
+                              }
+                            : undefined
+                        }
+                      >
+                        <span className="hero-lineup-icon">+</span>
+                        <div>
+                          <strong>Open slot</strong>
+                          <p>{teamsEnabled && slotTeam ? slotTeam.name : "Add a player"}</p>
                         </div>
-                      ),
-                    )}
-                  </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
                   <div className="hero-actions">
                     <button
-                      className="primary-button"
+                      className={`primary-button ${hasPlayableModeSelected ? "is-play-selected" : ""}`}
                       disabled={!canLaunchActiveMode}
                       onClick={launchActiveMode}
                       type="button"
@@ -449,21 +564,6 @@ export default function HomeScreen({
                       value={playerName}
                       onChange={(event) => onPlayerNameChange(event.target.value)}
                     />
-                    <div className={`player-team-slot ${teamsEnabled ? "is-visible" : ""}`}>
-                      <select
-                        className="player-select-input"
-                        disabled={!teamsEnabled}
-                        tabIndex={teamsEnabled ? 0 : -1}
-                        value={newPlayerTeamId}
-                        onChange={(event) => onNewPlayerTeamChange(event.target.value)}
-                      >
-                        {teams.map((team) => (
-                          <option key={team.id} value={team.id}>
-                            {team.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
                     <button
                       aria-label="Add player"
                       className="primary-button player-add-button"
@@ -474,27 +574,69 @@ export default function HomeScreen({
                   </div>
                 </form>
 
-                <div className="party-settings-grid">
-                  <div className="party-setting-card">
-                    <p className="panel-label">Selected game</p>
-                    <strong>{activeMode?.title ?? "No game selected"}</strong>
-                  </div>
+                <div className={`party-settings-grid ${teamsEnabled ? "is-team-naming" : ""}`}>
+                  {teamsEnabled ? (
+                    <div className="party-team-name-card">
+                      {activeEditorTeam ? (
+                        <>
+                          <label className="party-team-editor-picker">
+                            <select
+                              className="party-team-editor-select"
+                              value={activeEditorTeam.id}
+                              onChange={(event) => setActiveTeamEditorId(event.target.value)}
+                            >
+                              {displayedTeams.map((team) => (
+                                <option key={team.id} value={team.id}>
+                                  Team {team.id.replace("team-", "")}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label
+                            className="party-team-name-field is-single-editor"
+                            style={{
+                              "--team-outline": getTeamAccent(activeEditorTeam.id).border,
+                              "--team-glow": getTeamAccent(activeEditorTeam.id).glow,
+                              "--team-wash": getTeamAccent(activeEditorTeam.id).wash,
+                            }}
+                          >
+                            <input
+                              className="player-text-input hero-team-name-input"
+                              type="text"
+                              value={activeEditorTeam.name}
+                              onChange={(event) => onTeamRename(activeEditorTeam.id, event.target.value)}
+                            />
+                          </label>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="party-setting-card">
+                      <p className="panel-label">Selected game</p>
+                      <strong>
+                        {activeMode?.title ??
+                          (hasSelectedGroup ? selectedLaunchTarget.id : "No selection yet")}
+                      </strong>
+                    </div>
+                  )}
                 </div>
 
                 <div className="party-controls-panel">
                   <div className="party-control-group">
-                    <span className="panel-label">Game setup</span>
-                    <div className="party-inline-actions">
-                      <button className="ghost-button party-chip-button" onClick={onOpenModeHub} type="button">
-                        All games
-                      </button>
-                      <button
-                        className="ghost-button party-chip-button"
-                        onClick={() => window.location.hash = "#modes"}
-                        type="button"
-                      >
-                        Carousel
-                      </button>
+                    <span className="panel-label">Team structure</span>
+                    <div className="party-segmented-row">
+                      {[2, 3, 4].map((count) => (
+                        <button
+                          className={`ghost-button party-segment-button ${teams.length === count ? "is-active" : ""}`}
+                          disabled={!teamsEnabled}
+                          key={count}
+                          onClick={() => handleTeamCountSelect(count)}
+                          type="button"
+                        >
+                          {count}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -509,23 +651,6 @@ export default function HomeScreen({
                           type="button"
                         >
                           {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="party-control-group">
-                    <span className="panel-label">Team structure</span>
-                    <div className="party-segmented-row">
-                      {[2, 3, 4].map((count) => (
-                        <button
-                          className={`ghost-button party-segment-button ${teams.length === count ? "is-active" : ""}`}
-                          disabled={!teamsEnabled}
-                          key={count}
-                          onClick={() => handleTeamCountSelect(count)}
-                          type="button"
-                        >
-                          {count}
                         </button>
                       ))}
                     </div>
@@ -585,8 +710,8 @@ export default function HomeScreen({
                 <p className="panel-label">How to start</p>
                 <h2>Choose your game mode</h2>
                 <p className="mode-instructions-text">
-                  Let the cards cycle, tap the one you want, and set the next game
-                  before launching it from the party lineup above.
+                  Browse the carousel, lock in the mode you want, and launch it from
+                  the party lineup above when your group is ready.
                 </p>
                 <div className="mode-instruction-list">
                   <div className="mode-instruction-item">
@@ -602,10 +727,6 @@ export default function HomeScreen({
                     <span>Launch the selected game from the party lineup section.</span>
                   </div>
                 </div>
-                <div className="mode-current-pick">
-                  <span className="mode-current-pill">Selected now</span>
-                  <strong>{activeMode.title}</strong>
-                </div>
               </aside>
 
               <div className="mode-carousel-column">
@@ -616,13 +737,13 @@ export default function HomeScreen({
                 >
                   <Carousel
                     activeIndex={carouselModeIndex}
-                    autoplay
+                    autoplay={!hasSelectedMode}
                     autoplayDelay={5000}
                     baseWidth={280}
                     isPaused={isCarouselHovered}
                     items={modeOptions}
                     loop
-                    selectedIndex={selectedModeIndex}
+                    selectedIndex={selectedModeIndex ?? -1}
                     onSelect={setCarouselModeIndex}
                     pauseOnHover
                     round={false}
@@ -630,20 +751,23 @@ export default function HomeScreen({
                 </div>
 
                 <div className="mode-play-row">
-                  <button className="ghost-button" onClick={onOpenModeHub} type="button">
-                    View all games
-                  </button>
                   <button
-                    className="primary-button"
+                    className={`primary-button ${isPreviewModeSelected ? "is-mode-selected" : ""}`}
                     disabled={!previewMode || previewMode.comingSoon || isPreviewModeSelected}
-                    onClick={() => setSelectedModeIndex(carouselModeIndex)}
+                    onClick={() => {
+                      onSelectLaunchTarget?.({ type: "mode", id: previewMode.id });
+                      setCarouselModeIndex(carouselModeIndex);
+                    }}
                     type="button"
                   >
                     {previewMode?.comingSoon
                       ? "Coming Soon"
                       : isPreviewModeSelected
-                        ? `${previewMode.title} Selected`
+                        ? "Mode selected"
                         : `Select ${previewMode?.title ?? "Game"}`}
+                  </button>
+                  <button className="ghost-button" onClick={onOpenModeHub} type="button">
+                    View all games
                   </button>
                 </div>
               </div>
@@ -719,29 +843,6 @@ export default function HomeScreen({
                         </div>
                       </div>
 
-                      {teamsEnabled ? (
-                        <div className="lineup-control-group">
-                          <label className="lineup-control">
-                            <span>Team</span>
-                            <select
-                              className="player-select-input"
-                              value={player.teamId ?? teams[0]?.id ?? ""}
-                              onChange={(event) =>
-                                player.id === hostProfile.id
-                                  ? onHostUpdate({ teamId: event.target.value })
-                                  : onPlayerUpdate(player.id, { teamId: event.target.value })
-                              }
-                            >
-                              {teams.map((team) => (
-                                <option key={team.id} value={team.id}>
-                                  {team.name}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-                        </div>
-                      ) : null}
-
                       <div className="player-slot-actions">
                         {player.id === hostProfile.id ? (
                           <>
@@ -815,29 +916,51 @@ export default function HomeScreen({
           delay={0.15}
         >
           <section className="group-section" id="groups">
-            <div className="section-heading">
-              <p className="section-kicker">Group-specific quizzes</p>
-            </div>
-
             <div className="group-showcase">
-              <div className="group-feature-card">
-                <p className="panel-label">Selected group</p>
-                <h3>{selectedGroup.label}</h3>
-                <p>{selectedGroup.description}</p>
-                <button
-                  className="group-start-button"
-                  onClick={() => onStartGroupQuiz(selectedGroup)}
-                  type="button"
+              <div
+                className={`group-feature-card ${isAdvertisedGroupSelected ? "is-selected" : ""}`}
+                style={{
+                  "--group-cover-image": selectedGroup.coverImage
+                    ? `url("${selectedGroup.coverImage}")`
+                    : "none",
+                }}
+              >
+                <AnimatedContent
+                  animateKey={selectedGroup.label}
+                  className="group-feature-body"
+                  delay={0}
+                  direction="vertical"
+                  distance={220}
+                  duration={1.2}
+                  ease="cubic-bezier(0.22, 1, 0.36, 1)"
+                  initialOpacity={0}
+                  reverse={false}
+                  scale={1}
+                  threshold={0.1}
+                  animateOpacity
                 >
-                  Select {selectedGroup.label}
-                </button>
-                {launchMessage ? <p className="group-launch-note">{launchMessage}</p> : null}
+                  <p className="panel-label">Individual quizzes</p>
+                  <h3>{selectedGroup.label}</h3>
+                  <p>{selectedGroup.description}</p>
+                  <button
+                    className={`group-start-button ${isAdvertisedGroupSelected ? "is-selected" : ""}`}
+                    onClick={() => onStartGroupQuiz(selectedGroup)}
+                    type="button"
+                  >
+                    {isAdvertisedGroupSelected
+                      ? `${selectedGroup.label} Selected`
+                      : `Select ${selectedGroup.label}`}
+                  </button>
+                </AnimatedContent>
               </div>
 
               <AnimatedList
                 items={groupQuizzes}
-                onItemSelect={(item) => onStartGroupQuiz(item)}
-                showGradients
+                onItemSelect={(item) => onStartGroupQuiz(item, { silent: true })}
+                onActiveItemChange={(item) => onStartGroupQuiz(item, { silent: true })}
+                autoplay={!hasSelectedGroup}
+                selectedItemLabel={hasSelectedGroup ? selectedLaunchTarget.id : null}
+                showGradients={false}
                 enableArrowNavigation
                 displayScrollbar={false}
               />

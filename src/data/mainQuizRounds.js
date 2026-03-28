@@ -788,6 +788,18 @@ const songMetaLibrary = {
     coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/50/7e/e0/507ee09f-ccfd-1e3c-af90-ca5e92b1221b/00888735949869_Cover.jpg/1000x1000bb.jpg",
     previewUrl: null,
   },
+  "Girlset::Only One": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/ac/0f/14/ac0f1485-87d2-d8f3-2d46-ec80bfb8ffa5/24UMGIM21739.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/ef/47/01/ef470181-944f-0510-c8ef-cb7c0645829a/mzaf_12945061919960777031.plus.aac.p.m4a",
+  },
+  "Girlset::Little Miss": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/23/be/be/23bebead-5ea2-0220-dfb9-4f7e7839a329/25UM1IM71310.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/1d/24/10/1d24103d-7885-a647-b81a-45f7bc0cb344/mzaf_16511137530745842698.plus.aac.p.m4a",
+  },
+  "Girlset::XO Call Me": {
+    coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/e6/38/f9/e638f959-a24c-5395-fd22-b03d990a9a1a/24UMGIM02827.rgb.jpg/1000x1000bb.jpg",
+    previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/5d/fb/1b/5dfb1b3f-9a12-1137-6b37-d51397ec1b9e/mzaf_10459626570237686005.plus.aac.p.m4a",
+  },
 };
 
 const groupSongFallbacks = {
@@ -810,6 +822,7 @@ const groupSongFallbacks = {
   XG: songMetaLibrary["XG::Hypnotize"],
   "Baby DONT Cry": songMetaLibrary["Baby DONT Cry::I Dont Care"],
   ILLIT: songMetaLibrary["ILLIT::Cherish (My Love)"],
+  Girlset: songMetaLibrary["Girlset::Little Miss"],
 };
 
 export function getSongMeta(groupName, title) {
@@ -1768,6 +1781,67 @@ const rounds = [
         label: "Who is my bias?",
         answer: "Zoey",
         choices: ["Zoey", "Rumi", "Mira", "No answer"],
+      },
+    ],
+  },
+  {
+    id: "girlset",
+    groupName: "Girlset",
+    groupChoices: ["Girlset", "KATSEYE", "ILLIT", "Kiss of Life"],
+    members: [
+      {
+        name: "Lexi",
+        image:
+          "https://static.wikia.nocookie.net/vcha/images/0/0f/Lexi_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305211957",
+      },
+      {
+        name: "Kendall",
+        image:
+          "https://static.wikia.nocookie.net/vcha/images/7/71/Kendall_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305212018",
+      },
+      {
+        name: "Camila",
+        image:
+          "https://static.wikia.nocookie.net/vcha/images/9/9f/Camila_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305211939",
+      },
+      {
+        name: "Savanna",
+        image:
+          "https://static.wikia.nocookie.net/vcha/images/b/bb/Savanna_Tweak_concept_photo_3.jpg/revision/latest?cb=20260305212037",
+      },
+    ],
+    extras: [
+      ...buildFavoriteSongExtras({
+        groupName: "Girlset",
+        favorites: ["Only One", "Little Miss", "XO Call Me"],
+        wrongSongs: [
+          "Commas",
+          "Girls of the Year",
+          "Favorite Girl",
+          "Know Me Like That",
+          "Go Getter",
+          "Y.O.Universe",
+          "Ready for the World",
+          "Tweak",
+        ],
+      }),
+      {
+        key: "leader",
+        label: "Who is the leader?",
+        answer: "Lexi",
+        choices: ["Lexi", "Camila", "Kendall", "Savanna"],
+      },
+      {
+        key: "maknae",
+        label: "Who is the maknae?",
+        answer: "Savanna",
+        choices: ["Savanna", "Kendall", "Camila", "Lexi"],
+      },
+      {
+        key: "bias",
+        label: "Who is my bias?",
+        answer: "Kendall",
+        choices: ["Kendall", "Lexi", "Camila", "Savanna"],
       },
     ],
   },

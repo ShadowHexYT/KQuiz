@@ -1,21 +1,8 @@
 import { useMemo, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
-import StaggeredMenu from "./StaggeredMenu";
 import { gameModes } from "../data/gameModeCatalog";
 
 const filters = ["All", "Board", "Audio", "Visual", "Party", "Battle", "Lore"];
-
-const menuItems = [
-  { label: "Home", ariaLabel: "Return home", link: "#top" },
-  { label: "Games", ariaLabel: "Jump to game cards", link: "#mode-grid" },
-  { label: "Open Selected", ariaLabel: "Open the selected game", onClick: () => {} },
-];
-
-const socialItems = [
-  { label: "Back Home", onClick: () => {} },
-  { label: "All Games", link: "#mode-grid" },
-  { label: "Launch Game", onClick: () => {} },
-];
 
 export default function ModeHub({ onBackHome, onOpenMode }) {
   const [activeFilter, setActiveFilter] = useState("All");
@@ -36,46 +23,10 @@ export default function ModeHub({ onBackHome, onOpenMode }) {
     setSelectedModeId(mode.id);
   }
 
-  const resolvedMenuItems = menuItems.map((item) =>
-    item.label === "Open Selected"
-      ? {
-          ...item,
-          onClick: () =>
-            selectedMode && !selectedMode.comingSoon ? onOpenMode(selectedMode.id) : undefined,
-        }
-      : item,
-  );
-
-  const resolvedSocialItems = socialItems.map((item) => {
-    if (item.label === "Back Home") return { ...item, onClick: onBackHome };
-    if (item.label === "Launch Game") {
-      return {
-        ...item,
-        onClick: () =>
-          selectedMode && !selectedMode.comingSoon ? onOpenMode(selectedMode.id) : undefined,
-      };
-    }
-    return item;
-  });
-
   return (
     <div className="page-shell" id="top">
       <div className="background-orb background-orb-left" />
       <div className="background-orb background-orb-right" />
-      <StaggeredMenu
-        position="right"
-        items={resolvedMenuItems}
-        socialItems={resolvedSocialItems}
-        itemSectionLabel="Game hub"
-        socialSectionLabel="Jump links"
-        displaySocials
-        displayItemNumbering
-        menuButtonColor="#fff8ef"
-        openMenuButtonColor="#fff8ef"
-        changeMenuColorOnOpen
-        colors={["#ff8d66", "#ff5d8f"]}
-        accentColor="#ff5d8f"
-      />
 
       <main className="app-frame">
         <AnimatedContent
