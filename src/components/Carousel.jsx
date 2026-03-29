@@ -71,11 +71,12 @@ export default function Carousel({
         {visibleItems.map(({ item, index, offset }) => {
           const isActive = index === safeIndex;
           const isSelected = index === selectedIndex;
+          const isDimmed = item.isHomeCarouselPlayable === false;
 
           return (
             <button
               aria-selected={isSelected}
-              className={`carousel-card ${isActive ? "is-active" : ""} ${isSelected ? "is-chosen" : ""}`}
+              className={`carousel-card ${isActive ? "is-active" : ""} ${isSelected ? "is-chosen" : ""} ${isDimmed ? "is-dimmed" : ""}`}
               key={item.id ?? item.title ?? index}
               onClick={() => onSelect?.(index)}
               style={{
@@ -91,6 +92,8 @@ export default function Carousel({
               <p>{item.description}</p>
               {isSelected ? (
                 <span className="carousel-status is-selected">Selected</span>
+              ) : isDimmed ? (
+                <span className="carousel-status is-disabled">Unavailable</span>
               ) : null}
             </button>
           );

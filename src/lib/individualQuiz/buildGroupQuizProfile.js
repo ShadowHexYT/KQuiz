@@ -1,4 +1,5 @@
 import { groupQuizzes } from "../../data/groupQuizzes.js";
+import { groupDeepFacts } from "../../data/groupDeepFacts.js";
 import { groupVerifiedFacts } from "../../data/groupVerifiedFacts.js";
 import { mainQuizRounds, getSongMeta } from "../../data/mainQuizRounds.js";
 import { lyricPrompts, playlistSongs } from "../../data/playlistGamePacks.js";
@@ -169,6 +170,7 @@ export function buildGroupQuizProfile(groupName) {
   const round = mainQuizRounds.find((entry) => entry.groupName === groupName) ?? null;
   const groupCard = groupQuizzes.find((entry) => entry.label === groupName) ?? null;
   const reference = groupVerifiedFacts[groupName] ?? {};
+  const deepReference = groupDeepFacts[groupName] ?? {};
 
   if (!round) {
     profile.reviewQueue.push({
@@ -212,6 +214,12 @@ export function buildGroupQuizProfile(groupName) {
       ["originStory", "nameMeaning", "achievementAnswer", "alias", "varietySeries"].includes(fact.kind),
     ),
   ];
+  profile.deepFacts = {
+    memberCredits: deepReference.memberCredits ?? [],
+    videoClues: deepReference.videoClues ?? [],
+    releaseClues: deepReference.releaseClues ?? [],
+    performanceClues: deepReference.performanceClues ?? [],
+  };
   profile.dataSignals = {
     discographyDepth: profile.songs.length + profile.albums.length,
     visualDepth:
@@ -219,6 +227,11 @@ export function buildGroupQuizProfile(groupName) {
       profile.visualFacts.filter((fact) => fact.coverImage).length,
     fandomDepth: profile.fandomFacts.length,
     memberDepth: profile.members.length + Object.keys(profile.memberRoles).length,
+    deepFactDepth:
+      profile.deepFacts.memberCredits.length +
+      profile.deepFacts.videoClues.length +
+      profile.deepFacts.releaseClues.length +
+      profile.deepFacts.performanceClues.length,
   };
 
   if (!profile.albums.length) {

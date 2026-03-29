@@ -37,3 +37,39 @@ test("individual group quiz keeps a varied template mix instead of one dominant 
     assert.ok(maxFamilyCount <= 6);
   });
 });
+
+test("individual group quiz surfaces deeper group-specific categories when verified facts exist", () => {
+  const quiz = buildIndividualQuizForGroup("NewJeans");
+  const mediumAndHardQuestions = [...quiz.questionPools.medium, ...quiz.questionPools.hard];
+
+  assert.ok(
+    mediumAndHardQuestions.some((question) => question.templateFamily === "member-credit-spotlight"),
+  );
+  assert.ok(
+    mediumAndHardQuestions.some((question) => question.templateFamily === "member-credit-song-lock"),
+  );
+  assert.ok(
+    mediumAndHardQuestions.some((question) => question.templateFamily === "video-clue-spotlight"),
+  );
+  assert.ok(
+    mediumAndHardQuestions.some(
+      (question) =>
+        question.metadata?.sourceUrl === "https://en.wikipedia.org/wiki/Get_Up_(EP)",
+    ),
+  );
+});
+
+test("deeper verified facts can drive hard fan questions beyond the base main-game data", () => {
+  const quiz = buildIndividualQuizForGroup("TWICE");
+  const hardQuestions = quiz.questionPools.hard;
+
+  assert.ok(
+    hardQuestions.some((question) => question.templateFamily === "release-story-clue"),
+  );
+  assert.ok(
+    hardQuestions.some((question) => question.templateFamily === "member-credit-era-clue"),
+  );
+  assert.ok(
+    hardQuestions.some((question) => question.prompt.includes("Blame It on Me") || question.prompt.includes("Trouble")),
+  );
+});

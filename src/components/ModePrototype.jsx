@@ -120,6 +120,14 @@ function PlaylistModeGame({
     mode.id === "album-cover-zoom"
       ? "Guess the album"
       : currentQuestion?.title ?? "Waiting for setup";
+  const promptSupportText =
+    mode.id === "emoji-song-guess"
+      ? "Decode the clue, preview a player on a choice, then hold to lock it in."
+      : mode.id === "finish-the-lyric"
+        ? "Use the lyric lead-in to lock the song title that fits best."
+        : mode.id === "album-cover-zoom"
+          ? "Study the crop, zoom out only when needed, then lock the album from the choices."
+          : "Lock the group that matches the prompt, then reveal the answer.";
   const displayPlayers = useMemo(
     () =>
       buildGameEntities({
@@ -407,13 +415,9 @@ function PlaylistModeGame({
     if (mode.id === "emoji-song-guess") {
       return (
         <div className="playlist-prompt-shell">
-          <p className="panel-label">Emoji clue</p>
           <div className="playlist-emoji-prompt">
             {currentQuestionVariant.prompt ?? currentQuestion.prompt}
           </div>
-          <p className="playlist-meta-line">
-            Click to preview a player on an answer, then hold to lock it in.
-          </p>
         </div>
       );
     }
@@ -421,13 +425,9 @@ function PlaylistModeGame({
     if (mode.id === "finish-the-lyric") {
       return (
         <div className="playlist-prompt-shell">
-          <p className="panel-label">Finish the lyric</p>
           <blockquote className="playlist-lyric-card">
             "{currentQuestion.lyricLeadIn}..."
           </blockquote>
-          <p className="playlist-meta-line">
-            Song: {currentQuestion.title} by {currentQuestion.artist}
-          </p>
         </div>
       );
     }
@@ -437,7 +437,7 @@ function PlaylistModeGame({
 
       return (
         <div className="playlist-prompt-shell">
-          <div className="playlist-cover-frame playlist-silhouette-frame">
+          <div className={`playlist-cover-frame playlist-silhouette-frame ${revealed ? "is-revealed" : ""}`}>
             {currentQuestion.imageUrl ? (
               <img
                 alt={`${currentQuestion.artist} lightstick`}
@@ -456,16 +456,9 @@ function PlaylistModeGame({
               />
             ) : (
               <div className="playlist-silhouette-mark">
-                <p className="panel-label">Official lightstick</p>
                 <strong>{revealed ? currentQuestion.title : "Mystery stick"}</strong>
               </div>
             )}
-          </div>
-          <div className="playlist-cover-actions">
-            <p className="panel-label">Lightstick round</p>
-            <p className="playlist-meta-line">
-              Lock the group that matches this verified lightstick silhouette, then reveal the answer.
-            </p>
           </div>
         </div>
       );
@@ -473,7 +466,7 @@ function PlaylistModeGame({
 
     return (
       <div className="playlist-prompt-shell">
-        <div className="playlist-cover-frame">
+        <div className={`playlist-cover-frame ${revealed ? "is-revealed" : ""}`}>
           <img
             alt={`${currentQuestion.title} album cover`}
             className={`playlist-cover-image ${revealed ? "is-revealed" : ""}`}
@@ -490,31 +483,19 @@ function PlaylistModeGame({
             }}
           />
         </div>
-        <div className="playlist-cover-actions">
-          <p className="panel-label">Album cover zoom</p>
-          <p className="playlist-meta-line">
-            Hold a choice to lock a player in after you zoom out as needed.
-          </p>
-          <button
-            className="ghost-button"
-            disabled={revealed || zoomLevel >= 2}
-            onClick={() => setZoomLevel((value) => Math.min(2, value + 1))}
-            type="button"
-          >
-            Zoom out
-          </button>
-        </div>
       </div>
     );
   }
 
   return (
     <section className="playlist-mode-screen">
-      <div className="mode-live-hero">
-        <p className="eyebrow">{mode.category}</p>
-        <h1>{mode.title}</h1>
-        <p className="hero-text">{mode.description}</p>
-      </div>
+      <section className="game-show-hero">
+        <div>
+          <p className="eyebrow">{mode.category}</p>
+          <h1>{mode.title}</h1>
+          <p className="hero-text">{mode.description}</p>
+        </div>
+      </section>
 
       {isSetupOpen ? (
         <div className="modal-overlay" role="presentation">
@@ -689,161 +670,165 @@ function PlaylistModeGame({
         </div>
       ) : null}
 
-      <section className="score-strip-panel score-strip-panel-wide">
-        <div className="score-strip-header">
-          <div>
-            <p className="panel-label">Live scores</p>
-            <div className="score-strip-title-row">
-              <h2>Current game</h2>
-            </div>
-          </div>
-        </div>
-
-        <div className="score-strip">
-          {displayPlayers.map((player) => {
-            const isHost = !teamsEnabled && player.id === hostProfile.id;
-            const isScoring = player.isScoring;
-
-            return (
-              <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>
-                <div>
-                  <strong>
-                    {player.icon ? `${player.icon} ` : ""}
-                    {player.name}
-                  </strong>
-                  <p>
-                    {player.kind === "team"
-                      ? player.memberNames.join(", ")
-                      : isHost
-                        ? hostGetsScore
-                          ? "Host and player"
-                          : "Host only"
-                        : "Player"}
-                  </p>
+      <section className="game-show-layout">
+        <div className="game-board-column">
+          <section className="score-strip-panel score-strip-panel-wide">
+            <div className="score-strip-header">
+              <div>
+                <p className="panel-label">Live scores</p>
+                <div className="score-strip-title-row">
+                  <h2>Current game</h2>
                 </div>
-                <div className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
-                  {player.scoreTotal ?? 0}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="round-card">
-        <section className="round-game-section">
-          <div className="round-overview">
-            <div className="round-visual-column">
-              <div className="member-image-wrap">
-                <div className="image-question-bar">
-                  <div className="image-question-copy">
-                    <p className="flow-section-label">{mode.title}</p>
-                    <h2>{promptHeading}</h2>
-                  </div>
-                </div>
-                <div className="playlist-prompt-shell">
-                  {renderPrompt()}
-                </div>
-              </div>
-
-              <div className="image-action-bar">
-                <button
-                  className="ghost-button"
-                  onClick={() => setIsSetupOpen(true)}
-                  type="button"
-                >
-                  Game Setup
-                </button>
-                <button
-                  className="ghost-button"
-                  onClick={() => restartGame(sessionSeed + 1)}
-                  type="button"
-                >
-                  Shuffle Set
-                </button>
-                <button
-                  className="primary-button"
-                  disabled={!currentQuestion || revealed}
-                  onClick={revealAnswer}
-                  type="button"
-                >
-                  Reveal answer
-                </button>
-                <button
-                  className="ghost-button"
-                  disabled={!currentQuestion}
-                  onClick={handleNextQuestion}
-                  type="button"
-                >
-                  {isLastQuestion ? "Restart set" : "Next question"}
-                </button>
               </div>
             </div>
 
-            <div className="round-meta-card">
-              <div className="round-meta-top">
-                <p className="flow-section-label">Multiple Choice</p>
-                <div className="round-controls">
-                  <div className="round-nav-pill">
-                    <span className="round-nav-label">Difficulty</span>
-                    <span className="playlist-nav-value">
-                      {difficulty[0].toUpperCase() + difficulty.slice(1)}
-                    </span>
-                  </div>
-                  <div className="round-nav-pill">
-                    <span className="round-nav-label">Questions</span>
-                    <span className="playlist-nav-value">{activeQuestions.length}</span>
-                  </div>
-                </div>
-              </div>
+            <div className="score-strip">
+              {displayPlayers.map((player) => {
+                const isHost = !teamsEnabled && player.id === hostProfile.id;
+                const isScoring = player.isScoring;
 
-              <div className={`round-flow-choices ${visibleChoices.length % 2 === 0 ? "is-even" : "is-odd"}`}>
-                {visibleChoices.map((choice) => {
-                  const isCorrect = revealed && choice === currentQuestion?.answer;
-                  const isWrongPick = revealed && selectedChoice === choice && choice !== currentQuestion?.answer;
-                  const playersOnChoice = getPlayersForOption(choice);
-                  const previewPlayerId = getPreviewPlayerId(choice);
-                  const previewPlayer = eligiblePlayers.find((player) => player.id === previewPlayerId);
-                  const shouldShowPreview =
-                    previewPlayer &&
-                    !playersOnChoice.some((player) => player.id === previewPlayer.id);
+                return (
+                  <div className={`score-strip-card ${isHost ? "is-host" : ""}`} key={player.id}>
+                    <div>
+                      <strong>
+                        {player.icon ? `${player.icon} ` : ""}
+                        {player.name}
+                      </strong>
+                      <p>
+                        {player.kind === "team"
+                          ? player.memberNames.join(", ")
+                          : isHost
+                            ? hostGetsScore
+                              ? "Host and player"
+                              : "Host only"
+                            : "Player"}
+                      </p>
+                    </div>
+                    <div className={`score-badge ${!isScoring ? "is-muted" : ""}`}>
+                      {player.scoreTotal ?? 0}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
 
-                  return (
-                    <div className="flow-choice-wrap" key={choice}>
+          <section className="round-card">
+            <section className="round-game-section">
+              <div className="round-overview">
+                <div className="round-visual-column">
+                  <div className="member-image-wrap">
+                    <div className="image-question-bar">
+                      <div className="image-question-copy">
+                        <p className="flow-section-label">{mode.title}</p>
+                        <h2>{promptHeading}</h2>
+                        <p className="image-selection-help">{promptSupportText}</p>
+                      </div>
+                    </div>
+                    <div className={`playlist-prompt-stage ${mode.id === "album-cover-zoom" && revealed ? "is-centered-reveal" : ""}`}>
+                      {renderPrompt()}
+                    </div>
+                  </div>
+
+                  <div className="image-action-bar">
+                    {mode.id === "album-cover-zoom" ? (
                       <button
-                        className={`choice-button flow-choice-button ${visibleChoices.length % 2 !== 0 ? "is-list-view" : ""} ${isCorrect ? "is-correct" : ""} ${holdingOption === choice ? "is-holding" : ""} ${isWrongPick ? "is-popping" : ""}`}
-                        disabled={revealed}
-                        onClick={() => handleChoiceClick(choice)}
-                        onMouseDown={() => handleChoicePointerDown(choice)}
-                        onMouseLeave={handleChoicePointerUp}
-                        onMouseUp={handleChoicePointerUp}
+                        className="ghost-button"
+                        disabled={revealed || zoomLevel >= 2}
+                        onClick={() => setZoomLevel((value) => Math.min(2, value + 1))}
                         type="button"
                       >
-                        {(playersOnChoice.length || shouldShowPreview) ? (
-                          <span className="flow-choice-tags">
-                            {playersOnChoice.map((player) => (
-                              <span className="flow-choice-tag is-locked" key={`${choice}-${player.id}`}>
-                                {player.icon ? `${player.icon} ` : ""}
-                                {player.name}
-                              </span>
-                            ))}
-                            {shouldShowPreview ? (
-                              <span className="flow-choice-tag">
-                                {previewPlayer.icon ? `${previewPlayer.icon} ` : ""}
-                                {previewPlayer.name}
+                        Zoom out
+                      </button>
+                    ) : null}
+                    <button
+                      className="primary-button"
+                      disabled={!currentQuestion || revealed}
+                      onClick={revealAnswer}
+                      type="button"
+                    >
+                      Reveal answer
+                    </button>
+                    {revealed ? (
+                      <button
+                        className="ghost-button"
+                        disabled={!currentQuestion}
+                        onClick={handleNextQuestion}
+                        type="button"
+                      >
+                        {isLastQuestion ? "Restart set" : "Next question"}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="round-meta-card">
+                  <div className="round-meta-top">
+                    <p className="flow-section-label">Multiple Choice</p>
+                    <div className="round-controls">
+                      <div className="round-nav-pill">
+                        <span className="round-nav-label">Difficulty</span>
+                        <span className="playlist-nav-value">
+                          {difficulty[0].toUpperCase() + difficulty.slice(1)}
+                        </span>
+                      </div>
+                      <div className="round-nav-pill">
+                        <span className="round-nav-label">Question</span>
+                        <span className="playlist-nav-value">
+                          {activeQuestions.length ? `${currentIndex + 1}/${activeQuestions.length}` : "0/0"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`round-flow-choices ${visibleChoices.length % 2 === 0 ? "is-even" : "is-odd"}`}>
+                    {visibleChoices.map((choice) => {
+                      const isCorrect = revealed && choice === currentQuestion?.answer;
+                      const isWrongPick = revealed && selectedChoice === choice && choice !== currentQuestion?.answer;
+                      const playersOnChoice = getPlayersForOption(choice);
+                      const previewPlayerId = getPreviewPlayerId(choice);
+                      const previewPlayer = eligiblePlayers.find((player) => player.id === previewPlayerId);
+                      const shouldShowPreview =
+                        previewPlayer &&
+                        !playersOnChoice.some((player) => player.id === previewPlayer.id);
+
+                      return (
+                        <div className="flow-choice-wrap" key={choice}>
+                          <button
+                            className={`choice-button flow-choice-button ${visibleChoices.length % 2 !== 0 ? "is-list-view" : ""} ${isCorrect ? "is-correct" : ""} ${holdingOption === choice ? "is-holding" : ""} ${isWrongPick ? "is-popping" : ""}`}
+                            disabled={revealed}
+                            onClick={() => handleChoiceClick(choice)}
+                            onMouseDown={() => handleChoicePointerDown(choice)}
+                            onMouseLeave={handleChoicePointerUp}
+                            onMouseUp={handleChoicePointerUp}
+                            type="button"
+                          >
+                            {(playersOnChoice.length || shouldShowPreview) ? (
+                              <span className="flow-choice-tags">
+                                {playersOnChoice.map((player) => (
+                                  <span className="flow-choice-tag is-locked" key={`${choice}-${player.id}`}>
+                                    {player.icon ? `${player.icon} ` : ""}
+                                    {player.name}
+                                  </span>
+                                ))}
+                                {shouldShowPreview ? (
+                                  <span className="flow-choice-tag">
+                                    {previewPlayer.icon ? `${previewPlayer.icon} ` : ""}
+                                    {previewPlayer.name}
+                                  </span>
+                                ) : null}
                               </span>
                             ) : null}
-                          </span>
-                        ) : null}
-                        <span className="flow-choice-label">{choice}</span>
-                      </button>
-                    </div>
-                  );
-                })}
+                            <span className="flow-choice-label">{choice}</span>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          </section>
+        </div>
       </section>
     </section>
   );

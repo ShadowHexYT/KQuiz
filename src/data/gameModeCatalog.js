@@ -140,6 +140,7 @@ export const gameModes = [
     id: "lightstick-silhouette-guess",
     title: "Lightstick Silhouette Guess",
     tagline: "Name the fandom icon from the outline alone.",
+    comingSoon: true,
     category: "Visual",
     playerFormat: "Solo or Teams",
     layoutType: "visual",

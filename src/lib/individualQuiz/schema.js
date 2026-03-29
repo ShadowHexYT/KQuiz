@@ -53,12 +53,19 @@ export function createEmptyIndividualQuizProfile(groupName) {
     fandomFacts: [],
     visualFacts: [],
     loreFacts: [],
+    deepFacts: {
+      memberCredits: [],
+      videoClues: [],
+      releaseClues: [],
+      performanceClues: [],
+    },
     reviewQueue: [],
     dataSignals: {
       discographyDepth: 0,
       visualDepth: 0,
       fandomDepth: 0,
       memberDepth: 0,
+      deepFactDepth: 0,
     },
   };
 }

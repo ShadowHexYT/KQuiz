@@ -86,6 +86,13 @@ function confidenceForSources(sources) {
   return Math.min(1, 0.72 + normalized.length * 0.08);
 }
 
+function normalizeFactDifficulty(value) {
+  if (value === "expert") return "expert";
+  if (value === "hard") return "hard";
+  if (value === "medium") return "medium";
+  return "easy";
+}
+
 function pickOutsiderSongs(allProfiles, groupName, count) {
   return unique(
     allProfiles
@@ -122,6 +129,214 @@ function buildTemplateCandidates(profile, allProfiles) {
   const fandomValuePool = unique(
     allProfiles.flatMap((entry) => entry.fandomFacts.map((fact) => fact.value)),
   );
+  const allSeriesTitles = unique(
+    allProfiles.flatMap((entry) =>
+      entry.fandomFacts.filter((fact) => fact.kind === "varietySeries").map((fact) => fact.value),
+    ),
+  );
+  const allOriginValues = unique(
+    allProfiles.flatMap((entry) =>
+      entry.fandomFacts.filter((fact) => fact.kind === "originStory").map((fact) => fact.value),
+    ),
+  );
+  const allAchievementValues = unique(
+    allProfiles.flatMap((entry) =>
+      entry.fandomFacts.filter((fact) => fact.kind === "achievementAnswer").map((fact) => fact.value),
+    ),
+  );
+
+  profile.deepFacts.memberCredits.forEach((fact, index) => {
+    const difficulty = normalizeFactDifficulty(fact.difficulty);
+    const provenance = [fact.source];
+
+    candidates.push(
+      createQuestion({
+        profile,
+        id: `${slugify(profile.groupName)}-member-credit-member-${index + 1}`,
+        difficulty,
+        category: "members",
+        templateFamily: "member-credit-spotlight",
+        prompt: `Which ${profile.groupName} member is tied to ${fact.contribution} on "${fact.songTitle}"?`,
+        answer: fact.member,
+        choices: buildChoices(fact.member, memberNamePool, `${profile.groupName}-member-credit-member-${index}`),
+        provenance,
+        confidenceScore: confidenceForSources(provenance),
+        funScore: 0.93,
+        uniquenessScore: 0.92,
+        fairnessRating: 0.9,
+        metadata: {
+          sourceUrl: fact.sourceUrl ?? null,
+          songTitle: fact.songTitle,
+          contribution: fact.contribution,
+          albumTitle: fact.albumTitle ?? null,
+        },
+      }),
+    );
+
+    candidates.push(
+      createQuestion({
+        profile,
+        id: `${slugify(profile.groupName)}-member-credit-song-${index + 1}`,
+        difficulty: difficulty === "easy" ? "medium" : difficulty,
+        category: "match-based",
+        templateFamily: "member-credit-song-lock",
+        prompt: `${fact.member} is credited for ${fact.contribution} on which ${profile.groupName} song?`,
+        answer: fact.songTitle,
+        choices: buildChoices(fact.songTitle, songTitles, `${profile.groupName}-member-credit-song-${index}`),
+        provenance,
+        confidenceScore: confidenceForSources(provenance),
+        funScore: 0.92,
+        uniquenessScore: 0.91,
+        fairnessRating: 0.89,
+        metadata: {
+          sourceUrl: fact.sourceUrl ?? null,
+          member: fact.member,
+          contribution: fact.contribution,
+          albumTitle: fact.albumTitle ?? null,
+        },
+      }),
+    );
+
+    if (fact.albumTitle) {
+      candidates.push(
+        createQuestion({
+          profile,
+          id: `${slugify(profile.groupName)}-member-credit-album-${index + 1}`,
+          difficulty: difficulty === "easy" ? "medium" : "hard",
+          category: "clue-based",
+          templateFamily: "member-credit-era-clue",
+          prompt: `Deep-fan clue for ${profile.groupName}: ${fact.member} has ${fact.contribution} credit on "${fact.songTitle}". Which release era does that point to?`,
+          answer: fact.albumTitle,
+          choices: buildChoices(fact.albumTitle, albumTitles, `${profile.groupName}-member-credit-album-${index}`),
+          provenance,
+          confidenceScore: confidenceForSources(provenance),
+          funScore: 0.91,
+          uniquenessScore: 0.92,
+          fairnessRating: 0.86,
+          metadata: {
+            sourceUrl: fact.sourceUrl ?? null,
+            member: fact.member,
+            songTitle: fact.songTitle,
+            contribution: fact.contribution,
+          },
+        }),
+      );
+    }
+  });
+
+  profile.deepFacts.videoClues.forEach((fact, index) => {
+    const difficulty = normalizeFactDifficulty(fact.difficulty);
+    const provenance = [fact.source];
+    const answerPool = fact.answerType === "album" ? albumTitles : songTitles;
+
+    candidates.push(
+      createQuestion({
+        profile,
+        id: `${slugify(profile.groupName)}-video-clue-${index + 1}`,
+        difficulty,
+        category: "variety-iconic-moments",
+        templateFamily: "video-clue-spotlight",
+        prompt: `Which ${profile.groupName} release fits this visual clue: ${fact.clue}?`,
+        answer: fact.answer,
+        choices: buildChoices(fact.answer, answerPool, `${profile.groupName}-video-clue-${index}`),
+        provenance,
+        confidenceScore: confidenceForSources(provenance),
+        funScore: 0.95,
+        uniquenessScore: 0.94,
+        fairnessRating: 0.9,
+        metadata: {
+          sourceUrl: fact.sourceUrl ?? null,
+          answerType: fact.answerType,
+        },
+      }),
+    );
+
+    candidates.push(
+      createQuestion({
+        profile,
+        id: `${slugify(profile.groupName)}-video-statement-${index + 1}`,
+        difficulty: difficulty === "easy" ? "medium" : difficulty,
+        category: "true-vs-false",
+        templateFamily: "video-clue-true-check",
+        prompt: `Which visual-era statement is actually true for ${profile.groupName}?`,
+        answer: fact.answer,
+        choices: buildChoices(fact.answer, answerPool, `${profile.groupName}-video-statement-${index}`),
+        provenance,
+        confidenceScore: confidenceForSources(provenance),
+        funScore: 0.9,
+        uniquenessScore: 0.9,
+        fairnessRating: 0.87,
+        metadata: {
+          sourceUrl: fact.sourceUrl ?? null,
+          clue: fact.clue,
+          answerType: fact.answerType,
+        },
+      }),
+    );
+  });
+
+  profile.deepFacts.releaseClues.forEach((fact, index) => {
+    const difficulty = normalizeFactDifficulty(fact.difficulty);
+    const provenance = [fact.source];
+    const answerPool = fact.answerType === "song" ? songTitles : albumTitles;
+
+    candidates.push(
+      createQuestion({
+        profile,
+        id: `${slugify(profile.groupName)}-release-clue-${index + 1}`,
+        difficulty,
+        category: "eras-comebacks",
+        templateFamily: "release-story-clue",
+        prompt: `Which ${profile.groupName} release matches this deeper clue: ${fact.clue}?`,
+        answer: fact.answer,
+        choices: buildChoices(fact.answer, answerPool, `${profile.groupName}-release-clue-${index}`),
+        provenance,
+        confidenceScore: confidenceForSources(provenance),
+        funScore: 0.92,
+        uniquenessScore: 0.92,
+        fairnessRating: 0.88,
+        metadata: {
+          sourceUrl: fact.sourceUrl ?? null,
+          answerType: fact.answerType,
+        },
+      }),
+    );
+  });
+
+  profile.deepFacts.performanceClues.forEach((fact, index) => {
+    const difficulty = normalizeFactDifficulty(fact.difficulty);
+    const provenance = [fact.source];
+    const answerPool =
+      fact.answerType === "event"
+        ? allAchievementValues.length
+          ? allAchievementValues
+          : [...songTitles, ...albumTitles]
+        : fact.answerType === "album"
+          ? albumTitles
+          : songTitles;
+
+    candidates.push(
+      createQuestion({
+        profile,
+        id: `${slugify(profile.groupName)}-performance-clue-${index + 1}`,
+        difficulty,
+        category: "variety-iconic-moments",
+        templateFamily: "performance-moment-clue",
+        prompt: `Recognize the ${profile.groupName} moment from this clue: ${fact.clue}`,
+        answer: fact.answer,
+        choices: buildChoices(fact.answer, answerPool, `${profile.groupName}-performance-clue-${index}`),
+        provenance,
+        confidenceScore: confidenceForSources(provenance),
+        funScore: 0.94,
+        uniquenessScore: 0.93,
+        fairnessRating: 0.87,
+        metadata: {
+          sourceUrl: fact.sourceUrl ?? null,
+          answerType: fact.answerType,
+        },
+      }),
+    );
+  });
 
   profile.visualFacts.forEach((fact, index) => {
     candidates.push(
@@ -664,6 +879,7 @@ function buildCategoryTargets(profile, difficulty, targetCount) {
   const visualWeight = Math.max(1, profile.dataSignals.visualDepth);
   const fandomWeight = Math.max(1, profile.dataSignals.fandomDepth);
   const memberWeight = Math.max(1, profile.dataSignals.memberDepth);
+  const deepFactWeight = Math.max(1, profile.dataSignals.deepFactDepth);
 
   const baseWeights = {
     easy: {
@@ -673,42 +889,46 @@ function buildCategoryTargets(profile, difficulty, targetCount) {
       "lyrics": 2,
       "fandom-knowledge": fandomWeight,
       "visual-recognition": memberWeight,
-      "members": memberWeight,
+      "members": memberWeight + Math.round(deepFactWeight / 2),
       "true-vs-false": 2,
       "odd-one-out": 2,
-      "clue-based": 1,
+      "clue-based": 1 + Math.round(deepFactWeight / 3),
+      "variety-iconic-moments": Math.max(1, Math.round(deepFactWeight / 3)),
     },
     medium: {
       "discography": discographyWeight,
-      "match-based": discographyWeight,
+      "match-based": discographyWeight + Math.round(deepFactWeight / 3),
       "eras-comebacks": discographyWeight,
       "lyrics": 2,
       "fandom-knowledge": fandomWeight,
-      "variety-iconic-moments": fandomWeight,
+      "variety-iconic-moments": fandomWeight + Math.round(deepFactWeight / 2),
       "odd-one-out": 2,
       "true-vs-false": 2,
-      "clue-based": 2,
+      "clue-based": 2 + Math.round(deepFactWeight / 2),
+      "members": Math.max(1, Math.round(deepFactWeight / 2)),
     },
     hard: {
       "discography": discographyWeight,
       "b-sides": Math.max(2, discographyWeight - 1),
       "eras-comebacks": discographyWeight,
       "fandom-knowledge": fandomWeight,
-      "variety-iconic-moments": fandomWeight,
+      "variety-iconic-moments": fandomWeight + deepFactWeight,
       "odd-one-out": 2,
       "true-vs-false": 2,
-      "clue-based": 3,
-      "match-based": 2,
+      "clue-based": 3 + Math.round(deepFactWeight / 2),
+      "match-based": 2 + Math.round(deepFactWeight / 3),
+      "members": Math.max(1, Math.round(deepFactWeight / 2)),
     },
     expert: {
       "b-sides": Math.max(2, discographyWeight - 1),
       "eras-comebacks": discographyWeight,
       "fandom-knowledge": fandomWeight,
-      "variety-iconic-moments": fandomWeight,
+      "variety-iconic-moments": fandomWeight + deepFactWeight,
       "odd-one-out": 2,
       "true-vs-false": 2,
-      "clue-based": 4,
-      "match-based": 2,
+      "clue-based": 4 + Math.round(deepFactWeight / 2),
+      "match-based": 2 + Math.round(deepFactWeight / 3),
+      "members": Math.max(1, Math.round(deepFactWeight / 2)),
     },
   };
 
@@ -814,9 +1034,19 @@ function buildExpertAvailability(profile, candidates) {
   const deepFactCount = profile.fandomFacts.filter((fact) =>
     ["originStory", "nameMeaning", "achievementAnswer", "alias", "varietySeries"].includes(fact.kind),
   ).length;
+  const extendedDeepFactCount =
+    deepFactCount +
+    profile.deepFacts.memberCredits.length +
+    profile.deepFacts.videoClues.length +
+    profile.deepFacts.releaseClues.length +
+    profile.deepFacts.performanceClues.length;
   const hardSongCount = profile.songs.filter((song) => song.familiarityBand === "hard").length;
   const expertCandidates = candidates.filter((question) => question.difficulty === "expert");
-  return deepFactCount >= 3 && hardSongCount >= 4 && expertCandidates.length >= INDIVIDUAL_QUIZ_TARGETS.expert;
+  return (
+    extendedDeepFactCount >= 6 &&
+    hardSongCount >= 4 &&
+    expertCandidates.length >= INDIVIDUAL_QUIZ_TARGETS.expert
+  );
 }
 
 function buildFallbackVariant(question, difficulty, index) {

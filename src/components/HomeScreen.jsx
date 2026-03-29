@@ -106,6 +106,8 @@ const TEAM_ACCENTS = [
   },
 ];
 
+const HOME_CAROUSEL_PLAYABLE_MODE_IDS = new Set(["main-game", "jeopardy"]);
+
 export default function HomeScreen({
   players,
   hostProfile,
@@ -167,9 +169,13 @@ export default function HomeScreen({
     const matchedIndex = modeOptions.findIndex((mode) => mode.id === selectedLaunchTarget.id);
     return matchedIndex >= 0 ? matchedIndex : null;
   })();
-  const previewMode = modeOptions[carouselModeIndex] ?? modeOptions[0];
+  const homeCarouselModeOptions = modeOptions.map((mode) => ({
+    ...mode,
+    isHomeCarouselPlayable: HOME_CAROUSEL_PLAYABLE_MODE_IDS.has(mode.id),
+  }));
+  const previewMode = homeCarouselModeOptions[carouselModeIndex] ?? homeCarouselModeOptions[0];
   const activeMode =
-    selectedModeIndex === null ? null : (modeOptions[selectedModeIndex] ?? null);
+    selectedModeIndex === null ? null : (homeCarouselModeOptions[selectedModeIndex] ?? null);
   const difficultyMode = activeMode ?? previewMode;
   const hasSelectedMode = selectedModeIndex !== null;
   const hasSelectedGroup = selectedLaunchTarget?.type === "group";
@@ -773,7 +779,7 @@ export default function HomeScreen({
                     autoplayDelay={5000}
                     baseWidth={280}
                     isPaused={isCarouselHovered}
-                    items={modeOptions}
+                    items={homeCarouselModeOptions}
                     loop
                     selectedIndex={selectedModeIndex ?? -1}
                     onSelect={setCarouselModeIndex}
@@ -785,7 +791,12 @@ export default function HomeScreen({
                 <div className="mode-play-row">
                   <button
                     className={`primary-button ${isPreviewModeSelected ? "is-mode-selected" : ""}`}
-                    disabled={!previewMode || previewMode.comingSoon || isPreviewModeSelected}
+                    disabled={
+                      !previewMode ||
+                      previewMode.comingSoon ||
+                      !previewMode.isHomeCarouselPlayable ||
+                      isPreviewModeSelected
+                    }
                     onClick={() => {
                       onSelectLaunchTarget?.({ type: "mode", id: previewMode.id });
                       setCarouselModeIndex(carouselModeIndex);
@@ -794,9 +805,11 @@ export default function HomeScreen({
                   >
                     {previewMode?.comingSoon
                       ? "Coming Soon"
-                      : isPreviewModeSelected
-                        ? "Mode selected"
-                        : `Select ${previewMode?.title ?? "Game"}`}
+                      : previewMode && !previewMode.isHomeCarouselPlayable
+                        ? "Unavailable"
+                        : isPreviewModeSelected
+                          ? "Mode selected"
+                          : `Select ${previewMode?.title ?? "Game"}`}
                   </button>
                   <button className="ghost-button" onClick={onOpenModeHub} type="button">
                     View all games
