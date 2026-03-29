@@ -55,18 +55,27 @@ function loadStoredAnswerOverrides() {
   }
 }
 
-function buildRoundSteps(round) {
+function buildRoundSteps(round, options = {}) {
+  const { includeGroupGuess = true } = options;
+  if (round.customSteps?.length) {
+    return round.customSteps;
+  }
+
   const memberNames = round.members.map((member) => member.name);
 
   return [
-    {
-      id: `${round.id}-group`,
-      type: "group",
-      label: "Guess the group",
-      answer: round.groupName,
-      choices: round.groupChoices,
-      description: "Start each round by recognizing the group from the full member collage.",
-    },
+    ...(includeGroupGuess
+      ? [
+          {
+            id: `${round.id}-group`,
+            type: "group",
+            label: "Guess the group",
+            answer: round.groupName,
+            choices: round.groupChoices,
+            description: "Start each round by recognizing the group from the full member collage.",
+          },
+        ]
+      : []),
     ...round.members.map((member, index) => ({
       id: `${round.id}-member-${index}`,
       type: "member",
@@ -114,6 +123,12 @@ export default function MainGameShow({
   addPlayer,
   removePlayer,
   scoreKey,
+  rounds = mainQuizRounds,
+  includeGroupGuess = true,
+  heroEyebrow = "Headliner gameshow",
+  heroTitle = "Are You Smarter Than a K-Popper?",
+  heroText = "Each group now plays as a full round: group guess first, every member one by one, then the extra personal questions.",
+  roundNavTitle = "Group",
   onBackHome,
 }) {
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
@@ -137,8 +152,12 @@ export default function MainGameShow({
   const audioContextRef = useRef(null);
   const popResetTimerRef = useRef(null);
 
-  const currentRound = mainQuizRounds[currentRoundIndex];
-  const currentSteps = useMemo(() => buildRoundSteps(currentRound), [currentRound]);
+  const quizRounds = rounds?.length ? rounds : mainQuizRounds;
+  const currentRound = quizRounds[currentRoundIndex] ?? quizRounds[0];
+  const currentSteps = useMemo(
+    () => buildRoundSteps(currentRound, { includeGroupGuess }),
+    [currentRound, includeGroupGuess],
+  );
   const currentStep = currentSteps[currentStepIndex];
   const currentAnswerOverrideKey = useMemo(
     () => getAnswerOverrideStorageKey(currentRound, currentStep),
@@ -167,13 +186,18 @@ export default function MainGameShow({
   const isFavoriteSongStep =
     currentStep.type === "extra" &&
     (currentStep.kind === "favoriteSong" || currentStep.key.startsWith("favoriteSong"));
+  const isTextOnlyExtra =
+    currentStep.type === "extra" &&
+    !currentStep.image &&
+    !currentStep.coverImage &&
+    (currentStep.songChoices?.length ?? 0) === 0;
   const usesGroupCollage =
     currentStep.type === "group" ||
     (currentStep.type === "extra" &&
-      ["leader", "maknae", "bias"].includes(currentStep.key));
+      (["leader", "maknae", "bias"].includes(currentStep.key) || isTextOnlyExtra));
   const usesSongChoiceGallery = isFavoriteSongStep && (currentStep.songChoices?.length ?? 0) > 0;
-  const usesAlbumCover =
-    isFavoriteSongStep && !usesSongChoiceGallery && currentStep.coverImage;
+  const usesAlbumCover = !usesSongChoiceGallery && Boolean(currentStep.coverImage);
+  const currentRoundLabel = currentRound?.roundLabel ?? `Group ${currentRoundIndex + 1}`;
   const galleryImages = useMemo(() => {
     if (usesSongChoiceGallery) {
       const seenCovers = new Set();
@@ -795,7 +819,9 @@ export default function MainGameShow({
 
     if (currentRoundIndex > 0) {
       const previousRoundIndex = currentRoundIndex - 1;
-      const previousRoundSteps = buildRoundSteps(mainQuizRounds[previousRoundIndex]);
+      const previousRoundSteps = buildRoundSteps(quizRounds[previousRoundIndex], {
+        includeGroupGuess,
+      });
       setCurrentRoundIndex(previousRoundIndex);
       setCurrentStepIndex(previousRoundSteps.length - 1);
       setRevealAnswers(false);
@@ -811,7 +837,7 @@ export default function MainGameShow({
       return;
     }
 
-    if (currentRoundIndex < mainQuizRounds.length - 1) {
+    if (currentRoundIndex < quizRounds.length - 1) {
       setCurrentRoundIndex((index) => index + 1);
       setCurrentStepIndex(0);
       setRevealAnswers(false);
@@ -825,7 +851,7 @@ export default function MainGameShow({
   }
 
   function goToNextGroup() {
-    if (currentRoundIndex === mainQuizRounds.length - 1) return;
+    if (currentRoundIndex === quizRounds.length - 1) return;
     goToRound(currentRoundIndex + 1);
   }
 
@@ -1173,12 +1199,9 @@ export default function MainGameShow({
         >
           <section className="game-show-hero">
             <div>
-              <p className="eyebrow">Headliner gameshow</p>
-              <h1>Are You Smarter Than a K-Popper?</h1>
-              <p className="hero-text">
-                Each group now plays as a full round: group guess first, every
-                member one by one, then the extra personal questions.
-              </p>
+              <p className="eyebrow">{heroEyebrow}</p>
+              <h1>{heroTitle}</h1>
+              <p className="hero-text">{heroText}</p>
             </div>
           </section>
         </AnimatedContent>
@@ -1325,7 +1348,7 @@ export default function MainGameShow({
                     <div className="member-image-wrap">
                       <div className="image-question-bar">
                         <div className="image-question-copy">
-                          <p className="flow-section-label">Group {currentRoundIndex + 1}</p>
+                          <p className="flow-section-label">{currentRoundLabel}</p>
                           <h2>{currentStep.label}</h2>
                           {usesGroupCollage && galleryImages.some((image) => getImageOption(image)) ? (
                             <p className="image-selection-help">
@@ -1484,7 +1507,7 @@ export default function MainGameShow({
                       <p className="flow-section-label">Multiple Choice</p>
                       <div className="round-controls">
                         <div className="round-nav-pill">
-                          <span className="round-nav-label">Group</span>
+                          <span className="round-nav-label">{roundNavTitle}</span>
                           <button
                             aria-label="Previous group"
                             className="ghost-button round-nav-arrow"
@@ -1497,7 +1520,7 @@ export default function MainGameShow({
                           <button
                             aria-label="Next group"
                             className="ghost-button round-nav-arrow"
-                            disabled={currentRoundIndex === mainQuizRounds.length - 1}
+                            disabled={currentRoundIndex === quizRounds.length - 1}
                             onClick={goToNextGroup}
                             type="button"
                           >
@@ -1519,7 +1542,7 @@ export default function MainGameShow({
                             aria-label="Next question"
                             className="ghost-button round-nav-arrow"
                             disabled={
-                              currentRoundIndex === mainQuizRounds.length - 1 &&
+                              currentRoundIndex === quizRounds.length - 1 &&
                               currentStepIndex === currentSteps.length - 1
                             }
                             onClick={goToNext}

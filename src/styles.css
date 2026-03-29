@@ -1164,6 +1164,9 @@ a:focus-visible {
 
 .hero-lineup-title {
   display: grid;
+  flex: 1 1 auto;
+  justify-items: center;
+  text-align: center;
 }
 
 .hero-lineup-header h2,
@@ -1358,10 +1361,10 @@ a:focus-visible {
 .hero-setup-panel {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.55rem;
   align-self: stretch;
   height: 100%;
-  padding: 1rem;
+  padding: 0.75rem 0.95rem 0.9rem;
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   background:
@@ -1404,7 +1407,7 @@ a:focus-visible {
 
 .party-team-name-card {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.45rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1467,13 +1470,13 @@ a:focus-visible {
 
 .party-controls-panel {
   display: grid;
-  gap: 0.65rem;
-  margin-top: 0.15rem;
+  gap: 0.5rem;
+  margin-top: 0;
 }
 
 .party-control-group {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.3rem;
 }
 
 .party-inline-actions,
@@ -1566,6 +1569,15 @@ a:focus-visible {
   gap: 1rem;
 }
 
+.hero-setup-panel .host-panel-header {
+  justify-content: center;
+}
+
+.hero-setup-panel .host-panel-header > div {
+  width: 100%;
+  text-align: center;
+}
+
 .player-count,
 .host-pill {
   background: rgba(255, 211, 111, 0.16);
@@ -1574,7 +1586,7 @@ a:focus-visible {
 
 .player-form,
 .host-select-wrap {
-  margin-top: 0.35rem;
+  margin-top: 0.15rem;
 }
 
 .icon-picker-wrap {
@@ -1586,7 +1598,7 @@ a:focus-visible {
 .icon-picker-wrap label,
 .setup-inline-label {
   display: block;
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.3rem;
   color: var(--text-secondary);
 }
 
@@ -1598,7 +1610,7 @@ a:focus-visible {
 .player-form-stack {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto auto;
-  gap: 0.75rem;
+  gap: 0.55rem;
   align-items: center;
 }
 

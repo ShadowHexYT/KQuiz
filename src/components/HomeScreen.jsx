@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { HOST_ID } from "../App";
+import { modeSupportsGroupFocus } from "../data/gameModeCatalog";
 import { groupQuizzes } from "../data/groupQuizzes";
+import { playlistGroupOptions } from "../data/playlistGamePacks";
 import AnimatedContent from "./AnimatedContent";
 import AnimatedList from "./AnimatedList";
 import Carousel from "./Carousel";
@@ -110,6 +112,7 @@ export default function HomeScreen({
   hostGetsScore,
   selectedGroup,
   selectedLaunchTarget,
+  modeGroupFilters,
   playerName,
   newPlayerIcon,
   teams,
@@ -132,9 +135,11 @@ export default function HomeScreen({
   onMovePlayerToLineupSlot,
   modeOptions,
   onSelectLaunchTarget,
+  onModeGroupFilterChange,
   onOpenModeHub,
   onOpenMode,
   onStartGroupQuiz,
+  onLaunchGroupQuiz,
   onStartMainShow,
 }) {
   const [carouselModeIndex, setCarouselModeIndex] = useState(0);
@@ -171,10 +176,15 @@ export default function HomeScreen({
   const isAdvertisedGroupSelected = hasSelectedGroup && selectedLaunchTarget.id === selectedGroup.label;
   const canLaunchActiveMode = Boolean(activeMode && !activeMode.comingSoon);
   const hasPlayableModeSelected = selectedLaunchTarget?.type === "mode" && canLaunchActiveMode;
+  const canLaunchSelectedTarget = hasPlayableModeSelected || hasSelectedGroup;
   const isPreviewModeSelected = hasSelectedMode && previewMode?.id === activeMode?.id;
   const activeDifficultyOptions = getDifficultyOptionsForMode(difficultyMode?.id);
   const activeDifficulty =
     (difficultyMode?.id ? modeDifficulties[difficultyMode.id] : null) ?? activeDifficultyOptions[0];
+  const showModeGroupFilter = Boolean(difficultyMode?.id && modeSupportsGroupFocus(difficultyMode.id));
+  const activeModeGroupFilter = difficultyMode?.id
+    ? (modeGroupFilters?.[difficultyMode.id] ?? "All groups")
+    : "All groups";
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
   const playerSlots = Array.from({ length: playerSlotCount }, (_, index) => lineupPlayers[index] ?? null);
@@ -200,12 +210,20 @@ export default function HomeScreen({
 
     onOpenMode(activeMode.id);
   };
+  const launchSelectedTarget = () => {
+    if (hasSelectedGroup) {
+      onLaunchGroupQuiz?.(selectedGroup);
+      return;
+    }
+
+    launchActiveMode();
+  };
   const launchButtonLabel = activeMode?.comingSoon
     ? `${activeMode.title} Coming Soon`
     : activeMode
       ? `Launch ${activeMode.title}`
       : hasSelectedGroup
-        ? `${selectedLaunchTarget.id} quiz coming soon`
+        ? `Launch ${selectedLaunchTarget.id} Quiz`
         : "Select a game or group";
   const currentPlayersLabel = `Current Players: ${lineupPlayers.length}`;
   const formatLabel = teamsEnabled ? `${teams.length} teams` : "Free-for-all";
@@ -361,7 +379,7 @@ export default function HomeScreen({
                 <div className="hero-lineup-panel" id="party-lineup">
                   <div className="hero-lineup-header">
                     <div className="hero-lineup-title">
-                      <h2>Party lineup</h2>
+                      <h2>Party</h2>
                     </div>
                     <span className="player-count">{currentPlayersLabel}</span>
                   </div>
@@ -501,9 +519,9 @@ export default function HomeScreen({
 
                   <div className="hero-actions">
                     <button
-                      className={`primary-button ${hasPlayableModeSelected ? "is-play-selected" : ""}`}
-                      disabled={!canLaunchActiveMode}
-                      onClick={launchActiveMode}
+                      className={`primary-button ${canLaunchSelectedTarget ? "is-play-selected" : ""}`}
+                      disabled={!canLaunchSelectedTarget}
+                      onClick={launchSelectedTarget}
                       type="button"
                     >
                       {launchButtonLabel}
@@ -515,7 +533,7 @@ export default function HomeScreen({
               <aside className="hero-setup-panel" id="party-setup">
                 <div className="host-panel-header">
                   <div>
-                    <h2>Build your game night</h2>
+                    <h2>Party Setup</h2>
                   </div>
                 </div>
 
@@ -573,8 +591,8 @@ export default function HomeScreen({
                   </div>
                 </form>
 
-                <div className={`party-settings-grid ${teamsEnabled ? "is-team-naming" : ""}`}>
-                  {teamsEnabled ? (
+                {teamsEnabled ? (
+                  <div className="party-settings-grid is-team-naming">
                     <div className="party-team-name-card">
                       {activeEditorTeam ? (
                         <>
@@ -610,16 +628,8 @@ export default function HomeScreen({
                         </>
                       ) : null}
                     </div>
-                  ) : (
-                    <div className="party-setting-card">
-                      <p className="panel-label">Selected game</p>
-                      <strong>
-                        {activeMode?.title ??
-                          (hasSelectedGroup ? selectedLaunchTarget.id : "No selection yet")}
-                      </strong>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                ) : null}
 
                 <div className="party-controls-panel">
                   <div className="party-control-group">
@@ -654,6 +664,29 @@ export default function HomeScreen({
                       ))}
                     </div>
                   </div>
+
+                  {showModeGroupFilter ? (
+                    <div className="party-control-group">
+                      <label className="panel-label" htmlFor="party-mode-group-focus">
+                        Group focus
+                      </label>
+                      <select
+                        id="party-mode-group-focus"
+                        className="player-select-input party-group-focus-select"
+                        value={activeModeGroupFilter}
+                        onChange={(event) =>
+                          onModeGroupFilterChange?.(difficultyMode.id, event.target.value)
+                        }
+                      >
+                        <option value="All groups">All groups</option>
+                        {playlistGroupOptions.map((groupName) => (
+                          <option key={groupName} value={groupName}>
+                            {groupName}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
 
                   <div className="party-control-group party-toggle-group">
                     <span className="panel-label">Toggles</span>

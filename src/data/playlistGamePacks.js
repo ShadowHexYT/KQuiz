@@ -1,24 +1,20 @@
-import { getSongMeta } from "./mainQuizRounds";
-
-function getStableHash(value) {
-  return Array.from(value).reduce((hash, char) => hash + char.charCodeAt(0), 0);
-}
-
-function sortWithSeed(values, seed) {
-  return [...values].sort((left, right) => {
-    const leftScore = getStableHash(`${seed}-${left}`);
-    const rightScore = getStableHash(`${seed}-${right}`);
-    return leftScore - rightScore;
-  });
-}
+import {
+  buildPlaylistModeCatalog,
+  buildQuestionChoices,
+  buildSessionQuestionSet,
+} from "../lib/playlistModes/catalog.js";
+import { pickQuestionVariant } from "../lib/playlistModes/assetPrep.js";
+import { getSupportedPlaylistGroups } from "../lib/playlistModes/supportedGroups.js";
 
 function buildChoices(answer, pool, seed, size = 4) {
-  const distractors = sortWithSeed(
-    pool.filter((item) => item !== answer),
-    `${seed}-distractors`,
-  ).slice(0, Math.max(0, size - 1));
+  const distractors = [...pool.filter((item) => item !== answer)].sort((left, right) =>
+    `${seed}-distractors-${left}`.localeCompare(`${seed}-distractors-${right}`),
+  )
+    .slice(0, Math.max(0, size - 1));
 
-  return sortWithSeed([answer, ...distractors], `${seed}-choices`);
+  return [answer, ...distractors].sort((left, right) =>
+    `${seed}-choices-${left}`.localeCompare(`${seed}-choices-${right}`),
+  );
 }
 
 export const playlistSongs = [
@@ -108,35 +104,7 @@ export const lyricPrompts = [
   { id: "lyric-hands-up", title: "HANDS UP", artist: "Meovv", difficulty: "easy", lyricLeadIn: "Hands", lyricAnswer: "up" },
 ];
 
-const titlePool = playlistSongs.map((song) => song.title);
-const albumPool = [...new Set(playlistSongs.map((song) => song.album).filter(Boolean))];
 const lyricAnswerPool = lyricPrompts.map((prompt) => prompt.lyricAnswer);
-
-export const emojiSongGuessQuestions = playlistSongs.map((song) => ({
-  ...song,
-  prompt: song.emojiClue,
-  answer: song.title,
-  choices: buildChoices(song.title, titlePool, `${song.id}-emoji`),
-}));
-
-export const albumCoverZoomQuestions = playlistSongs
-  .map((song, index) => {
-    const songMeta = getSongMeta(song.artist, song.title);
-
-    if (!songMeta.coverImage || !song.album) {
-      return null;
-    }
-
-    return {
-      ...song,
-      answer: song.album,
-      coverImage: songMeta.coverImage,
-      choices: buildChoices(song.album, albumPool, `${song.id}-cover`),
-      focusX: 18 + ((index * 13) % 60),
-      focusY: 18 + ((index * 9) % 60),
-    };
-  })
-  .filter(Boolean);
 
 export const finishTheLyricQuestions = lyricPrompts.map((prompt) => ({
   ...prompt,
@@ -148,3 +116,24 @@ export const finishTheLyricQuestions = lyricPrompts.map((prompt) => ({
 
 export const playlistDifficultyOptions = ["easy", "medium", "hard"];
 export const playlistQuestionCountOptions = [5, 10, 15, 20, 25, 30, 40, 50];
+const generatedCatalog = buildPlaylistModeCatalog({ playlistSongs });
+
+export const emojiSongGuessQuestions = generatedCatalog.emojiSongGuessQuestions;
+export const albumCoverZoomQuestions = generatedCatalog.albumCoverZoomQuestions;
+export const lightstickSilhouetteQuestions = generatedCatalog.lightstickSilhouetteQuestions;
+export const playlistModeDiagnostics = generatedCatalog.diagnostics;
+export const playlistGroupOptions = getSupportedPlaylistGroups();
+
+export function buildPlaylistChoices(question, seed, size = 4) {
+  return question.choicePool
+    ? buildQuestionChoices(question, seed, size)
+    : question.choices ?? [];
+}
+
+export function buildPlaylistQuestionSet(questions, count, seed, recentIds = []) {
+  return buildSessionQuestionSet(questions, count, seed, recentIds);
+}
+
+export function getPlaylistQuestionVariant(question, seed) {
+  return pickQuestionVariant(question, seed);
+}

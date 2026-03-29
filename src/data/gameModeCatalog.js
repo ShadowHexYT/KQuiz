@@ -55,6 +55,7 @@ export const gameModes = [
     id: "finish-the-lyric",
     title: "Finish the Lyric",
     tagline: "Continue the next line before the timer closes.",
+    comingSoon: true,
     category: "Lyric",
     playerFormat: "Solo or Teams",
     layoutType: "prompt",
@@ -83,7 +84,6 @@ export const gameModes = [
     id: "emoji-song-guess",
     title: "Emoji Song Guess",
     tagline: "Decode the emoji chain into a song title.",
-    comingSoon: true,
     category: "Party",
     playerFormat: "Solo or Teams",
     layoutType: "emoji",
@@ -112,7 +112,6 @@ export const gameModes = [
     id: "album-cover-zoom",
     title: "Album Cover Zoom-In",
     tagline: "Guess the album from a tiny crop.",
-    comingSoon: true,
     category: "Visual",
     playerFormat: "Solo or Teams",
     layoutType: "visual",
@@ -181,7 +180,16 @@ export const featuredGameModes = featuredGameModeIds
   .filter(Boolean);
 
 export const gameModeMap = Object.fromEntries(gameModes.map((mode) => [mode.id, mode]));
+export const groupFilterEligibleModeIds = [
+  "finish-the-lyric",
+  "emoji-song-guess",
+  "album-cover-zoom",
+];
 
 export function getGameModeById(modeId) {
   return gameModeMap[modeId] ?? null;
+}
+
+export function modeSupportsGroupFocus(modeId) {
+  return groupFilterEligibleModeIds.includes(modeId);
 }

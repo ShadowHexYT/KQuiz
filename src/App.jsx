@@ -1,10 +1,11 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import HomeScreen from "./components/HomeScreen";
 import MainGameShow from "./components/MainGameShow";
 import ModeHub from "./components/ModeHub";
 import PillNav from "./components/PillNav";
 import { groupQuizzes } from "./data/groupQuizzes";
-import { gameModes } from "./data/gameModeCatalog";
+import { buildIndividualQuizForGroup } from "./lib/individualQuiz/index.js";
+import { gameModes, modeSupportsGroupFocus } from "./data/gameModeCatalog";
 import { createEmptyScores, GAME_SCORE_KEYS, normalizeScores } from "./data/scoreModel";
 
 const ModePrototype = lazy(() => import("./components/ModePrototype"));
@@ -90,6 +91,14 @@ function getNextAvailableLineupSlot(players) {
   return players.length + 1;
 }
 
+function slugify(value) {
+  return String(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 function getRouteFromHash(hashValue) {
   if (hashValue === "#/main-gameshow") {
     return { name: "main-gameshow" };
@@ -103,6 +112,13 @@ function getRouteFromHash(hashValue) {
     return {
       name: "mode-prototype",
       modeId: hashValue.replace("#/mode/", ""),
+    };
+  }
+
+  if (hashValue.startsWith("#/group/")) {
+    return {
+      name: "group-quiz",
+      groupSlug: hashValue.replace("#/group/", ""),
     };
   }
 
@@ -127,6 +143,7 @@ export default function App() {
   const [desiredPlayerCount, setDesiredPlayerCount] = useState(starterPlayers.length);
   const [selectedGroup, setSelectedGroup] = useState(groupQuizzes[0]);
   const [selectedLaunchTarget, setSelectedLaunchTarget] = useState(null);
+  const [modeGroupFilters, setModeGroupFilters] = useState({});
 
   useEffect(() => {
     function handleHashChange() {
@@ -328,11 +345,20 @@ export default function App() {
   function openGroupQuizFromNav(group) {
     setSelectedGroup(group);
     setSelectedLaunchTarget({ type: "group", id: group.label });
-    goHome();
+    goToGroupQuiz(group.label);
   }
 
   function selectLaunchTarget(target) {
     setSelectedLaunchTarget(target);
+  }
+
+  function setModeGroupFilter(modeId, groupName) {
+    if (!modeSupportsGroupFocus(modeId)) return;
+
+    setModeGroupFilters((currentValue) => ({
+      ...currentValue,
+      [modeId]: groupName,
+    }));
   }
 
   function goToMainShow() {
@@ -350,6 +376,10 @@ export default function App() {
     }
 
     window.location.hash = `/mode/${modeId}`;
+  }
+
+  function goToGroupQuiz(groupLabel) {
+    window.location.hash = `/group/${slugify(groupLabel)}`;
   }
 
   function goHome() {
@@ -373,10 +403,29 @@ export default function App() {
     setDesiredPlayerCount(starterPlayers.length);
     setSelectedGroup(groupQuizzes[0]);
     setSelectedLaunchTarget(null);
+    setModeGroupFilters({});
     goHome();
   }
 
   const activeNavKey = route.name === "home" ? "home" : "games";
+  const routedGroup =
+    route.name === "group-quiz"
+      ? groupQuizzes.find((group) => slugify(group.label) === route.groupSlug) ?? null
+      : null;
+  const routedGroupQuiz = useMemo(
+    () => (routedGroup ? buildIndividualQuizForGroup(routedGroup.label) : null),
+    [routedGroup],
+  );
+  const routedGroupRounds = routedGroupQuiz?.rounds ?? [];
+
+  useEffect(() => {
+    if (route.name !== "group-quiz" || !routedGroup) return;
+
+    setSelectedGroup((currentGroup) =>
+      currentGroup?.label === routedGroup.label ? currentGroup : routedGroup,
+    );
+    setSelectedLaunchTarget({ type: "group", id: routedGroup.label });
+  }, [route.name, routedGroup]);
 
   const topNav = (
     <PillNav
@@ -448,6 +497,8 @@ export default function App() {
         >
           <ModePrototype
             modeId={route.modeId}
+            selectedGroupFilter={modeGroupFilters[route.modeId] ?? "All groups"}
+            onSelectedGroupFilterChange={(groupName) => setModeGroupFilter(route.modeId, groupName)}
             onBackHome={goHome}
             onOpenModeHub={goToModeHub}
             players={players}
@@ -477,6 +528,41 @@ export default function App() {
     );
   }
 
+  if (route.name === "group-quiz" && routedGroup && routedGroupRounds.length) {
+    return (
+      <>
+        {topNav}
+        <MainGameShow
+          players={players}
+          setPlayers={setPlayers}
+          hostProfile={hostProfile}
+          setHostProfile={setHostProfile}
+          teams={teams}
+          teamsEnabled={teamsEnabled}
+          hostGetsScore={hostGetsScore}
+          setHostGetsScore={setHostGetsScore}
+          playerName={playerName}
+          setPlayerName={setPlayerName}
+          newPlayerIcon={newPlayerIcon}
+          setNewPlayerIcon={setNewPlayerIcon}
+          playerIcons={playerIcons}
+          desiredPlayerCount={desiredPlayerCount}
+          setDesiredPlayerCount={setDesiredPlayerCount}
+          addPlayer={addPlayer}
+          removePlayer={removePlayer}
+          scoreKey={GAME_SCORE_KEYS.songGuessing}
+          rounds={routedGroupRounds}
+          includeGroupGuess={false}
+          heroEyebrow="Individual group quiz"
+          heroTitle={`${routedGroup.label} Quiz`}
+          heroText={routedGroup.description}
+          roundNavTitle="Difficulty"
+          onBackHome={goHome}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       {topNav}
@@ -486,6 +572,7 @@ export default function App() {
         hostGetsScore={hostGetsScore}
         selectedGroup={selectedGroup}
         selectedLaunchTarget={selectedLaunchTarget}
+        modeGroupFilters={modeGroupFilters}
         playerName={playerName}
         newPlayerIcon={newPlayerIcon}
         teams={teams}
@@ -508,9 +595,11 @@ export default function App() {
         onMovePlayerToLineupSlot={movePlayerToLineupSlot}
         onStartGroupQuiz={startGroupQuiz}
         onSelectLaunchTarget={selectLaunchTarget}
+        onModeGroupFilterChange={setModeGroupFilter}
         modeOptions={gameModes}
         onOpenModeHub={goToModeHub}
         onOpenMode={goToModePrototype}
+        onLaunchGroupQuiz={(group) => goToGroupQuiz(group.label)}
         onStartMainShow={goToMainShow}
       />
     </>

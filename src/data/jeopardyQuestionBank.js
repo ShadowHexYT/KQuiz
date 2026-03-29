@@ -202,6 +202,7 @@ const groupReference = {
     debutDate: "August 29, 2025",
     fandom: "LOCKETS",
     debutSong: "Commas",
+    aliases: ["VCHA"],
     originStory: "The group rebranded from VCHA after A2K's original lineup changed.",
     achievementPrompt: "What was Girlset's group name before the 2025 rebrand?",
     achievementAnswer: "VCHA",
@@ -381,6 +382,178 @@ function buildGroupEssentialsCategory(round) {
         difficulty: "hard",
       }),
       fallbackQuestion,
+    ],
+  };
+}
+
+function buildGroupSpotlightCategory(round) {
+  const leader = getRoundExtra(round, "leader");
+  const maknae = getRoundExtra(round, "maknae");
+  const bias = getRoundExtra(round, "bias");
+  const favorite = getFavoriteExtra(round);
+  const favoriteAnswers = favorite?.answers ?? [favorite?.answer].filter(Boolean);
+  const shuffledMembers = sortWithSeed(round.members, `${round.id}-spotlight-members`);
+  const focusMemberOne = shuffledMembers[0];
+  const focusMemberTwo = shuffledMembers[1] ?? shuffledMembers[0];
+  const wrongMembersOne = getWrongMembers(round.groupName, "spotlight-member-one");
+  const wrongMembersTwo = getWrongMembers(round.groupName, "spotlight-member-two");
+  const wrongGroups = getWrongGroups(round.groupName, "spotlight-groups");
+  const reference = groupReference[round.groupName] ?? {};
+
+  return {
+    id: `${round.id}-spotlight`,
+    title: `${round.groupName} Spotlight`,
+    groupTags: [round.groupName],
+    questions: [
+      makeQuestion({
+        id: `${round.id}-spotlight-group-name`,
+        prompt: `Which group do these questions belong to: ${round.groupName}?`,
+        answer: round.groupName,
+        choices: sortWithSeed(
+          [round.groupName, ...wrongGroups],
+          `${round.id}-spotlight-group-name-choices`,
+        ),
+        difficulty: "easy",
+      }),
+      makeQuestion({
+        id: `${round.id}-spotlight-member-one`,
+        prompt: `Which of these members belongs to ${round.groupName}?`,
+        answer: focusMemberOne?.name ?? "",
+        choices: sortWithSeed(
+          [focusMemberOne?.name ?? "", ...wrongMembersOne],
+          `${round.id}-spotlight-member-one-choices`,
+        ),
+        difficulty: "easy",
+      }),
+      makeQuestion({
+        id: `${round.id}-spotlight-member-two`,
+        prompt: `Pick another real member of ${round.groupName}.`,
+        answer: focusMemberTwo?.name ?? "",
+        choices: sortWithSeed(
+          [focusMemberTwo?.name ?? "", ...wrongMembersTwo],
+          `${round.id}-spotlight-member-two-choices`,
+        ),
+        difficulty: "medium",
+      }),
+      makeQuestion({
+        id: `${round.id}-spotlight-favorite-one`,
+        prompt: `Name another favorite song tied to ${round.groupName}.`,
+        answer: favoriteAnswers[1] ?? favoriteAnswers[0] ?? "",
+        choices: favorite?.choices ?? [],
+        difficulty: "medium",
+      }),
+      makeQuestion({
+        id: `${round.id}-spotlight-favorite-two`,
+        prompt: `Which song should still count as one of your ${round.groupName} favorites?`,
+        answer: favoriteAnswers[2] ?? favoriteAnswers[1] ?? favoriteAnswers[0] ?? "",
+        choices: favorite?.choices ?? [],
+        difficulty: "medium",
+      }),
+      makeQuestion({
+        id: `${round.id}-spotlight-leader-repeat`,
+        prompt: `Lock in the leader for ${round.groupName}.`,
+        answer: leader?.answer ?? "",
+        choices: leader?.choices ?? [],
+        difficulty: "medium",
+      }),
+      makeQuestion({
+        id: `${round.id}-spotlight-maknae-repeat`,
+        prompt: `Who closes out the age line as the maknae of ${round.groupName}?`,
+        answer: maknae?.answer ?? "",
+        choices: maknae?.choices ?? [],
+        difficulty: "medium",
+      }),
+      makeQuestion({
+        id: `${round.id}-spotlight-bias-repeat`,
+        prompt: `For ${round.groupName}, who is the bias pick in this game set?`,
+        answer: bias?.answer ?? "",
+        choices: bias?.choices ?? [],
+        difficulty: "hard",
+      }),
+      ...(reference.fandom
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-fandom`,
+              prompt: `What fandom name goes with ${round.groupName}?`,
+              answer: reference.fandom,
+              difficulty: "hard",
+            }),
+          ]
+        : []),
+      ...(reference.debutSong
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-debut-song`,
+              prompt: `What debut song belongs to ${round.groupName}?`,
+              answer: reference.debutSong,
+              difficulty: "hard",
+            }),
+          ]
+        : []),
+      ...(reference.company
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-company`,
+              prompt: `Which company or label is tied to ${round.groupName}?`,
+              answer: reference.company,
+              difficulty: "hard",
+            }),
+          ]
+        : []),
+      ...(reference.debutDate
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-debut-date`,
+              prompt: `When did ${round.groupName} debut?`,
+              answer: reference.debutDate,
+              difficulty: "hard",
+            }),
+          ]
+        : []),
+      ...(reference.nameMeaning
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-name-meaning`,
+              prompt: `What does the name ${round.groupName} mean or refer to?`,
+              answer: reference.nameMeaning,
+              difficulty: "hard",
+            }),
+          ]
+        : []),
+      ...(reference.originStory
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-origin-story`,
+              prompt: `What project, show, or origin story is tied to ${round.groupName}?`,
+              answer: reference.originStory,
+              difficulty: "hard",
+            }),
+          ]
+        : []),
+      ...(reference.achievementPrompt && reference.achievementAnswer
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-achievement`,
+              prompt: reference.achievementPrompt,
+              answer: reference.achievementAnswer,
+              difficulty: "hard",
+            }),
+          ]
+        : []),
+      ...(reference.aliases?.length
+        ? [
+            makeQuestion({
+              id: `${round.id}-spotlight-alias`,
+              prompt: `What other name is directly tied to ${round.groupName}?`,
+              answer: reference.aliases[0],
+              choices: sortWithSeed(
+                [reference.aliases[0], ...getWrongGroups(round.groupName, "spotlight-alias")],
+                `${round.id}-spotlight-alias-choices`,
+              ),
+              difficulty: "medium",
+            }),
+          ]
+        : []),
     ],
   };
 }
@@ -719,7 +892,7 @@ const albumOwnerCategory = {
 const soundtrackCategory = {
   id: "soundtrack-and-special-acts",
   title: "Soundtrack and Special Acts",
-  groupTags: ["KPDH", "KATSEYE", "XG", "BabyMonster", "Meovv"],
+  groupTags: ["KPDH", "KATSEYE", "XG", "BabyMonster", "Meovv", "Girlset"],
   questions: [
     makeQuestion({
       id: "kpdh-golden-soundtrack",
@@ -761,6 +934,12 @@ const soundtrackCategory = {
       id: "hearts2hearts-rude-special",
       prompt: `Which rookie act performs Rude!?`,
       answer: "Hearts2Hearts",
+      difficulty: "medium",
+    }),
+    makeQuestion({
+      id: "girlset-only-one-special",
+      prompt: `Which group formerly known as VCHA performs Only One?`,
+      answer: "Girlset",
       difficulty: "medium",
     }),
   ],
@@ -848,6 +1027,7 @@ const achievementCategory = {
 
 export const jeopardyCategoryPool = [
   ...allRounds.map(buildGroupEssentialsCategory),
+  ...allRounds.map(buildGroupSpotlightCategory),
   leadersCategory,
   maknaesCategory,
   biasCategory,

@@ -1,32 +1,21 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import AnimatedContent from "./AnimatedContent";
-import { getGameModeById } from "../data/gameModeCatalog";
+import { getGameModeById, modeSupportsGroupFocus } from "../data/gameModeCatalog";
 import {
   albumCoverZoomQuestions,
+  buildPlaylistChoices,
+  buildPlaylistQuestionSet,
   emojiSongGuessQuestions,
   finishTheLyricQuestions,
+  getPlaylistQuestionVariant,
+  lightstickSilhouetteQuestions,
   playlistDifficultyOptions,
+  playlistGroupOptions,
   playlistQuestionCountOptions,
 } from "../data/playlistGamePacks";
 import { buildJeopardyBoard, jeopardyBoardValues } from "../data/jeopardyQuestionBank";
 import { normalizeScores } from "../data/scoreModel";
 import { buildGameEntities } from "../data/teamModeHelpers";
-
-function getStableHash(value) {
-  return Array.from(value).reduce((hash, char) => hash + char.charCodeAt(0), 0);
-}
-
-function sortWithSeed(values, seed) {
-  return [...values].sort((left, right) => {
-    const leftScore = getStableHash(`${seed}-${left.id ?? left}`);
-    const rightScore = getStableHash(`${seed}-${right.id ?? right}`);
-    return leftScore - rightScore;
-  });
-}
-
-function buildQuestionSet(allQuestions, count, seed) {
-  return sortWithSeed(allQuestions, seed).slice(0, Math.min(count, allQuestions.length));
-}
 
 function getAvailableQuestionCounts(totalCount) {
   const presetCounts = playlistQuestionCountOptions.filter((option) => option <= totalCount);
@@ -42,6 +31,7 @@ function getPlaylistQuestionsForMode(modeId) {
   if (modeId === "emoji-song-guess") return emojiSongGuessQuestions;
   if (modeId === "album-cover-zoom") return albumCoverZoomQuestions;
   if (modeId === "finish-the-lyric") return finishTheLyricQuestions;
+  if (modeId === "lightstick-silhouette-guess") return lightstickSilhouetteQuestions;
   return [];
 }
 
@@ -52,6 +42,8 @@ function playerCanScore(player, hostGetsScore, hostId) {
 
 function PlaylistModeGame({
   mode,
+  selectedGroupFilter,
+  setSelectedGroupFilter,
   players,
   setPlayers,
   hostProfile,
@@ -69,6 +61,7 @@ function PlaylistModeGame({
   scoreKey,
 }) {
   const sourceQuestions = useMemo(() => getPlaylistQuestionsForMode(mode.id), [mode.id]);
+  const supportsGroupFocus = modeSupportsGroupFocus(mode.id);
   const [difficulty, setDifficulty] = useState("easy");
   const [questionCount, setQuestionCount] = useState(10);
   const [isSetupOpen, setIsSetupOpen] = useState(true);
@@ -82,10 +75,18 @@ function PlaylistModeGame({
   const [previewAssignments, setPreviewAssignments] = useState({});
   const [awardedPoints, setAwardedPoints] = useState({});
   const [holdingOption, setHoldingOption] = useState(null);
+  const [recentQuestionIds, setRecentQuestionIds] = useState([]);
   const longPressRef = useRef({ timer: null, triggered: false });
+  const groupFocusedQuestions = useMemo(() => {
+    if (!supportsGroupFocus || selectedGroupFilter === "All groups") {
+      return sourceQuestions;
+    }
+
+    return sourceQuestions.filter((question) => question.artist === selectedGroupFilter);
+  }, [selectedGroupFilter, sourceQuestions, supportsGroupFocus]);
   const filteredQuestions = useMemo(
-    () => sourceQuestions.filter((question) => question.difficulty === difficulty),
-    [difficulty, sourceQuestions],
+    () => groupFocusedQuestions.filter((question) => question.difficulty === difficulty),
+    [difficulty, groupFocusedQuestions],
   );
   const availableQuestionCounts = useMemo(
     () => getAvailableQuestionCounts(filteredQuestions.length),
@@ -94,14 +95,25 @@ function PlaylistModeGame({
 
   const activeQuestions = useMemo(
     () =>
-      buildQuestionSet(
+      buildPlaylistQuestionSet(
         filteredQuestions,
         Math.min(questionCount, filteredQuestions.length),
         `${mode.id}-${difficulty}-${sessionSeed}`,
+        recentQuestionIds,
       ),
-    [difficulty, filteredQuestions, mode.id, questionCount, sessionSeed],
+    [difficulty, filteredQuestions, mode.id, questionCount, recentQuestionIds, sessionSeed],
   );
   const currentQuestion = activeQuestions[currentIndex] ?? null;
+  const currentQuestionVariant = useMemo(
+    () =>
+      currentQuestion
+        ? getPlaylistQuestionVariant(
+            currentQuestion,
+            `${mode.id}-${difficulty}-${sessionSeed}-${currentQuestion.id}`,
+          )
+        : { prompt: null, cropVariant: null, renderVariant: null },
+    [currentQuestion, difficulty, mode.id, sessionSeed],
+  );
   const stepId = currentQuestion?.id ?? null;
   const isLastQuestion = currentIndex >= activeQuestions.length - 1;
   const promptHeading =
@@ -130,8 +142,8 @@ function PlaylistModeGame({
   const visibleChoices = useMemo(
     () =>
       currentQuestion
-        ? sortWithSeed(
-            currentQuestion.choices,
+        ? buildPlaylistChoices(
+            currentQuestion,
             `${mode.id}-${difficulty}-${sessionSeed}-${currentQuestion.id}`,
           )
         : [],
@@ -161,6 +173,10 @@ function PlaylistModeGame({
   }
 
   function restartGame(nextSeed = sessionSeed) {
+    setRecentQuestionIds((currentIds) => [
+      ...currentIds,
+      ...activeQuestions.map((question) => question.id),
+    ].slice(-120));
     setSessionSeed(nextSeed);
     resetRoundState();
   }
@@ -392,7 +408,9 @@ function PlaylistModeGame({
       return (
         <div className="playlist-prompt-shell">
           <p className="panel-label">Emoji clue</p>
-          <div className="playlist-emoji-prompt">{currentQuestion.prompt}</div>
+          <div className="playlist-emoji-prompt">
+            {currentQuestionVariant.prompt ?? currentQuestion.prompt}
+          </div>
           <p className="playlist-meta-line">
             Click to preview a player on an answer, then hold to lock it in.
           </p>
@@ -414,6 +432,45 @@ function PlaylistModeGame({
       );
     }
 
+    if (mode.id === "lightstick-silhouette-guess") {
+      const renderVariant = currentQuestionVariant.renderVariant;
+
+      return (
+        <div className="playlist-prompt-shell">
+          <div className="playlist-cover-frame playlist-silhouette-frame">
+            {currentQuestion.imageUrl ? (
+              <img
+                alt={`${currentQuestion.artist} lightstick`}
+                className="playlist-cover-image playlist-lightstick-image"
+                src={currentQuestion.imageUrl}
+                style={{
+                  filter: revealed
+                    ? "none"
+                    : `brightness(0) saturate(0) contrast(${renderVariant?.contrast ?? 1.8}) blur(${renderVariant?.blurPx ?? 4}px)`,
+                  transform: `scale(0.88) rotate(${renderVariant?.rotateDeg ?? 0}deg)`,
+                  clipPath:
+                    revealed || !renderVariant?.maskInset
+                      ? "none"
+                      : `inset(${renderVariant.maskInset}% round 24px)`,
+                }}
+              />
+            ) : (
+              <div className="playlist-silhouette-mark">
+                <p className="panel-label">Official lightstick</p>
+                <strong>{revealed ? currentQuestion.title : "Mystery stick"}</strong>
+              </div>
+            )}
+          </div>
+          <div className="playlist-cover-actions">
+            <p className="panel-label">Lightstick round</p>
+            <p className="playlist-meta-line">
+              Lock the group that matches this verified lightstick silhouette, then reveal the answer.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="playlist-prompt-shell">
         <div className="playlist-cover-frame">
@@ -424,8 +481,12 @@ function PlaylistModeGame({
             style={{
               transform: revealed
                 ? "scale(1)"
-                : `scale(${[3.8, 2.8, 1.95][zoomLevel] ?? 1.95})`,
-              transformOrigin: `${currentQuestion.focusX}% ${currentQuestion.focusY}%`,
+                : `scale(${[
+                    currentQuestionVariant.cropVariant?.scale ?? 3.8,
+                    Math.max(1.95, (currentQuestionVariant.cropVariant?.scale ?? 3.8) - 0.9),
+                    Math.max(1.35, (currentQuestionVariant.cropVariant?.scale ?? 3.8) - 1.7),
+                  ][zoomLevel] ?? 1.95})`,
+              transformOrigin: `${currentQuestionVariant.cropVariant?.focusX ?? 50}% ${currentQuestionVariant.cropVariant?.focusY ?? 50}%`,
             }}
           />
         </div>
@@ -550,6 +611,35 @@ function PlaylistModeGame({
                 </select>
                 <p className="setup-help">Choose how many prompts this round will use.</p>
               </div>
+
+              {supportsGroupFocus ? (
+                <div className="party-setting-card">
+                  <label className="setup-label" htmlFor={`${mode.id}-group-focus`}>
+                    Group focus
+                  </label>
+                  <select
+                    id={`${mode.id}-group-focus`}
+                    className="setup-input"
+                    value={selectedGroupFilter}
+                    onChange={(event) => {
+                      setSelectedGroupFilter(event.target.value);
+                      resetRoundState();
+                    }}
+                  >
+                    <option value="All groups">All groups</option>
+                    {playlistGroupOptions.map((groupName) => (
+                      <option key={groupName} value={groupName}>
+                        {groupName}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="setup-help">
+                    {selectedGroupFilter === "All groups"
+                      ? "Use the full mixed-group pool."
+                      : `Only ${selectedGroupFilter} prompts will appear in this mode.`}
+                  </p>
+                </div>
+              ) : null}
 
               <div className="party-setting-card">
                 <label className="setup-label">Host</label>
@@ -1389,7 +1479,8 @@ function renderModeSurface(mode, modeProps) {
   if (
     mode.id === "emoji-song-guess" ||
     mode.id === "album-cover-zoom" ||
-    mode.id === "finish-the-lyric"
+    mode.id === "finish-the-lyric" ||
+    mode.id === "lightstick-silhouette-guess"
   ) {
     return <PlaylistModeGame mode={mode} {...modeProps} />;
   }
@@ -1431,6 +1522,8 @@ function renderModeSurface(mode, modeProps) {
 
 export default function ModePrototype({
   modeId,
+  selectedGroupFilter = "All groups",
+  onSelectedGroupFilterChange,
   onBackHome,
   onOpenModeHub,
   players,
@@ -1508,6 +1601,8 @@ export default function ModePrototype({
               setDesiredPlayerCount,
               addPlayer,
               removePlayer,
+              selectedGroupFilter,
+              setSelectedGroupFilter: onSelectedGroupFilterChange,
               scoreKey,
             })}
           </section>

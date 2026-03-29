@@ -42,11 +42,25 @@ export const groupQuizzes = [
       "Genre-switching title tracks, powerhouse vocal moments, member recognition, and unpredictable clue rounds that fit NMIXX's mixxpop identity.",
   },
   {
+    label: "STAYC",
+    coverImage:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/17/30/df/1730dfb5-4d53-04d7-0bc9-6802a980903d/cover_KM0021351_1.jpg/1000x1000bb.jpg",
+    description:
+      "Bright hooks, addictive chorus recognition, point-choreography callbacks, and discography rounds built around STAYC's crisp pop identity.",
+  },
+  {
     label: "ILLIT",
     coverImage:
       "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/e4/bc/4d/e4bc4da3-0013-9949-8e54-0eede523f9d4/198704525001_Cover.jpg/1000x1000bb.jpg",
     description:
       "Dreamy visuals, soft-pop mood checks, member recognition, and bias-friendly trivia shaped around ILLIT's light and youthful atmosphere.",
+  },
+  {
+    label: "KATSEYE",
+    coverImage:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/08/fb/6a/08fb6a32-8856-f1f4-148b-8959bff0efb0/24UMGIM67773.rgb.jpg/1000x1000bb.jpg",
+    description:
+      "Global-group identity clues, debut-era recognition, sleek performance visuals, and song rounds shaped around KATSEYE's crossover energy.",
   },
   {
     label: "KiiiKiii",
@@ -77,11 +91,39 @@ export const groupQuizzes = [
       "Sharp performance rounds, rap and dance standouts, global-style visual clues, and member recognition built around XG's high-impact edge.",
   },
   {
+    label: "ITZY",
+    coverImage:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/08/1e/ff/081effcc-4f11-0b73-d131-bef7d49fb6e8/8809928950150_Cover.jpg/1000x1000bb.jpg",
+    description:
+      "Confidence-heavy title tracks, iconic self-empowerment concepts, performance hooks, and member trivia built around ITZY's bold style.",
+  },
+  {
+    label: "G-(I)DLE",
+    coverImage:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/4c/da/91/4cda91b0-6fa2-805e-fd1a-e89bf87bb969/8804775250422.jpg/1000x1000bb.jpg",
+    description:
+      "Concept-switching comeback rounds, self-produced identity clues, title-track recognition, and fandom-favorite deep cuts for (G)I-DLE fans.",
+  },
+  {
     label: "Baby DONT Cry",
     coverImage:
       "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/97/fc/de/97fcdebf-6110-63a7-aa4d-f82306875562/cover_KM0023790_1.jpg/1000x1000bb.jpg",
     description:
       "Attitude-heavy concept prompts, early member recognition, debut-era details, and bias trivia tuned to Baby DONT Cry's rebellious tone.",
+  },
+  {
+    label: "VIVIZ",
+    coverImage:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/42/5a/20/425a2026-a87d-7e6a-26d9-4159de176762/8804775284434_cover.jpg/1000x1000bb.jpg",
+    description:
+      "Elegant performance rounds, trio chemistry recognition, comeback styling clues, and fan-friendly song prompts centered on VIVIZ's polished vibe.",
+  },
+  {
+    label: "BabyMonster",
+    coverImage:
+      "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/b9/e1/ef/b9e1ef3a-e3eb-8152-e91b-20aca0fc9ffd/BM_DRIP_Digital-Cover_4000.jpg/1000x1000bb.jpg",
+    description:
+      "High-impact rookie energy, YG-style performance charisma, member spotlight questions, and big-hook discography rounds built for BABYMONSTER.",
   },
   {
     label: "KPDH",
