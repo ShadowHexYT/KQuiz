@@ -3,12 +3,15 @@ import assert from "node:assert/strict";
 
 import { buildIndividualQuizForGroup } from "../../src/lib/individualQuiz/index.js";
 
-test("individual group quiz builds long-form easy medium and hard pools", () => {
+test("individual group quiz keeps deep difficulty pools and builds one mixed playthrough", () => {
   const quiz = buildIndividualQuizForGroup("TWICE");
 
   assert.equal(quiz.coverage.easy, 25);
   assert.equal(quiz.coverage.medium, 25);
   assert.equal(quiz.coverage.hard, 25);
+  assert.equal(quiz.rounds.length, 1);
+  assert.ok(quiz.coverage.mixed >= 25);
+  assert.ok(quiz.mixPlan.easy > quiz.mixPlan.hard);
 });
 
 test("individual group quiz does not reuse blocked main-game template families", () => {
@@ -72,4 +75,13 @@ test("deeper verified facts can drive hard fan questions beyond the base main-ga
   assert.ok(
     hardQuestions.some((question) => question.prompt.includes("Blame It on Me") || question.prompt.includes("Trouble")),
   );
+});
+
+test("mixed individual quiz run actually blends difficulties instead of staying in one tier", () => {
+  const quiz = buildIndividualQuizForGroup("LE SSERAFIM");
+  const mixedDifficulties = new Set(quiz.mixedQuestionPool.map((question) => question.difficulty));
+
+  assert.ok(mixedDifficulties.has("easy"));
+  assert.ok(mixedDifficulties.has("medium"));
+  assert.ok(mixedDifficulties.has("hard"));
 });

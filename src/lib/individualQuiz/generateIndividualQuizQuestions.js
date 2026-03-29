@@ -1090,6 +1090,95 @@ function topUpQuestions(profile, selected, candidates, difficulty, targetCount) 
   return [...selected, ...variants].slice(0, targetCount);
 }
 
+const MIXED_DIFFICULTY_WEIGHTS = {
+  easy: 0.4,
+  medium: 0.35,
+  hard: 0.2,
+  expert: 0.05,
+};
+
+function buildMixedTargetCounts(questionPools, difficulties, totalCount) {
+  const targetCounts = Object.fromEntries(difficulties.map((difficulty) => [difficulty, 0]));
+
+  difficulties.forEach((difficulty) => {
+    targetCounts[difficulty] = Math.min(
+      questionPools[difficulty].length,
+      Math.floor(totalCount * (MIXED_DIFFICULTY_WEIGHTS[difficulty] ?? 0)),
+    );
+  });
+
+  let remaining = totalCount - Object.values(targetCounts).reduce((sum, value) => sum + value, 0);
+  const fillOrder = ["medium", "easy", "hard", "expert"].filter((difficulty) =>
+    difficulties.includes(difficulty),
+  );
+
+  while (remaining > 0) {
+    const nextDifficulty = fillOrder.find(
+      (difficulty) => targetCounts[difficulty] < questionPools[difficulty].length,
+    );
+
+    if (!nextDifficulty) break;
+    targetCounts[nextDifficulty] += 1;
+    remaining -= 1;
+  }
+
+  return targetCounts;
+}
+
+function buildMixedQuestionPool(profile, questionPools, difficulties) {
+  const poolLimitCandidates = difficulties
+    .map((difficulty) => {
+      const weight = MIXED_DIFFICULTY_WEIGHTS[difficulty] ?? 0;
+      if (!weight || !questionPools[difficulty]?.length) return null;
+      return Math.floor(questionPools[difficulty].length / weight);
+    })
+    .filter(Boolean);
+
+  const maxBalancedCount = poolLimitCandidates.length ? Math.min(60, ...poolLimitCandidates) : 25;
+  const totalCount = Math.max(25, maxBalancedCount);
+  const targetCounts = buildMixedTargetCounts(questionPools, difficulties, totalCount);
+  const queues = Object.fromEntries(
+    difficulties.map((difficulty) => [
+      difficulty,
+      stableSort(questionPools[difficulty], `${profile.groupName}-${difficulty}-mixed`).slice(
+        0,
+        targetCounts[difficulty],
+      ),
+    ]),
+  );
+  const queueProgress = Object.fromEntries(difficulties.map((difficulty) => [difficulty, 0]));
+  const mixed = [];
+
+  while (mixed.length < totalCount) {
+    const nextDifficulty = difficulties
+      .filter((difficulty) => queues[difficulty].length > 0)
+      .sort((left, right) => {
+        const leftProgress =
+          targetCounts[left] > 0 ? queueProgress[left] / targetCounts[left] : Number.POSITIVE_INFINITY;
+        const rightProgress =
+          targetCounts[right] > 0 ? queueProgress[right] / targetCounts[right] : Number.POSITIVE_INFINITY;
+
+        if (leftProgress !== rightProgress) {
+          return leftProgress - rightProgress;
+        }
+
+        return `${profile.groupName}-${left}-${queueProgress[left]}`.localeCompare(
+          `${profile.groupName}-${right}-${queueProgress[right]}`,
+        );
+      })[0];
+
+    if (!nextDifficulty) break;
+
+    mixed.push(queues[nextDifficulty].shift());
+    queueProgress[nextDifficulty] += 1;
+  }
+
+  return {
+    mixed,
+    mixedTargetCounts: targetCounts,
+  };
+}
+
 export function generateIndividualQuizMode(profile, allProfiles) {
   const candidates = buildTemplateCandidates(profile, allProfiles);
   const expertEnabled = buildExpertAvailability(profile, candidates);
@@ -1109,25 +1198,30 @@ export function generateIndividualQuizMode(profile, allProfiles) {
       ),
     ]),
   );
-
-  const rounds = difficulties.map((difficulty) => ({
-    id: `${slugify(profile.groupName)}-${difficulty}`,
-    groupName: profile.groupName,
-    roundLabel: difficulty[0].toUpperCase() + difficulty.slice(1),
-    members: profile.members.map((member) => ({
-      name: member.name,
-      image: member.image,
-    })),
-    customSteps: questionPools[difficulty].map(buildRoundStep),
-  }));
+  const { mixed, mixedTargetCounts } = buildMixedQuestionPool(profile, questionPools, difficulties);
+  const rounds = [
+    {
+      id: `${slugify(profile.groupName)}-mixed`,
+      groupName: profile.groupName,
+      roundLabel: "Full quiz",
+      members: profile.members.map((member) => ({
+        name: member.name,
+        image: member.image,
+      })),
+      customSteps: mixed.map(buildRoundStep),
+    },
+  ];
 
   return {
     groupName: profile.groupName,
     rounds,
     questionPools,
+    mixedQuestionPool: mixed,
     reviewQueue: profile.reviewQueue,
-    coverage: Object.fromEntries(
-      difficulties.map((difficulty) => [difficulty, questionPools[difficulty].length]),
-    ),
+    coverage: {
+      ...Object.fromEntries(difficulties.map((difficulty) => [difficulty, questionPools[difficulty].length])),
+      mixed: mixed.length,
+    },
+    mixPlan: mixedTargetCounts,
   };
 }

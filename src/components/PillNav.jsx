@@ -159,6 +159,7 @@ export default function PillNav({
                   ? buildFallbackLogo(activeLogo.label)
                   : activeLogo.src
               }
+              decoding="async"
               onError={() =>
                 setLogoFallbackMap((currentValue) => ({
                   ...currentValue,
@@ -195,7 +196,7 @@ export default function PillNav({
                 <p className="pill-nav-kicker">How To Play</p>
                 <div className="pill-nav-note-list">
                   <p>Build your party lineup first, then choose a main mode or an individual group quiz.</p>
-                  <p>Use the setup panel to turn on teams, rename them, and adjust difficulty before launch.</p>
+                  <p>Use the setup panel to turn on teams, rename them, and tune the group focus before launch.</p>
                   <p>The launch button in the lineup is the final start point for the selected game.</p>
                 </div>
               </div>

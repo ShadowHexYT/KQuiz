@@ -8,6 +8,22 @@ import { buildGameEntities } from "../data/teamModeHelpers";
 
 const ANSWER_OVERRIDES_STORAGE_KEY = "kpop-quiz-main-answer-overrides-v1";
 
+function getStableHash(value) {
+  return Array.from(String(value)).reduce(
+    (hash, char) => ((hash * 33) ^ char.charCodeAt(0)) >>> 0,
+    5381,
+  );
+}
+
+function shuffleWithSeed(values, seed) {
+  return [...values].sort((left, right) => {
+    const leftScore = getStableHash(`${seed}-${left}`);
+    const rightScore = getStableHash(`${seed}-${right}`);
+    if (leftScore !== rightScore) return leftScore - rightScore;
+    return String(left).localeCompare(String(right));
+  });
+}
+
 function playerCanScore(player, hostGetsScore, hostId) {
   if (player.id !== hostId) return true;
   return hostGetsScore;
@@ -147,6 +163,7 @@ export default function MainGameShow({
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isImageCarouselPaused, setIsImageCarouselPaused] = useState(false);
   const [scoreRefreshTick, setScoreRefreshTick] = useState(0);
+  const [choiceShuffleSeed] = useState(() => Date.now());
   const longPressRef = useRef({ timer: null, triggered: false });
   const imageDragRef = useRef({ startX: 0, active: false });
   const audioContextRef = useRef(null);
@@ -162,6 +179,14 @@ export default function MainGameShow({
   const currentAnswerOverrideKey = useMemo(
     () => getAnswerOverrideStorageKey(currentRound, currentStep),
     [currentRound, currentStep],
+  );
+  const currentChoices = useMemo(
+    () =>
+      shuffleWithSeed(
+        currentStep?.choices ?? [],
+        `${choiceShuffleSeed}-${currentRound?.id ?? "round"}-${currentStep?.id ?? "step"}`,
+      ),
+    [choiceShuffleSeed, currentRound?.id, currentStep?.choices, currentStep?.id],
   );
   const resolvedAnswer =
     (currentAnswerOverrideKey ? answerOverrides[currentAnswerOverrideKey] : null) ??
@@ -327,7 +352,7 @@ export default function MainGameShow({
 
   function getImageOption(image) {
     if (!image?.name) return null;
-    return currentStep.choices.includes(image.name) ? image.name : null;
+    return currentChoices.includes(image.name) ? image.name : null;
   }
 
   function getAvailablePlayersForOption(option) {
@@ -1555,10 +1580,10 @@ export default function MainGameShow({
                     </div>
                     <div
                       className={`round-flow-choices ${
-                        currentStep.choices.length % 2 === 0 ? "is-even" : "is-odd"
+                        currentChoices.length % 2 === 0 ? "is-even" : "is-odd"
                       }`}
                     >
-                      {currentStep.choices.map((option) => {
+                      {currentChoices.map((option) => {
                         const previewPlayerId = getPreviewPlayerId(option);
                         const previewPlayer = eligiblePlayers.find(
                           (player) => player.id === previewPlayerId,
@@ -1575,7 +1600,7 @@ export default function MainGameShow({
                         return (
                           <div className="flow-choice-wrap" key={option}>
                             <button
-                              className={`choice-button flow-choice-button ${currentStep.choices.length % 2 !== 0 ? "is-list-view" : ""} ${isCorrect ? "is-correct" : ""} ${holdingOption === option ? "is-holding" : ""} ${poppingOption === option ? "is-popping" : ""}`}
+                              className={`choice-button flow-choice-button ${currentChoices.length % 2 !== 0 ? "is-list-view" : ""} ${isCorrect ? "is-correct" : ""} ${holdingOption === option ? "is-holding" : ""} ${poppingOption === option ? "is-popping" : ""}`}
                               onClick={() => handleChoiceClick(option)}
                               onPointerCancel={handleChoicePointerUp}
                               onPointerDown={() => handleChoicePointerDown(option)}

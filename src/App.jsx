@@ -1,14 +1,14 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useState } from "react";
 import HomeScreen from "./components/HomeScreen";
-import MainGameShow from "./components/MainGameShow";
-import ModeHub from "./components/ModeHub";
 import PillNav from "./components/PillNav";
 import { groupQuizzes } from "./data/groupQuizzes";
-import { buildIndividualQuizForGroup } from "./lib/individualQuiz/index.js";
 import { gameModes, modeSupportsGroupFocus } from "./data/gameModeCatalog";
 import { createEmptyScores, GAME_SCORE_KEYS, normalizeScores } from "./data/scoreModel";
 
 const ModePrototype = lazy(() => import("./components/ModePrototype"));
+const MainGameShow = lazy(() => import("./components/MainGameShow"));
+const ModeHub = lazy(() => import("./components/ModeHub"));
+const GroupQuizScreen = lazy(() => import("./components/GroupQuizScreen"));
 
 const starterPlayers = [];
 const DEFAULT_TEAM_COUNT = 2;
@@ -412,11 +412,6 @@ export default function App() {
     route.name === "group-quiz"
       ? groupQuizzes.find((group) => slugify(group.label) === route.groupSlug) ?? null
       : null;
-  const routedGroupQuiz = useMemo(
-    () => (routedGroup ? buildIndividualQuizForGroup(routedGroup.label) : null),
-    [routedGroup],
-  );
-  const routedGroupRounds = routedGroupQuiz?.rounds ?? [];
 
   useEffect(() => {
     if (route.name !== "group-quiz" || !routedGroup) return;
@@ -444,27 +439,41 @@ export default function App() {
     return (
       <>
         {topNav}
-        <MainGameShow
-          players={players}
-          setPlayers={setPlayers}
-          hostProfile={hostProfile}
-          setHostProfile={setHostProfile}
-          teams={teams}
-          teamsEnabled={teamsEnabled}
-          hostGetsScore={hostGetsScore}
-          setHostGetsScore={setHostGetsScore}
-          playerName={playerName}
-          setPlayerName={setPlayerName}
-          newPlayerIcon={newPlayerIcon}
-          setNewPlayerIcon={setNewPlayerIcon}
-          playerIcons={playerIcons}
-          desiredPlayerCount={desiredPlayerCount}
-          setDesiredPlayerCount={setDesiredPlayerCount}
-          addPlayer={addPlayer}
-          removePlayer={removePlayer}
-          scoreKey={GAME_SCORE_KEYS.mainShow}
-          onBackHome={goHome}
-        />
+        <Suspense
+          fallback={
+            <div className="page-shell">
+              <main className="app-frame">
+                <section className="game-show-hero">
+                  <div>
+                    <h1>Loading game...</h1>
+                  </div>
+                </section>
+              </main>
+            </div>
+          }
+        >
+          <MainGameShow
+            players={players}
+            setPlayers={setPlayers}
+            hostProfile={hostProfile}
+            setHostProfile={setHostProfile}
+            teams={teams}
+            teamsEnabled={teamsEnabled}
+            hostGetsScore={hostGetsScore}
+            setHostGetsScore={setHostGetsScore}
+            playerName={playerName}
+            setPlayerName={setPlayerName}
+            newPlayerIcon={newPlayerIcon}
+            setNewPlayerIcon={setNewPlayerIcon}
+            playerIcons={playerIcons}
+            desiredPlayerCount={desiredPlayerCount}
+            setDesiredPlayerCount={setDesiredPlayerCount}
+            addPlayer={addPlayer}
+            removePlayer={removePlayer}
+            scoreKey={GAME_SCORE_KEYS.mainShow}
+            onBackHome={goHome}
+          />
+        </Suspense>
       </>
     );
   }
@@ -473,7 +482,21 @@ export default function App() {
     return (
       <>
         {topNav}
-        <ModeHub onBackHome={goHome} onOpenMode={goToModePrototype} />
+        <Suspense
+          fallback={
+            <div className="page-shell">
+              <main className="app-frame">
+                <section className="game-show-hero">
+                  <div>
+                    <h1>Loading games...</h1>
+                  </div>
+                </section>
+              </main>
+            </div>
+          }
+        >
+          <ModeHub onBackHome={goHome} onOpenMode={goToModePrototype} />
+        </Suspense>
       </>
     );
   }
@@ -528,37 +551,46 @@ export default function App() {
     );
   }
 
-  if (route.name === "group-quiz" && routedGroup && routedGroupRounds.length) {
+  if (route.name === "group-quiz" && routedGroup) {
     return (
       <>
         {topNav}
-        <MainGameShow
-          players={players}
-          setPlayers={setPlayers}
-          hostProfile={hostProfile}
-          setHostProfile={setHostProfile}
-          teams={teams}
-          teamsEnabled={teamsEnabled}
-          hostGetsScore={hostGetsScore}
-          setHostGetsScore={setHostGetsScore}
-          playerName={playerName}
-          setPlayerName={setPlayerName}
-          newPlayerIcon={newPlayerIcon}
-          setNewPlayerIcon={setNewPlayerIcon}
-          playerIcons={playerIcons}
-          desiredPlayerCount={desiredPlayerCount}
-          setDesiredPlayerCount={setDesiredPlayerCount}
-          addPlayer={addPlayer}
-          removePlayer={removePlayer}
-          scoreKey={GAME_SCORE_KEYS.songGuessing}
-          rounds={routedGroupRounds}
-          includeGroupGuess={false}
-          heroEyebrow="Individual group quiz"
-          heroTitle={`${routedGroup.label} Quiz`}
-          heroText={routedGroup.description}
-          roundNavTitle="Difficulty"
-          onBackHome={goHome}
-        />
+        <Suspense
+          fallback={
+            <div className="page-shell">
+              <main className="app-frame">
+                <section className="game-show-hero">
+                  <div>
+                    <h1>Loading quiz...</h1>
+                  </div>
+                </section>
+              </main>
+            </div>
+          }
+        >
+          <GroupQuizScreen
+            routedGroup={routedGroup}
+            players={players}
+            setPlayers={setPlayers}
+            hostProfile={hostProfile}
+            setHostProfile={setHostProfile}
+            teams={teams}
+            teamsEnabled={teamsEnabled}
+            hostGetsScore={hostGetsScore}
+            setHostGetsScore={setHostGetsScore}
+            playerName={playerName}
+            setPlayerName={setPlayerName}
+            newPlayerIcon={newPlayerIcon}
+            setNewPlayerIcon={setNewPlayerIcon}
+            playerIcons={playerIcons}
+            desiredPlayerCount={desiredPlayerCount}
+            setDesiredPlayerCount={setDesiredPlayerCount}
+            addPlayer={addPlayer}
+            removePlayer={removePlayer}
+            scoreKey={GAME_SCORE_KEYS.songGuessing}
+            onBackHome={goHome}
+          />
+        </Suspense>
       </>
     );
   }

@@ -1,5 +1,5 @@
-import { mainQuizRounds } from "./mainQuizRounds";
-import { lyricPrompts, playlistSongs } from "./playlistGamePacks";
+import { getSongMeta, mainQuizRounds } from "./mainQuizRounds.js";
+import { lyricPrompts, playlistSongs } from "./playlistGamePacks.js";
 
 export const jeopardyBoardValues = [100, 200, 300, 400, 500];
 export const JEOPARDY_BOARD_CATEGORY_COUNT = 5;
@@ -216,7 +216,7 @@ function getStableHash(value) {
   );
 }
 
-function sortWithSeed(values, seed) {
+export function sortWithSeed(values, seed) {
   return [...values].sort((left, right) => {
     const leftScore = getStableHash(`${seed}-${left.id ?? left.prompt ?? left}`);
     const rightScore = getStableHash(`${seed}-${right.id ?? right.prompt ?? right}`);
@@ -242,8 +242,9 @@ function getRoundExtra(round, key) {
   return round.extras.find((extra) => extra.key === key);
 }
 
-function getFavoriteExtra(round) {
-  return round.extras.find((extra) => extra.kind === "favoriteSong" || extra.key === "favoriteSong");
+function pushQuestion(questions, question) {
+  if (!question?.answer) return;
+  questions.push(question);
 }
 
 function makeQuestion({
@@ -254,6 +255,7 @@ function makeQuestion({
   difficulty = "medium",
   promptType = "text",
   image = null,
+  imageStyle = null,
   note = null,
 }) {
   return {
@@ -264,6 +266,7 @@ function makeQuestion({
     difficulty,
     promptType,
     image,
+    imageStyle,
     note,
   };
 }
@@ -296,265 +299,283 @@ function getWrongGroups(groupName, seed, count = 3) {
 function buildGroupEssentialsCategory(round) {
   const leader = getRoundExtra(round, "leader");
   const maknae = getRoundExtra(round, "maknae");
-  const bias = getRoundExtra(round, "bias");
-  const favorite = getFavoriteExtra(round);
   const focusMember = sortWithSeed(round.members, `${round.id}-focus-member`)[0];
   const wrongMembers = getWrongMembers(round.groupName, "member");
-  const wrongFavoriteSongs = sortWithSeed(
-    playlistSongs
-      .filter((song) => song.artist !== round.groupName)
-      .map((song) => song.title),
-    `${round.id}-wrong-favorites`,
-  ).slice(0, 3);
   const reference = groupReference[round.groupName] ?? {};
-  const fallbackQuestion = reference.fandom
-    ? makeQuestion({
-        id: `${round.id}-fandom`,
-        prompt: `What is ${round.groupName}'s fandom name?`,
-        answer: reference.fandom,
-        difficulty: "hard",
-      })
-    : reference.debutSong
+  const questions = [];
+
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-leader-core`,
+      prompt: `This member is the leader of ${round.groupName}.`,
+      answer: leader?.answer ?? "",
+      choices: leader?.choices ?? [],
+      difficulty: "easy",
+    }),
+  );
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-member-count`,
+      prompt: `${round.groupName} has this many members.`,
+      answer: String(round.members.length),
+      difficulty: "easy",
+    }),
+  );
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-maknae-core`,
+      prompt: `This member is the maknae of ${round.groupName}.`,
+      answer: maknae?.answer ?? "",
+      choices: maknae?.choices ?? [],
+      difficulty: "medium",
+    }),
+  );
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-member-belongs`,
+      prompt: `This is a real member of ${round.groupName}.`,
+      answer: focusMember?.name ?? "",
+      choices: sortWithSeed(
+        [focusMember?.name ?? "", ...wrongMembers],
+        `${round.id}-member-belongs-choices`,
+      ),
+      difficulty: "medium",
+    }),
+  );
+  pushQuestion(
+    questions,
+    reference.fandom
       ? makeQuestion({
-          id: `${round.id}-debut`,
-          prompt: `What debut song should you connect with ${round.groupName}?`,
+          id: `${round.id}-fandom`,
+          prompt: `${round.groupName}'s fandom goes by this name.`,
+          answer: reference.fandom,
+          difficulty: "medium",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.debutSong
+      ? makeQuestion({
+          id: `${round.id}-debut-song`,
+          prompt: `This was the debut song for ${round.groupName}.`,
           answer: reference.debutSong,
+          difficulty: "medium",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.company
+      ? makeQuestion({
+          id: `${round.id}-company`,
+          prompt: `${round.groupName} is under this company or label.`,
+          answer: reference.company,
           difficulty: "hard",
         })
-      : makeQuestion({
-          id: `${round.id}-belongs`,
-          prompt: `Which song is one of your main-game favorites for ${round.groupName}?`,
-          answer: favorite?.answers?.[0] ?? favorite?.answer ?? "",
-          choices: sortWithSeed(
-            [favorite?.answers?.[0] ?? favorite?.answer ?? "", ...wrongFavoriteSongs],
-            `${round.id}-belongs-choices`,
-          ),
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.lightstick
+      ? makeQuestion({
+          id: `${round.id}-lightstick`,
+          prompt: `This is the official lightstick name for ${round.groupName}.`,
+          answer: reference.lightstick,
           difficulty: "hard",
-        });
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.debutDate
+      ? makeQuestion({
+          id: `${round.id}-debut-date`,
+          prompt: `${round.groupName} officially debuted on this date.`,
+          answer: reference.debutDate,
+          difficulty: "hard",
+        })
+      : null,
+  );
 
   return {
     id: `${round.id}-essentials`,
     title: `${round.groupName} Essentials`,
     groupTags: [round.groupName],
-    questions: [
-      makeQuestion({
-        id: `${round.id}-leader-core`,
-        prompt: `Who is the leader of ${round.groupName}?`,
-        answer: leader?.answer ?? "",
-        choices: leader?.choices ?? [],
-        difficulty: "easy",
-      }),
-      makeQuestion({
-        id: `${round.id}-member-count`,
-        prompt: `How many members are in ${round.groupName} in your main-game round?`,
-        answer: String(round.members.length),
-        difficulty: "easy",
-      }),
-      makeQuestion({
-        id: `${round.id}-favorite-core`,
-        prompt: `Name one song from your favorites list for ${round.groupName}.`,
-        answer: favorite?.answers?.[0] ?? favorite?.answer ?? "",
-        choices: favorite?.choices ?? [],
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-maknae-core`,
-        prompt: `Who is the maknae of ${round.groupName}?`,
-        answer: maknae?.answer ?? "",
-        choices: maknae?.choices ?? [],
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-member-belongs`,
-        prompt: `Which of these is a member of ${round.groupName}?`,
-        answer: focusMember?.name ?? "",
-        choices: sortWithSeed(
-          [focusMember?.name ?? "", ...wrongMembers],
-          `${round.id}-member-belongs-choices`,
-        ),
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-bias-core`,
-        prompt: `Who is your bias for ${round.groupName}?`,
-        answer: bias?.answer ?? "",
-        choices: bias?.choices ?? [],
-        difficulty: "hard",
-      }),
-      fallbackQuestion,
-    ],
+    questions,
   };
 }
 
 function buildGroupSpotlightCategory(round) {
   const leader = getRoundExtra(round, "leader");
   const maknae = getRoundExtra(round, "maknae");
-  const bias = getRoundExtra(round, "bias");
-  const favorite = getFavoriteExtra(round);
-  const favoriteAnswers = favorite?.answers ?? [favorite?.answer].filter(Boolean);
   const shuffledMembers = sortWithSeed(round.members, `${round.id}-spotlight-members`);
   const focusMemberOne = shuffledMembers[0];
   const focusMemberTwo = shuffledMembers[1] ?? shuffledMembers[0];
   const wrongMembersOne = getWrongMembers(round.groupName, "spotlight-member-one");
   const wrongMembersTwo = getWrongMembers(round.groupName, "spotlight-member-two");
-  const wrongGroups = getWrongGroups(round.groupName, "spotlight-groups");
   const reference = groupReference[round.groupName] ?? {};
+  const questions = [];
+
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-spotlight-member-one`,
+      prompt: `This member belongs to ${round.groupName}.`,
+      answer: focusMemberOne?.name ?? "",
+      choices: sortWithSeed(
+        [focusMemberOne?.name ?? "", ...wrongMembersOne],
+        `${round.id}-spotlight-member-one-choices`,
+      ),
+      difficulty: "easy",
+    }),
+  );
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-spotlight-member-two`,
+      prompt: `This is another real member of ${round.groupName}.`,
+      answer: focusMemberTwo?.name ?? "",
+      choices: sortWithSeed(
+        [focusMemberTwo?.name ?? "", ...wrongMembersTwo],
+        `${round.id}-spotlight-member-two-choices`,
+      ),
+      difficulty: "medium",
+    }),
+  );
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-spotlight-leader-repeat`,
+      prompt: `The leader of ${round.groupName} is this member.`,
+      answer: leader?.answer ?? "",
+      choices: leader?.choices ?? [],
+      difficulty: "medium",
+    }),
+  );
+  pushQuestion(
+    questions,
+    makeQuestion({
+      id: `${round.id}-spotlight-maknae-repeat`,
+      prompt: `The youngest member of ${round.groupName} is this person.`,
+      answer: maknae?.answer ?? "",
+      choices: maknae?.choices ?? [],
+      difficulty: "medium",
+    }),
+  );
+  pushQuestion(
+    questions,
+    reference.fandom
+      ? makeQuestion({
+          id: `${round.id}-spotlight-fandom`,
+          prompt: `${round.groupName}'s fandom uses this name.`,
+          answer: reference.fandom,
+          difficulty: "medium",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.debutSong
+      ? makeQuestion({
+          id: `${round.id}-spotlight-debut-song`,
+          prompt: `This was the debut title track for ${round.groupName}.`,
+          answer: reference.debutSong,
+          difficulty: "medium",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.lightstick
+      ? makeQuestion({
+          id: `${round.id}-spotlight-lightstick`,
+          prompt: `Fans of ${round.groupName} wave this lightstick name.`,
+          answer: reference.lightstick,
+          difficulty: "hard",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.varietySeries
+      ? makeQuestion({
+          id: `${round.id}-spotlight-variety`,
+          prompt: `This official video series is tied to ${round.groupName}.`,
+          answer: reference.varietySeries,
+          difficulty: "hard",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.company
+      ? makeQuestion({
+          id: `${round.id}-spotlight-company`,
+          prompt: `${round.groupName} is signed under this company or label.`,
+          answer: reference.company,
+          difficulty: "hard",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.nameMeaning
+      ? makeQuestion({
+          id: `${round.id}-spotlight-name-meaning`,
+          prompt: `This meaning or phrase is tied to the name ${round.groupName}.`,
+          answer: reference.nameMeaning,
+          difficulty: "hard",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.originStory
+      ? makeQuestion({
+          id: `${round.id}-spotlight-origin-story`,
+          prompt: `This project or backstory is directly tied to how ${round.groupName} was formed.`,
+          answer: reference.originStory,
+          difficulty: "hard",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.achievementPrompt && reference.achievementAnswer
+      ? makeQuestion({
+          id: `${round.id}-spotlight-achievement`,
+          prompt: reference.achievementPrompt,
+          answer: reference.achievementAnswer,
+          difficulty: "hard",
+        })
+      : null,
+  );
+  pushQuestion(
+    questions,
+    reference.aliases?.length
+      ? makeQuestion({
+          id: `${round.id}-spotlight-alias`,
+          prompt: `This alternate name is directly tied to ${round.groupName}.`,
+          answer: reference.aliases[0],
+          choices: sortWithSeed(
+            [reference.aliases[0], ...getWrongGroups(round.groupName, "spotlight-alias")],
+            `${round.id}-spotlight-alias-choices`,
+          ),
+          difficulty: "medium",
+        })
+      : null,
+  );
 
   return {
     id: `${round.id}-spotlight`,
     title: `${round.groupName} Spotlight`,
     groupTags: [round.groupName],
-    questions: [
-      makeQuestion({
-        id: `${round.id}-spotlight-group-name`,
-        prompt: `Which group do these questions belong to: ${round.groupName}?`,
-        answer: round.groupName,
-        choices: sortWithSeed(
-          [round.groupName, ...wrongGroups],
-          `${round.id}-spotlight-group-name-choices`,
-        ),
-        difficulty: "easy",
-      }),
-      makeQuestion({
-        id: `${round.id}-spotlight-member-one`,
-        prompt: `Which of these members belongs to ${round.groupName}?`,
-        answer: focusMemberOne?.name ?? "",
-        choices: sortWithSeed(
-          [focusMemberOne?.name ?? "", ...wrongMembersOne],
-          `${round.id}-spotlight-member-one-choices`,
-        ),
-        difficulty: "easy",
-      }),
-      makeQuestion({
-        id: `${round.id}-spotlight-member-two`,
-        prompt: `Pick another real member of ${round.groupName}.`,
-        answer: focusMemberTwo?.name ?? "",
-        choices: sortWithSeed(
-          [focusMemberTwo?.name ?? "", ...wrongMembersTwo],
-          `${round.id}-spotlight-member-two-choices`,
-        ),
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-spotlight-favorite-one`,
-        prompt: `Name another favorite song tied to ${round.groupName}.`,
-        answer: favoriteAnswers[1] ?? favoriteAnswers[0] ?? "",
-        choices: favorite?.choices ?? [],
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-spotlight-favorite-two`,
-        prompt: `Which song should still count as one of your ${round.groupName} favorites?`,
-        answer: favoriteAnswers[2] ?? favoriteAnswers[1] ?? favoriteAnswers[0] ?? "",
-        choices: favorite?.choices ?? [],
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-spotlight-leader-repeat`,
-        prompt: `Lock in the leader for ${round.groupName}.`,
-        answer: leader?.answer ?? "",
-        choices: leader?.choices ?? [],
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-spotlight-maknae-repeat`,
-        prompt: `Who closes out the age line as the maknae of ${round.groupName}?`,
-        answer: maknae?.answer ?? "",
-        choices: maknae?.choices ?? [],
-        difficulty: "medium",
-      }),
-      makeQuestion({
-        id: `${round.id}-spotlight-bias-repeat`,
-        prompt: `For ${round.groupName}, who is the bias pick in this game set?`,
-        answer: bias?.answer ?? "",
-        choices: bias?.choices ?? [],
-        difficulty: "hard",
-      }),
-      ...(reference.fandom
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-fandom`,
-              prompt: `What fandom name goes with ${round.groupName}?`,
-              answer: reference.fandom,
-              difficulty: "hard",
-            }),
-          ]
-        : []),
-      ...(reference.debutSong
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-debut-song`,
-              prompt: `What debut song belongs to ${round.groupName}?`,
-              answer: reference.debutSong,
-              difficulty: "hard",
-            }),
-          ]
-        : []),
-      ...(reference.company
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-company`,
-              prompt: `Which company or label is tied to ${round.groupName}?`,
-              answer: reference.company,
-              difficulty: "hard",
-            }),
-          ]
-        : []),
-      ...(reference.debutDate
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-debut-date`,
-              prompt: `When did ${round.groupName} debut?`,
-              answer: reference.debutDate,
-              difficulty: "hard",
-            }),
-          ]
-        : []),
-      ...(reference.nameMeaning
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-name-meaning`,
-              prompt: `What does the name ${round.groupName} mean or refer to?`,
-              answer: reference.nameMeaning,
-              difficulty: "hard",
-            }),
-          ]
-        : []),
-      ...(reference.originStory
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-origin-story`,
-              prompt: `What project, show, or origin story is tied to ${round.groupName}?`,
-              answer: reference.originStory,
-              difficulty: "hard",
-            }),
-          ]
-        : []),
-      ...(reference.achievementPrompt && reference.achievementAnswer
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-achievement`,
-              prompt: reference.achievementPrompt,
-              answer: reference.achievementAnswer,
-              difficulty: "hard",
-            }),
-          ]
-        : []),
-      ...(reference.aliases?.length
-        ? [
-            makeQuestion({
-              id: `${round.id}-spotlight-alias`,
-              prompt: `What other name is directly tied to ${round.groupName}?`,
-              answer: reference.aliases[0],
-              choices: sortWithSeed(
-                [reference.aliases[0], ...getWrongGroups(round.groupName, "spotlight-alias")],
-                `${round.id}-spotlight-alias-choices`,
-              ),
-              difficulty: "medium",
-            }),
-          ]
-        : []),
-    ],
+    questions,
   };
 }
 
@@ -589,38 +610,6 @@ const maknaesCategory = {
       answer: maknae?.answer ?? "",
       choices: maknae?.choices ?? [],
       difficulty: "easy",
-    });
-  }),
-};
-
-const biasCategory = {
-  id: "bias-vault",
-  title: "Bias Vault",
-  groupTags: allRounds.map((round) => round.groupName),
-  questions: allRounds.map((round) => {
-    const bias = getRoundExtra(round, "bias");
-    return makeQuestion({
-      id: `${round.id}-bias-vault`,
-      prompt: `Who is your bias for ${round.groupName}?`,
-      answer: bias?.answer ?? "",
-      choices: bias?.choices ?? [],
-      difficulty: "medium",
-    });
-  }),
-};
-
-const favoriteSongsCategory = {
-  id: "favorite-song-vault",
-  title: "Favorite Song Vault",
-  groupTags: allRounds.map((round) => round.groupName),
-  questions: allRounds.map((round) => {
-    const favorite = getFavoriteExtra(round);
-    return makeQuestion({
-      id: `${round.id}-favorite-vault`,
-      prompt: `Which song belongs in your favorites for ${round.groupName}?`,
-      answer: favorite?.answers?.[0] ?? favorite?.answer ?? "",
-      choices: favorite?.choices ?? [],
-      difficulty: "medium",
     });
   }),
 };
@@ -690,7 +679,7 @@ const varietyCategory = {
   questions: varietyRounds.map((round) =>
     makeQuestion({
       id: `${round.id}-youtube-variety-club`,
-      prompt: `Name one official content series tied to ${round.groupName}'s channel or core video content.`,
+      prompt: `This official recurring video series belongs to ${round.groupName}.`,
       answer: groupReference[round.groupName]?.varietySeries ?? "",
       difficulty: "hard",
     }),
@@ -698,9 +687,32 @@ const varietyCategory = {
 };
 
 const uniqueAlbums = uniqueBy(
-  playlistSongs.map((song) => ({ album: song.album, artist: song.artist, title: song.title })),
+  playlistSongs
+    .map((song) => ({
+      album: song.album,
+      artist: song.artist,
+      title: song.title,
+      coverImage: getSongMeta(song.artist, song.title).coverImage,
+    }))
+    .filter((entry) => entry.album && entry.coverImage),
   (entry) => `${entry.artist}::${entry.album}`,
 );
+
+function buildAlbumCropStyle(seedKey) {
+  const hash = getStableHash(seedKey);
+  const focusX = 18 + (hash % 64);
+  const focusY = 16 + (Math.floor(hash / 97) % 66);
+  const scale = 2.1 + ((Math.floor(hash / 7919) % 9) * 0.12);
+
+  return {
+    width: "min(100%, 320px)",
+    height: "320px",
+    objectFit: "cover",
+    objectPosition: `${focusX}% ${focusY}%`,
+    transform: `scale(${scale.toFixed(2)})`,
+    transformOrigin: `${focusX}% ${focusY}%`,
+  };
+}
 
 const albumMatchCategory = {
   id: "album-match-up",
@@ -723,7 +735,7 @@ const songByAlbumCategory = {
   questions: uniqueAlbums.map((entry) =>
     makeQuestion({
       id: `${entry.artist}-${entry.title}-which-album-is-it-on`,
-      prompt: `Name one song from ${entry.album} by ${entry.artist}.`,
+      prompt: `This ${entry.artist} song appears on the release ${entry.album}.`,
       answer: entry.title,
       difficulty: "medium",
     }),
@@ -783,7 +795,7 @@ const artistToSongCategory = {
   questions: playlistSongs.map((song) =>
     makeQuestion({
       id: `${song.id}-artist-to-song`,
-      prompt: `Name one tracked playlist song by ${song.artist}.`,
+      prompt: `This tracked playlist song belongs to ${song.artist}.`,
       answer: song.title,
       difficulty: song.difficulty,
     }),
@@ -806,71 +818,6 @@ const memberBelongsCategory = {
       ),
       difficulty: "medium",
       image: member.image,
-    });
-  }),
-};
-
-const favoriteCheckCategory = {
-  id: "main-game-favorites-check",
-  title: "Main-Game Favorites Check",
-  groupTags: allRounds.map((round) => round.groupName),
-  questions: allRounds.map((round) => {
-    const favorite = getFavoriteExtra(round);
-    const answer = favorite?.answers?.[0] ?? favorite?.answer ?? "";
-    return makeQuestion({
-      id: `${round.id}-main-game-favorites-check`,
-      prompt: `Which answer fits your favorites list for ${round.groupName}?`,
-      answer,
-      choices: favorite?.choices ?? [],
-      difficulty: "medium",
-    });
-  }),
-};
-
-const biasAgainCategory = {
-  id: "bias-picks-again",
-  title: "Bias Picks Again",
-  groupTags: allRounds.map((round) => round.groupName),
-  questions: allRounds.map((round) => {
-    const bias = getRoundExtra(round, "bias");
-    return makeQuestion({
-      id: `${round.id}-bias-picks-again`,
-      prompt: `For ${round.groupName}, who did you lock in as your bias?`,
-      answer: bias?.answer ?? "",
-      choices: bias?.choices ?? [],
-      difficulty: "hard",
-    });
-  }),
-};
-
-const leadersAgainCategory = {
-  id: "captain-check",
-  title: "Captain Check",
-  groupTags: allRounds.map((round) => round.groupName),
-  questions: allRounds.map((round) => {
-    const leader = getRoundExtra(round, "leader");
-    return makeQuestion({
-      id: `${round.id}-captain-check`,
-      prompt: `Which member is the leader of ${round.groupName}?`,
-      answer: leader?.answer ?? "",
-      choices: leader?.choices ?? [],
-      difficulty: "medium",
-    });
-  }),
-};
-
-const maknaesAgainCategory = {
-  id: "youngest-line-check",
-  title: "Youngest Line Check",
-  groupTags: allRounds.map((round) => round.groupName),
-  questions: allRounds.map((round) => {
-    const maknae = getRoundExtra(round, "maknae");
-    return makeQuestion({
-      id: `${round.id}-youngest-line-check`,
-      prompt: `Which member is the maknae of ${round.groupName}?`,
-      answer: maknae?.answer ?? "",
-      choices: maknae?.choices ?? [],
-      difficulty: "medium",
     });
   }),
 };
@@ -943,6 +890,170 @@ const soundtrackCategory = {
       difficulty: "medium",
     }),
   ],
+};
+
+const memeMomentsCategory = {
+  id: "meme-moments",
+  title: "Meme Moments",
+  groupTags: ["TWICE", "aespa", "IVE", "NMIXX", "LE SSERAFIM", "G-(I)DLE"],
+  questions: [
+    makeQuestion({
+      id: "meme-twice-shy-shy-shy",
+      prompt: `This TWICE hit is tied to Sana's viral "shy shy shy" moment.`,
+      answer: "Cheer Up",
+      difficulty: "easy",
+      note: "Source: Cheer Up (song) - Wikipedia",
+    }),
+    makeQuestion({
+      id: "meme-aespa-naevis",
+      prompt: `Fans keep quoting "my naevis, we love you" from this aespa title track.`,
+      answer: "Savage",
+      difficulty: "medium",
+      note: "Source: Savage (Aespa song) - Wikipedia / fan coverage of the lyric's meme status",
+    }),
+    makeQuestion({
+      id: "meme-ive-love-dive",
+      prompt: `The viral line "narcissistic, my god, I love it" points to this IVE song.`,
+      answer: "Love Dive",
+      difficulty: "medium",
+      note: "Source: NME coverage of Love Dive",
+    }),
+    makeQuestion({
+      id: "meme-nmixx-shoog-shoog",
+      prompt: `The phrase "shoog shoog" became a calling card for this NMIXX debut song.`,
+      answer: "O.O",
+      difficulty: "medium",
+      note: "Source: Rolling Stone India coverage of O.O",
+    }),
+    makeQuestion({
+      id: "meme-lesserafim-antifragile",
+      prompt: `This LE SSERAFIM song is the one fans mimic with the "anti-ti-ti-ti-fragile" chant.`,
+      answer: "ANTIFRAGILE",
+      difficulty: "medium",
+      note: "Source: Antifragile (song) coverage and official song title hook",
+    }),
+    makeQuestion({
+      id: "meme-gidle-queencard",
+      prompt: `The line "my boob and booty's hot" turned this (G)I-DLE song into a meme magnet.`,
+      answer: "Queencard",
+      difficulty: "hard",
+      note: "Source: official song lyric reference",
+    }),
+  ],
+};
+
+const whoseAlbumIsThisCategory = {
+  id: "whose-album-is-this",
+  title: "Whose Album Is This?",
+  groupTags: uniqueAlbums.map((entry) => entry.artist),
+  questions: uniqueAlbums.map((entry) =>
+    makeQuestion({
+      id: `${entry.artist}-${entry.album}-whose-album`,
+      prompt: "This cropped album cover belongs to this artist.",
+      answer: entry.artist,
+      choices: sortWithSeed(
+        [entry.artist, ...getWrongGroups(entry.artist, "whose-album-is-this")],
+        `${entry.artist}-${entry.album}-whose-album-choices`,
+      ),
+      difficulty: "medium",
+      promptType: "image",
+      image: entry.coverImage,
+      imageStyle: buildAlbumCropStyle(`${entry.artist}-${entry.album}`),
+      note: entry.album,
+    }),
+  ),
+};
+
+const memberCoverFacts = [
+  {
+    id: "cover-chaewon-i-love-you-3000",
+    groupName: "LE SSERAFIM",
+    member: "Chaewon",
+    songTitle: "I Love You 3000",
+    originalArtist: "Stephanie Poetri",
+    source: "LeeMujin Service - Wikipedia",
+  },
+  {
+    id: "cover-yunjin-nappa",
+    groupName: "LE SSERAFIM",
+    member: "Yunjin",
+    songTitle: "Nappa",
+    originalArtist: "Sole",
+    source: "LeeMujin Service - Wikipedia",
+  },
+  {
+    id: "cover-lily-i-am",
+    groupName: "NMIXX",
+    member: "Lily",
+    songTitle: "I Am",
+    originalArtist: "IVE",
+    source: "LeeMujin Service - Wikipedia",
+  },
+  {
+    id: "cover-minnie-confetti",
+    groupName: "G-(I)DLE",
+    member: "Minnie",
+    songTitle: "Confetti",
+    originalArtist: "Tori Kelly",
+    source: "LeeMujin Service - Wikipedia",
+  },
+  {
+    id: "cover-liz-love-wins-all",
+    groupName: "IVE",
+    member: "Liz",
+    songTitle: "Love Wins All",
+    originalArtist: "IU",
+    source: "LeeMujin Service - Wikipedia",
+  },
+  {
+    id: "cover-rei-bam-yang-gang",
+    groupName: "IVE",
+    member: "Rei",
+    songTitle: "Bam Yang Gang",
+    originalArtist: "Bibi",
+    source: "LeeMujin Service - Wikipedia",
+  },
+  {
+    id: "cover-jihyo-kill-bill",
+    groupName: "TWICE",
+    member: "Jihyo",
+    songTitle: "Kill Bill",
+    originalArtist: "SZA",
+    source: "LeeMujin Service - Wikipedia",
+  },
+  {
+    id: "cover-ningning-paper-hearts",
+    groupName: "aespa",
+    member: "Ningning",
+    songTitle: "Paper Hearts",
+    originalArtist: "Tori Kelly",
+    source: "LeeMujin Service - Wikipedia",
+  },
+];
+
+const whoCoveredCategory = {
+  id: "who-covered",
+  title: "Who Covered?",
+  groupTags: uniqueBy(memberCoverFacts, (entry) => entry.groupName).map((entry) => entry.groupName),
+  questions: memberCoverFacts.map((entry) => {
+    const memberChoices =
+      mainQuizRounds.find((round) => round.groupName === entry.groupName)?.members.map((member) => member.name) ?? [];
+
+    return makeQuestion({
+      id: entry.id,
+      prompt: `On Lee Mujin Service, which ${entry.groupName} member covered "${entry.songTitle}" by ${entry.originalArtist}?`,
+      answer: entry.member,
+      choices: sortWithSeed(
+        uniqueBy(
+          [entry.member, ...memberChoices.filter((name) => name !== entry.member).slice(0, 3)],
+          (value) => value,
+        ),
+        `${entry.id}-choices`,
+      ),
+      difficulty: "hard",
+      note: entry.source,
+    });
+  }),
 };
 
 const companyCategory = {
@@ -1030,26 +1141,23 @@ export const jeopardyCategoryPool = [
   ...allRounds.map(buildGroupSpotlightCategory),
   leadersCategory,
   maknaesCategory,
-  biasCategory,
-  favoriteSongsCategory,
   memberCountsCategory,
   debutCategory,
   fandomCategory,
   lightstickCategory,
   varietyCategory,
+  memeMomentsCategory,
   albumMatchCategory,
+  whoseAlbumIsThisCategory,
   songByAlbumCategory,
   lyricCategory,
   emojiCategory,
   whoSingsThisCategory,
   artistToSongCategory,
   memberBelongsCategory,
-  favoriteCheckCategory,
-  biasAgainCategory,
-  leadersAgainCategory,
-  maknaesAgainCategory,
   albumOwnerCategory,
   soundtrackCategory,
+  whoCoveredCategory,
   companyCategory,
   debutDateCategory,
   nameMeaningCategory,

@@ -15,6 +15,7 @@ export function buildIndividualQuizForGroup(groupName) {
       groupName,
       rounds: [],
       questionPools: {},
+      mixedQuestionPool: [],
       reviewQueue: [
         {
           field: "groupName",

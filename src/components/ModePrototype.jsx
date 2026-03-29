@@ -9,11 +9,10 @@ import {
   finishTheLyricQuestions,
   getPlaylistQuestionVariant,
   lightstickSilhouetteQuestions,
-  playlistDifficultyOptions,
   playlistGroupOptions,
   playlistQuestionCountOptions,
 } from "../data/playlistGamePacks";
-import { buildJeopardyBoard, jeopardyBoardValues } from "../data/jeopardyQuestionBank";
+import { buildJeopardyBoard, jeopardyBoardValues, sortWithSeed } from "../data/jeopardyQuestionBank";
 import { normalizeScores } from "../data/scoreModel";
 import { buildGameEntities } from "../data/teamModeHelpers";
 
@@ -33,6 +32,74 @@ function getPlaylistQuestionsForMode(modeId) {
   if (modeId === "finish-the-lyric") return finishTheLyricQuestions;
   if (modeId === "lightstick-silhouette-guess") return lightstickSilhouetteQuestions;
   return [];
+}
+
+const PLAYLIST_MIX_TARGETS = [
+  { difficulty: "easy", weight: 0.4 },
+  { difficulty: "medium", weight: 0.35 },
+  { difficulty: "hard", weight: 0.2 },
+];
+
+function buildMixedPlaylistQuestionSet(questions, count, seed, recentIds = []) {
+  const buckets = {
+    easy: questions.filter((question) => question.difficulty === "easy"),
+    medium: questions.filter((question) => question.difficulty === "medium"),
+    hard: questions.filter((question) => question.difficulty === "hard"),
+  };
+
+  const safeCount = Math.min(count, questions.length);
+  const selected = [];
+  const selectedIds = new Set();
+  const desiredCounts = Object.fromEntries(
+    PLAYLIST_MIX_TARGETS.map(({ difficulty, weight }) => [difficulty, Math.floor(safeCount * weight)]),
+  );
+
+  for (const { difficulty } of PLAYLIST_MIX_TARGETS) {
+    const nextQuestions = buildPlaylistQuestionSet(
+      buckets[difficulty],
+      desiredCounts[difficulty],
+      `${seed}-${difficulty}`,
+      recentIds,
+    );
+
+    nextQuestions.forEach((question) => {
+      if (selectedIds.has(question.id)) return;
+      selected.push(question);
+      selectedIds.add(question.id);
+    });
+  }
+
+  const remainingNeeded = safeCount - selected.length;
+  if (remainingNeeded > 0) {
+    const leftovers = buildPlaylistQuestionSet(
+      questions.filter((question) => !selectedIds.has(question.id)),
+      remainingNeeded,
+      `${seed}-leftovers`,
+      recentIds,
+    );
+
+    leftovers.forEach((question) => {
+      if (selectedIds.has(question.id)) return;
+      selected.push(question);
+      selectedIds.add(question.id);
+    });
+  }
+
+  return buildPlaylistQuestionSet(selected, safeCount, `${seed}-mixed-order`);
+}
+
+function getMixedDifficultyLabel(questions) {
+  const counts = questions.reduce(
+    (accumulator, question) => {
+      accumulator[question.difficulty] = (accumulator[question.difficulty] ?? 0) + 1;
+      return accumulator;
+    },
+    { easy: 0, medium: 0, hard: 0 },
+  );
+
+  if (!counts.medium && !counts.hard) return "Easy mix";
+  if (!counts.hard) return "Easy + medium";
+  return "Mixed";
 }
 
 function playerCanScore(player, hostGetsScore, hostId) {
@@ -62,7 +129,6 @@ function PlaylistModeGame({
 }) {
   const sourceQuestions = useMemo(() => getPlaylistQuestionsForMode(mode.id), [mode.id]);
   const supportsGroupFocus = modeSupportsGroupFocus(mode.id);
-  const [difficulty, setDifficulty] = useState("easy");
   const [questionCount, setQuestionCount] = useState(10);
   const [isSetupOpen, setIsSetupOpen] = useState(true);
   const [hasStarted, setHasStarted] = useState(false);
@@ -84,35 +150,46 @@ function PlaylistModeGame({
 
     return sourceQuestions.filter((question) => question.artist === selectedGroupFilter);
   }, [selectedGroupFilter, sourceQuestions, supportsGroupFocus]);
-  const filteredQuestions = useMemo(
-    () => groupFocusedQuestions.filter((question) => question.difficulty === difficulty),
-    [difficulty, groupFocusedQuestions],
+  const questionDifficultyCounts = useMemo(
+    () =>
+      groupFocusedQuestions.reduce(
+        (accumulator, question) => {
+          accumulator[question.difficulty] = (accumulator[question.difficulty] ?? 0) + 1;
+          return accumulator;
+        },
+        { easy: 0, medium: 0, hard: 0 },
+      ),
+    [groupFocusedQuestions],
   );
   const availableQuestionCounts = useMemo(
-    () => getAvailableQuestionCounts(filteredQuestions.length),
-    [filteredQuestions.length],
+    () => getAvailableQuestionCounts(groupFocusedQuestions.length),
+    [groupFocusedQuestions.length],
   );
 
   const activeQuestions = useMemo(
     () =>
-      buildPlaylistQuestionSet(
-        filteredQuestions,
-        Math.min(questionCount, filteredQuestions.length),
-        `${mode.id}-${difficulty}-${sessionSeed}`,
+      buildMixedPlaylistQuestionSet(
+        groupFocusedQuestions,
+        Math.min(questionCount, groupFocusedQuestions.length),
+        `${mode.id}-${sessionSeed}`,
         recentQuestionIds,
       ),
-    [difficulty, filteredQuestions, mode.id, questionCount, recentQuestionIds, sessionSeed],
+    [groupFocusedQuestions, mode.id, questionCount, recentQuestionIds, sessionSeed],
   );
   const currentQuestion = activeQuestions[currentIndex] ?? null;
+  const activeDifficultyLabel = useMemo(
+    () => getMixedDifficultyLabel(activeQuestions),
+    [activeQuestions],
+  );
   const currentQuestionVariant = useMemo(
     () =>
       currentQuestion
         ? getPlaylistQuestionVariant(
             currentQuestion,
-            `${mode.id}-${difficulty}-${sessionSeed}-${currentQuestion.id}`,
+            `${mode.id}-${sessionSeed}-${currentQuestion.id}`,
           )
         : { prompt: null, cropVariant: null, renderVariant: null },
-    [currentQuestion, difficulty, mode.id, sessionSeed],
+    [currentQuestion, mode.id, sessionSeed],
   );
   const stepId = currentQuestion?.id ?? null;
   const isLastQuestion = currentIndex >= activeQuestions.length - 1;
@@ -152,10 +229,10 @@ function PlaylistModeGame({
       currentQuestion
         ? buildPlaylistChoices(
             currentQuestion,
-            `${mode.id}-${difficulty}-${sessionSeed}-${currentQuestion.id}`,
+            `${mode.id}-${sessionSeed}-${currentQuestion.id}`,
           )
         : [],
-    [currentQuestion, difficulty, mode.id, sessionSeed],
+    [currentQuestion, mode.id, sessionSeed],
   );
 
   function getPlayerSubtitle(player) {
@@ -194,13 +271,8 @@ function PlaylistModeGame({
     resetRoundState();
   }
 
-  function handleDifficultyChange(nextDifficulty) {
-    setDifficulty(nextDifficulty);
-    resetRoundState();
-  }
-
   function handleStartGame() {
-    const safeQuestionCount = Math.min(questionCount, filteredQuestions.length || questionCount);
+    const safeQuestionCount = Math.min(questionCount, groupFocusedQuestions.length || questionCount);
     setQuestionCount(safeQuestionCount);
     resetRoundState();
     setHasStarted(true);
@@ -556,32 +628,13 @@ function PlaylistModeGame({
 
             <div className="setup-grid">
               <div className="party-setting-card">
-                <label className="setup-label" htmlFor={`${mode.id}-difficulty`}>
-                  Difficulty
-                </label>
-                <select
-                  id={`${mode.id}-difficulty`}
-                  className="setup-input"
-                  value={difficulty}
-                  onChange={(event) => handleDifficultyChange(event.target.value)}
-                >
-                  {playlistDifficultyOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option[0].toUpperCase() + option.slice(1)}
-                    </option>
-                  ))}
-                </select>
-                <p className="setup-help">Pool size: {filteredQuestions.length} questions.</p>
-              </div>
-
-              <div className="party-setting-card">
                 <label className="setup-label" htmlFor={`${mode.id}-question-count`}>
                   Questions for the group
                 </label>
                 <select
                   id={`${mode.id}-question-count`}
                   className="setup-input"
-                  value={Math.min(questionCount, filteredQuestions.length || questionCount)}
+                  value={Math.min(questionCount, groupFocusedQuestions.length || questionCount)}
                   onChange={(event) => handleQuestionCountChange(Number(event.target.value))}
                 >
                   {availableQuestionCounts.map((option) => (
@@ -590,7 +643,10 @@ function PlaylistModeGame({
                     </option>
                   ))}
                 </select>
-                <p className="setup-help">Choose how many prompts this round will use.</p>
+                <p className="setup-help">
+                  Mixed pool: {questionDifficultyCounts.easy} easy, {questionDifficultyCounts.medium} medium,
+                  {" "}{questionDifficultyCounts.hard} hard.
+                </p>
               </div>
 
               {supportsGroupFocus ? (
@@ -659,7 +715,7 @@ function PlaylistModeGame({
             <div className="playlist-setup-actions">
               <button
                 className="primary-button"
-                disabled={!filteredQuestions.length}
+                disabled={!groupFocusedQuestions.length}
                 onClick={handleStartGame}
                 type="button"
               >
@@ -766,9 +822,9 @@ function PlaylistModeGame({
                     <p className="flow-section-label">Multiple Choice</p>
                     <div className="round-controls">
                       <div className="round-nav-pill">
-                        <span className="round-nav-label">Difficulty</span>
+                        <span className="round-nav-label">Question mix</span>
                         <span className="playlist-nav-value">
-                          {difficulty[0].toUpperCase() + difficulty.slice(1)}
+                          {activeDifficultyLabel}
                         </span>
                       </div>
                       <div className="round-nav-pill">
@@ -1368,6 +1424,7 @@ function JeopardyModeGame({
                       alt={activeClue.answer}
                       className="jeopardy-clue-image"
                       src={activeClue.image}
+                      style={activeClue.imageStyle ?? undefined}
                     />
                   ) : null}
                   <div

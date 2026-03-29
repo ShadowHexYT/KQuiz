@@ -55,34 +55,6 @@ function pickRandomBackgroundSet() {
   return shuffled.slice(0, 4);
 }
 
-function getDifficultyOptionsForMode(modeId) {
-  if (modeId === "main-game") {
-    return ["Party", "Standard", "Chaos"];
-  }
-
-  if (modeId === "jeopardy") {
-    return ["Easy", "Medium", "Hard"];
-  }
-
-  if (modeId === "finish-the-lyric") {
-    return ["Easy", "Medium", "Hard"];
-  }
-
-  if (modeId === "emoji-song-guess") {
-    return ["Easy", "Medium", "Hard"];
-  }
-
-  if (modeId === "album-cover-zoom") {
-    return ["Easy", "Medium", "Hard"];
-  }
-
-  if (modeId === "lightstick-silhouette-guess") {
-    return ["Easy", "Medium", "Hard"];
-  }
-
-  return ["Standard"];
-}
-
 const TEAM_ACCENTS = [
   {
     border: "rgba(255, 108, 152, 0.62)",
@@ -152,9 +124,6 @@ export default function HomeScreen({
   const [swapAnimation, setSwapAnimation] = useState(null);
   const [backgroundSet, setBackgroundSet] = useState(() => pickRandomBackgroundSet());
   const [activeTeamEditorId, setActiveTeamEditorId] = useState("team-1");
-  const [modeDifficulties, setModeDifficulties] = useState(() =>
-    Object.fromEntries(modeOptions.map((mode) => [mode.id, getDifficultyOptionsForMode(mode.id)[0]])),
-  );
   const displayedTeams = teams.slice(0, 3);
   const fixedTeamSlotTeams = [
     displayedTeams[0] ?? null,
@@ -176,7 +145,7 @@ export default function HomeScreen({
   const previewMode = homeCarouselModeOptions[carouselModeIndex] ?? homeCarouselModeOptions[0];
   const activeMode =
     selectedModeIndex === null ? null : (homeCarouselModeOptions[selectedModeIndex] ?? null);
-  const difficultyMode = activeMode ?? previewMode;
+  const activeSetupMode = activeMode ?? previewMode;
   const hasSelectedMode = selectedModeIndex !== null;
   const hasSelectedGroup = selectedLaunchTarget?.type === "group";
   const isAdvertisedGroupSelected = hasSelectedGroup && selectedLaunchTarget.id === selectedGroup.label;
@@ -184,12 +153,9 @@ export default function HomeScreen({
   const hasPlayableModeSelected = selectedLaunchTarget?.type === "mode" && canLaunchActiveMode;
   const canLaunchSelectedTarget = hasPlayableModeSelected || hasSelectedGroup;
   const isPreviewModeSelected = hasSelectedMode && previewMode?.id === activeMode?.id;
-  const activeDifficultyOptions = getDifficultyOptionsForMode(difficultyMode?.id);
-  const activeDifficulty =
-    (difficultyMode?.id ? modeDifficulties[difficultyMode.id] : null) ?? activeDifficultyOptions[0];
-  const showModeGroupFilter = Boolean(difficultyMode?.id && modeSupportsGroupFocus(difficultyMode.id));
-  const activeModeGroupFilter = difficultyMode?.id
-    ? (modeGroupFilters?.[difficultyMode.id] ?? "All groups")
+  const showModeGroupFilter = Boolean(activeSetupMode?.id && modeSupportsGroupFocus(activeSetupMode.id));
+  const activeModeGroupFilter = activeSetupMode?.id
+    ? (modeGroupFilters?.[activeSetupMode.id] ?? "All groups")
     : "All groups";
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
@@ -292,15 +258,6 @@ export default function HomeScreen({
     onTeamsEnabledChange(isEnabled);
   }
 
-  function handleDifficultyChange(option) {
-    if (!difficultyMode?.id) return;
-
-    setModeDifficulties((currentValues) => ({
-      ...currentValues,
-      [difficultyMode.id]: option,
-    }));
-  }
-
   function handleTeamCountSelect(count) {
     onTeamCountChange(String(count));
   }
@@ -338,9 +295,16 @@ export default function HomeScreen({
       <div className="background-orb background-orb-right" />
       <div className="kpop-background-layer" aria-hidden="true">
         <div className="kpop-background-grid">
-          {backgroundSet.map((imagePath, index) => (
+                          {backgroundSet.map((imagePath, index) => (
             <div className={`kpop-background-card kpop-background-card-${index + 1}`} key={`${imagePath}-${index}`}>
-              <img alt="" className="kpop-background-image" src={imagePath} />
+              <img
+                alt=""
+                className="kpop-background-image"
+                src={imagePath}
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+              />
             </div>
           ))}
         </div>
@@ -655,22 +619,6 @@ export default function HomeScreen({
                     </div>
                   </div>
 
-                  <div className="party-control-group">
-                    <span className="panel-label">Difficulty</span>
-                    <div className="party-segmented-row">
-                      {activeDifficultyOptions.map((option) => (
-                        <button
-                          className={`ghost-button party-segment-button ${activeDifficulty === option ? "is-active" : ""}`}
-                          key={option}
-                          onClick={() => handleDifficultyChange(option)}
-                          type="button"
-                        >
-                          {option}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
                   {showModeGroupFilter ? (
                     <div className="party-control-group">
                       <label className="panel-label" htmlFor="party-mode-group-focus">
@@ -681,7 +629,7 @@ export default function HomeScreen({
                         className="player-select-input party-group-focus-select"
                         value={activeModeGroupFilter}
                         onChange={(event) =>
-                          onModeGroupFilterChange?.(difficultyMode.id, event.target.value)
+                          onModeGroupFilterChange?.(activeSetupMode.id, event.target.value)
                         }
                       >
                         <option value="All groups">All groups</option>
