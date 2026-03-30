@@ -26,11 +26,39 @@ function stableSort(values, seed) {
   });
 }
 
-function buildChoices(answer, pool, seed, size = 4) {
-  const distractors = stableSort(
-    pool.filter((value) => value && value !== answer),
-    `${seed}-distractors`,
-  ).slice(0, Math.max(0, size - 1));
+function normalizeChoicePools(pool) {
+  if (!Array.isArray(pool)) return [];
+  if (pool.some(Array.isArray)) return pool.flat();
+  return pool;
+}
+
+function scoreDistractor(answer, value, seed) {
+  const answerLabel = String(answer).toLowerCase();
+  const valueLabel = String(value).toLowerCase();
+  const answerTokens = answerLabel.split(/\s+/).filter(Boolean);
+  const valueTokens = valueLabel.split(/\s+/).filter(Boolean);
+  const tokenDelta = Math.abs(answerTokens.length - valueTokens.length);
+  const lengthDelta = Math.abs(answerLabel.length - valueLabel.length);
+  const sharedInitial = answerLabel[0] && answerLabel[0] === valueLabel[0] ? 0.35 : 0;
+  const punctuationMatch = /[!&:'".?-]/.test(answerLabel) === /[!&:'".?-]/.test(valueLabel) ? 0.15 : 0;
+  const seededTiebreak = `${seed}-${valueLabel}`;
+
+  return {
+    value,
+    score: sharedInitial + punctuationMatch - tokenDelta * 0.18 - lengthDelta * 0.012,
+    seededTiebreak,
+  };
+}
+
+function buildChoices(answer, pool, seed, size = 6) {
+  const distractors = unique(normalizeChoicePools(pool).filter((value) => value && value !== answer))
+    .map((value) => scoreDistractor(answer, value, seed))
+    .sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score;
+      return left.seededTiebreak.localeCompare(right.seededTiebreak);
+    })
+    .slice(0, Math.max(0, size - 1))
+    .map((entry) => entry.value);
 
   return stableSort(unique([answer, ...distractors]), `${seed}-choices`);
 }
@@ -117,6 +145,18 @@ function pickOutsiderMembers(allProfiles, groupName, count) {
   ).slice(0, count);
 }
 
+function buildSongChoicePool(songTitles, outsiderSongs) {
+  return unique([songTitles, outsiderSongs].flat());
+}
+
+function buildAlbumChoicePool(albumTitles, outsiderAlbums) {
+  return unique([albumTitles, outsiderAlbums].flat());
+}
+
+function buildMemberChoicePool(memberNames, outsiderMembers) {
+  return unique([memberNames, outsiderMembers].flat());
+}
+
 function buildTemplateCandidates(profile, allProfiles) {
   const candidates = [];
   const memberNames = profile.members.map((member) => member.name);
@@ -126,6 +166,9 @@ function buildTemplateCandidates(profile, allProfiles) {
   const outsiderSongs = pickOutsiderSongs(allProfiles, profile.groupName, 80);
   const outsiderAlbums = pickOutsiderAlbums(allProfiles, profile.groupName, 40);
   const outsiderMembers = pickOutsiderMembers(allProfiles, profile.groupName, 80);
+  const songChoicePool = buildSongChoicePool(songTitles, outsiderSongs);
+  const albumChoicePool = buildAlbumChoicePool(albumTitles, outsiderAlbums);
+  const memberChoicePool = buildMemberChoicePool(memberNames, outsiderMembers);
   const fandomValuePool = unique(
     allProfiles.flatMap((entry) => entry.fandomFacts.map((fact) => fact.value)),
   );
@@ -158,7 +201,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "member-credit-spotlight",
         prompt: `Which ${profile.groupName} member is tied to ${fact.contribution} on "${fact.songTitle}"?`,
         answer: fact.member,
-        choices: buildChoices(fact.member, memberNamePool, `${profile.groupName}-member-credit-member-${index}`),
+        choices: buildChoices(fact.member, memberChoicePool, `${profile.groupName}-member-credit-member-${index}`),
         provenance,
         confidenceScore: confidenceForSources(provenance),
         funScore: 0.93,
@@ -182,7 +225,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "member-credit-song-lock",
         prompt: `${fact.member} is credited for ${fact.contribution} on which ${profile.groupName} song?`,
         answer: fact.songTitle,
-        choices: buildChoices(fact.songTitle, songTitles, `${profile.groupName}-member-credit-song-${index}`),
+        choices: buildChoices(fact.songTitle, songChoicePool, `${profile.groupName}-member-credit-song-${index}`),
         provenance,
         confidenceScore: confidenceForSources(provenance),
         funScore: 0.92,
@@ -207,7 +250,7 @@ function buildTemplateCandidates(profile, allProfiles) {
           templateFamily: "member-credit-era-clue",
           prompt: `Deep-fan clue for ${profile.groupName}: ${fact.member} has ${fact.contribution} credit on "${fact.songTitle}". Which release era does that point to?`,
           answer: fact.albumTitle,
-          choices: buildChoices(fact.albumTitle, albumTitles, `${profile.groupName}-member-credit-album-${index}`),
+          choices: buildChoices(fact.albumTitle, albumChoicePool, `${profile.groupName}-member-credit-album-${index}`),
           provenance,
           confidenceScore: confidenceForSources(provenance),
           funScore: 0.91,
@@ -227,7 +270,7 @@ function buildTemplateCandidates(profile, allProfiles) {
   profile.deepFacts.videoClues.forEach((fact, index) => {
     const difficulty = normalizeFactDifficulty(fact.difficulty);
     const provenance = [fact.source];
-    const answerPool = fact.answerType === "album" ? albumTitles : songTitles;
+    const answerPool = fact.answerType === "album" ? albumChoicePool : songChoicePool;
 
     candidates.push(
       createQuestion({
@@ -278,7 +321,7 @@ function buildTemplateCandidates(profile, allProfiles) {
   profile.deepFacts.releaseClues.forEach((fact, index) => {
     const difficulty = normalizeFactDifficulty(fact.difficulty);
     const provenance = [fact.source];
-    const answerPool = fact.answerType === "song" ? songTitles : albumTitles;
+    const answerPool = fact.answerType === "song" ? songChoicePool : albumChoicePool;
 
     candidates.push(
       createQuestion({
@@ -312,8 +355,8 @@ function buildTemplateCandidates(profile, allProfiles) {
           ? allAchievementValues
           : [...songTitles, ...albumTitles]
         : fact.answerType === "album"
-          ? albumTitles
-          : songTitles;
+          ? albumChoicePool
+          : songChoicePool;
 
     candidates.push(
       createQuestion({
@@ -348,7 +391,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "album-cover-spotlight",
         prompt: `This ${profile.groupName} cover belongs to which release?`,
         answer: fact.value,
-        choices: buildChoices(fact.value, albumTitles, `${profile.groupName}-album-cover-${index}`),
+        choices: buildChoices(fact.value, albumChoicePool, `${profile.groupName}-album-cover-${index}`),
         provenance: [fact.source],
         confidenceScore: confidenceForSources([fact.source]),
         funScore: 0.9,
@@ -375,7 +418,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "lyric-finish-line",
         prompt: `${profile.groupName} lyric check: which song matches "${lyric.lyricLeadIn}..."?`,
         answer: lyric.songTitle,
-        choices: buildChoices(lyric.songTitle, songTitles, `${profile.groupName}-lyric-${index}`),
+        choices: buildChoices(lyric.songTitle, songChoicePool, `${profile.groupName}-lyric-${index}`),
         provenance: [lyric.source],
         confidenceScore: confidenceForSources([lyric.source]),
         funScore: 0.92,
@@ -398,7 +441,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "title-track-spotlight",
         prompt: `Which ${profile.groupName} song feels like a real title-track lane pick here?`,
         answer: song.title,
-        choices: buildChoices(song.title, [...songTitles, ...outsiderSongs], `${profile.groupName}-title-track-${index}`),
+        choices: buildChoices(song.title, songChoicePool, `${profile.groupName}-title-track-${index}`),
         provenance: song.sourceKinds,
         confidenceScore: confidenceForSources(song.sourceKinds),
         funScore: 0.83,
@@ -416,7 +459,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "real-song-check",
         prompt: `${profile.groupName} fan check: which of these songs is really theirs?`,
         answer: song.title,
-        choices: buildChoices(song.title, [...songTitles, ...outsiderSongs], `${profile.groupName}-real-song-${index}`),
+        choices: buildChoices(song.title, songChoicePool, `${profile.groupName}-real-song-${index}`),
         provenance: song.sourceKinds,
         confidenceScore: confidenceForSources(song.sourceKinds),
         funScore: 0.86,
@@ -436,7 +479,7 @@ function buildTemplateCandidates(profile, allProfiles) {
           templateFamily: "song-to-album-lock",
           prompt: `Which ${profile.groupName} release should you match with "${song.title}"?`,
           answer: song.albumTitle,
-          choices: buildChoices(song.albumTitle, albumTitles, `${profile.groupName}-song-album-${index}`),
+          choices: buildChoices(song.albumTitle, albumChoicePool, `${profile.groupName}-song-album-${index}`),
           provenance: song.sourceKinds,
           confidenceScore: confidenceForSources(song.sourceKinds),
           funScore: 0.85,
@@ -482,7 +525,7 @@ function buildTemplateCandidates(profile, allProfiles) {
           templateFamily: "cover-to-song",
           prompt: `Which ${profile.groupName} song matches this release art?`,
           answer: song.title,
-          choices: buildChoices(song.title, songTitles, `${profile.groupName}-cover-song-${index}`),
+          choices: buildChoices(song.title, songChoicePool, `${profile.groupName}-cover-song-${index}`),
           provenance: song.sourceKinds,
           confidenceScore: confidenceForSources(song.sourceKinds),
           funScore: 0.88,
@@ -504,7 +547,7 @@ function buildTemplateCandidates(profile, allProfiles) {
           templateFamily: "emoji-song-clue",
           prompt: `${profile.groupName} emoji clue: ${song.emojiClue}`,
           answer: song.title,
-          choices: buildChoices(song.title, songTitles, `${profile.groupName}-emoji-${index}`),
+          choices: buildChoices(song.title, songChoicePool, `${profile.groupName}-emoji-${index}`),
           provenance: song.sourceKinds,
           confidenceScore: confidenceForSources(song.sourceKinds),
           funScore: 0.94,
@@ -556,7 +599,7 @@ function buildTemplateCandidates(profile, allProfiles) {
             templateFamily: "era-clue-pack",
             prompt: `Which ${profile.groupName} era fits this clue set: ${albumClues.join(" • ")}?`,
             answer: song.albumTitle,
-            choices: buildChoices(song.albumTitle, albumTitles, `${profile.groupName}-era-${index}`),
+            choices: buildChoices(song.albumTitle, albumChoicePool, `${profile.groupName}-era-${index}`),
             provenance: song.sourceKinds,
             confidenceScore: confidenceForSources(song.sourceKinds),
             funScore: 0.88,
@@ -577,7 +620,7 @@ function buildTemplateCandidates(profile, allProfiles) {
           templateFamily: "multi-clue-song-reveal",
           prompt: `Name the ${profile.groupName} song from these clues: lyric "${song.lyricLeadIn}...", release "${song.albumTitle}", and a spot in this group's verified song pool.`,
           answer: song.title,
-          choices: buildChoices(song.title, songTitles, `${profile.groupName}-clue-song-${index}`),
+          choices: buildChoices(song.title, songChoicePool, `${profile.groupName}-clue-song-${index}`),
           provenance: [...song.sourceKinds],
           confidenceScore: confidenceForSources(song.sourceKinds),
           funScore: 0.91,
@@ -624,7 +667,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "member-spotlight-visual",
         prompt: `Which ${profile.groupName} member is on screen?`,
         answer: member.name,
-        choices: buildChoices(member.name, memberNames, `${profile.groupName}-member-visual-${index}`),
+        choices: buildChoices(member.name, memberChoicePool, `${profile.groupName}-member-visual-${index}`),
         provenance: [member.source],
         confidenceScore: confidenceForSources([member.source]),
         funScore: 0.8,
@@ -644,7 +687,7 @@ function buildTemplateCandidates(profile, allProfiles) {
           templateFamily: "real-member-check",
           prompt: `Which name is really part of ${profile.groupName}'s lineup?`,
           answer: member.name,
-          choices: buildChoices(member.name, [...memberNames, ...outsiderMembers], `${profile.groupName}-member-real-${index}`),
+          choices: buildChoices(member.name, memberChoicePool, `${profile.groupName}-member-real-${index}`),
           provenance: [member.source],
           confidenceScore: confidenceForSources([member.source]),
           funScore: 0.82,
@@ -686,7 +729,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "member-role-fact-check",
         prompt: `Which member is correctly tied to the ${role} role in ${profile.groupName}?`,
         answer: memberName,
-        choices: buildChoices(memberName, memberNames, `${profile.groupName}-${role}-${index}`),
+        choices: buildChoices(memberName, memberChoicePool, `${profile.groupName}-${role}-${index}`),
         provenance: ["mainQuizRounds"],
         confidenceScore: confidenceForSources(["mainQuizRounds"]),
         funScore: 0.79,
@@ -704,7 +747,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "member-role-clue-pack",
         prompt: `This ${profile.groupName} clue points to which member: ${role} role spotlight, verified lineup, and fan-recognizable core profile?`,
         answer: memberName,
-        choices: buildChoices(memberName, memberNames, `${profile.groupName}-role-clue-${role}-${index}`),
+        choices: buildChoices(memberName, memberChoicePool, `${profile.groupName}-role-clue-${role}-${index}`),
         provenance: ["mainQuizRounds"],
         confidenceScore: confidenceForSources(["mainQuizRounds"]),
         funScore: 0.83,
@@ -724,7 +767,7 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "real-release-check",
         prompt: `Which release title really belongs to ${profile.groupName}?`,
         answer: album.title,
-        choices: buildChoices(album.title, [...albumTitles, ...outsiderAlbums], `${profile.groupName}-real-album-${index}`),
+        choices: buildChoices(album.title, albumChoicePool, `${profile.groupName}-real-album-${index}`),
         provenance: album.sourceKinds,
         confidenceScore: confidenceForSources(album.sourceKinds),
         funScore: 0.84,
@@ -743,7 +786,7 @@ function buildTemplateCandidates(profile, allProfiles) {
           templateFamily: "album-clue-pack",
           prompt: `Which ${profile.groupName} release fits this clue set: ${album.songTitles.slice(0, 2).join(" • ")}?`,
           answer: album.title,
-          choices: buildChoices(album.title, albumTitles, `${profile.groupName}-album-clue-${index}`),
+          choices: buildChoices(album.title, albumChoicePool, `${profile.groupName}-album-clue-${index}`),
           provenance: album.sourceKinds,
           confidenceScore: confidenceForSources(album.sourceKinds),
           funScore: 0.86,
@@ -861,7 +904,11 @@ function buildTemplateCandidates(profile, allProfiles) {
         templateFamily: "which-title-is-real",
         prompt: `Only one of these songs belongs to ${profile.groupName}. Which one is real?`,
         answer: song.title,
-        choices: stableSort([song.title, falseSongA, falseSongB, falseSongC], `${profile.groupName}-which-real-${index}`),
+        choices: buildChoices(
+          song.title,
+          [falseSongA, falseSongB, falseSongC, outsiderSongs[index + 3], outsiderSongs[index + 4]].filter(Boolean),
+          `${profile.groupName}-which-real-${index}`,
+        ),
         provenance: song.sourceKinds,
         confidenceScore: confidenceForSources(song.sourceKinds),
         funScore: 0.9,
@@ -883,52 +930,52 @@ function buildCategoryTargets(profile, difficulty, targetCount) {
 
   const baseWeights = {
     easy: {
-      "discography": discographyWeight,
-      "album-covers": visualWeight,
-      "title-tracks": discographyWeight,
-      "lyrics": 2,
-      "fandom-knowledge": fandomWeight,
+      "discography": Math.max(1, Math.round(discographyWeight / 4)),
+      "album-covers": Math.max(1, Math.round(visualWeight / 2)),
+      "title-tracks": Math.max(1, Math.round(discographyWeight / 5)),
+      "lyrics": 1,
+      "fandom-knowledge": fandomWeight + 2,
       "visual-recognition": memberWeight,
-      "members": memberWeight + Math.round(deepFactWeight / 2),
-      "true-vs-false": 2,
+      "members": memberWeight + deepFactWeight,
+      "true-vs-false": 3,
       "odd-one-out": 2,
-      "clue-based": 1 + Math.round(deepFactWeight / 3),
-      "variety-iconic-moments": Math.max(1, Math.round(deepFactWeight / 3)),
+      "clue-based": 2 + Math.round(deepFactWeight / 2),
+      "variety-iconic-moments": Math.max(2, Math.round(deepFactWeight / 2) + 1),
     },
     medium: {
-      "discography": discographyWeight,
-      "match-based": discographyWeight + Math.round(deepFactWeight / 3),
-      "eras-comebacks": discographyWeight,
-      "lyrics": 2,
-      "fandom-knowledge": fandomWeight,
-      "variety-iconic-moments": fandomWeight + Math.round(deepFactWeight / 2),
+      "discography": Math.max(1, Math.round(discographyWeight / 5)),
+      "match-based": Math.max(1, Math.round(discographyWeight / 4)),
+      "eras-comebacks": Math.max(1, Math.round(discographyWeight / 3)),
+      "lyrics": 1,
+      "fandom-knowledge": fandomWeight + 2,
+      "variety-iconic-moments": fandomWeight + deepFactWeight + 1,
       "odd-one-out": 2,
-      "true-vs-false": 2,
-      "clue-based": 2 + Math.round(deepFactWeight / 2),
-      "members": Math.max(1, Math.round(deepFactWeight / 2)),
+      "true-vs-false": 3,
+      "clue-based": 3 + Math.round(deepFactWeight / 2),
+      "members": Math.max(2, Math.round(memberWeight / 2) + Math.round(deepFactWeight / 2)),
     },
     hard: {
-      "discography": discographyWeight,
-      "b-sides": Math.max(2, discographyWeight - 1),
-      "eras-comebacks": discographyWeight,
-      "fandom-knowledge": fandomWeight,
-      "variety-iconic-moments": fandomWeight + deepFactWeight,
+      "discography": Math.max(1, Math.round(discographyWeight / 6)),
+      "b-sides": Math.max(1, Math.round(discographyWeight / 4)),
+      "eras-comebacks": Math.max(1, Math.round(discographyWeight / 3)),
+      "fandom-knowledge": fandomWeight + 2,
+      "variety-iconic-moments": fandomWeight + deepFactWeight + 2,
       "odd-one-out": 2,
-      "true-vs-false": 2,
-      "clue-based": 3 + Math.round(deepFactWeight / 2),
-      "match-based": 2 + Math.round(deepFactWeight / 3),
-      "members": Math.max(1, Math.round(deepFactWeight / 2)),
+      "true-vs-false": 3,
+      "clue-based": 4 + Math.round(deepFactWeight / 2),
+      "match-based": Math.max(1, Math.round(discographyWeight / 5)),
+      "members": Math.max(2, Math.round(memberWeight / 2) + Math.round(deepFactWeight / 2)),
     },
     expert: {
-      "b-sides": Math.max(2, discographyWeight - 1),
-      "eras-comebacks": discographyWeight,
-      "fandom-knowledge": fandomWeight,
-      "variety-iconic-moments": fandomWeight + deepFactWeight,
+      "b-sides": Math.max(1, Math.round(discographyWeight / 4)),
+      "eras-comebacks": Math.max(1, Math.round(discographyWeight / 3)),
+      "fandom-knowledge": fandomWeight + 2,
+      "variety-iconic-moments": fandomWeight + deepFactWeight + 3,
       "odd-one-out": 2,
-      "true-vs-false": 2,
-      "clue-based": 4 + Math.round(deepFactWeight / 2),
-      "match-based": 2 + Math.round(deepFactWeight / 3),
-      "members": Math.max(1, Math.round(deepFactWeight / 2)),
+      "true-vs-false": 3,
+      "clue-based": 5 + Math.round(deepFactWeight / 2),
+      "match-based": Math.max(1, Math.round(discographyWeight / 5)),
+      "members": Math.max(2, Math.round(memberWeight / 2) + Math.round(deepFactWeight / 2)),
     },
   };
 
@@ -944,14 +991,57 @@ function buildCategoryTargets(profile, difficulty, targetCount) {
   );
 }
 
+function getTemplateSelectionPenalty(question) {
+  if (
+    [
+      "song-to-album-lock",
+      "real-release-check",
+      "real-song-check",
+      "cover-to-song",
+      "album-clue-pack",
+      "title-track-spotlight",
+      "which-title-is-real",
+    ].includes(question.templateFamily)
+  ) {
+    return 0.46;
+  }
+
+  if (
+    [
+      "fact-spotlight-fandom",
+      "fact-spotlight-lightstick",
+      "fact-spotlight-varietySeries",
+      "fact-spotlight-originStory",
+      "fact-spotlight-nameMeaning",
+      "fact-spotlight-achievementAnswer",
+      "member-credit-spotlight",
+      "release-story-clue",
+      "performance-moment-clue",
+      "video-clue-spotlight",
+    ].includes(question.templateFamily)
+  ) {
+    return -0.16;
+  }
+
+  return 0;
+}
+
 function selectQuestionsForDifficulty(profile, candidates, difficulty, targetCount) {
   const pool = candidates
     .filter((question) => question.difficulty === difficulty)
     .sort((left, right) => {
       const rightScore =
-        right.funScore + right.uniquenessScore + right.fairnessRating + right.confidenceScore;
+        right.funScore +
+        right.uniquenessScore +
+        right.fairnessRating +
+        right.confidenceScore -
+        getTemplateSelectionPenalty(right);
       const leftScore =
-        left.funScore + left.uniquenessScore + left.fairnessRating + left.confidenceScore;
+        left.funScore +
+        left.uniquenessScore +
+        left.fairnessRating +
+        left.confidenceScore -
+        getTemplateSelectionPenalty(left);
       return rightScore - leftScore;
     });
 
@@ -975,19 +1065,33 @@ function selectQuestionsForDifficulty(profile, candidates, difficulty, targetCou
         const leftPenalty = leftTemplateCount * 0.25 + Math.max(0, -leftCategoryNeed) * 0.2;
         const rightPenalty = rightTemplateCount * 0.25 + Math.max(0, -rightCategoryNeed) * 0.2;
         const leftScore =
-          left.funScore + left.uniquenessScore + left.fairnessRating + left.confidenceScore + Math.max(0, leftCategoryNeed) * 0.35 - leftPenalty;
+          left.funScore +
+          left.uniquenessScore +
+          left.fairnessRating +
+          left.confidenceScore +
+          Math.max(0, leftCategoryNeed) * 0.35 -
+          leftPenalty -
+          getTemplateSelectionPenalty(left);
         const rightScore =
-          right.funScore + right.uniquenessScore + right.fairnessRating + right.confidenceScore + Math.max(0, rightCategoryNeed) * 0.35 - rightPenalty;
+          right.funScore +
+          right.uniquenessScore +
+          right.fairnessRating +
+          right.confidenceScore +
+          Math.max(0, rightCategoryNeed) * 0.35 -
+          rightPenalty -
+          getTemplateSelectionPenalty(right);
         return rightScore - leftScore;
       })
       .find((question) => {
         const previous = selected[selected.length - 1];
         const templateCount = templateCounts[question.templateFamily] ?? 0;
+        const templateCapForQuestion =
+          SONG_HEAVY_TEMPLATE_CAPS[question.templateFamily] ?? templateCap;
         const categoryCount = categoryCounts[question.category] ?? 0;
         const categoryTarget = categoryTargets[question.category] ?? 0;
         const atCategoryCap = categoryTarget > 0 && categoryCount >= categoryTarget + 2;
 
-        if (templateCount >= templateCap) return false;
+        if (templateCount >= templateCapForQuestion) return false;
         if (previous?.templateFamily === question.templateFamily) return false;
         if (previous?.category === question.category && categoryCount >= 2) return false;
         if (atCategoryCap) return false;
@@ -1095,6 +1199,16 @@ const MIXED_DIFFICULTY_WEIGHTS = {
   medium: 0.35,
   hard: 0.2,
   expert: 0.05,
+};
+
+const SONG_HEAVY_TEMPLATE_CAPS = {
+  "song-to-album-lock": 2,
+  "real-release-check": 2,
+  "real-song-check": 2,
+  "cover-to-song": 2,
+  "album-clue-pack": 2,
+  "title-track-spotlight": 2,
+  "which-title-is-real": 2,
 };
 
 function buildMixedTargetCounts(questionPools, difficulties, totalCount) {

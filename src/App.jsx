@@ -9,6 +9,8 @@ const ModePrototype = lazy(() => import("./components/ModePrototype"));
 const MainGameShow = lazy(() => import("./components/MainGameShow"));
 const ModeHub = lazy(() => import("./components/ModeHub"));
 const GroupQuizScreen = lazy(() => import("./components/GroupQuizScreen"));
+const IdolsPage = lazy(() => import("./components/IdolsPage"));
+const CalendarPage = lazy(() => import("./components/CalendarPage"));
 
 const starterPlayers = [];
 const DEFAULT_TEAM_COUNT = 2;
@@ -120,6 +122,14 @@ function getRouteFromHash(hashValue) {
       name: "group-quiz",
       groupSlug: hashValue.replace("#/group/", ""),
     };
+  }
+
+  if (hashValue === "#/idols") {
+    return { name: "idols" };
+  }
+
+  if (hashValue === "#/calendar") {
+    return { name: "calendar" };
   }
 
   return { name: "home" };
@@ -382,6 +392,14 @@ export default function App() {
     window.location.hash = `/group/${slugify(groupLabel)}`;
   }
 
+  function goToIdols() {
+    window.location.hash = "/idols";
+  }
+
+  function goToCalendar() {
+    window.location.hash = "/calendar";
+  }
+
   function goHome() {
     window.location.hash = "";
   }
@@ -407,7 +425,14 @@ export default function App() {
     goHome();
   }
 
-  const activeNavKey = route.name === "home" ? "home" : "games";
+  const activeNavKey =
+    route.name === "home"
+      ? "home"
+      : route.name === "idols"
+        ? "idols"
+        : route.name === "calendar"
+          ? "calendar"
+          : "games";
   const routedGroup =
     route.name === "group-quiz"
       ? groupQuizzes.find((group) => slugify(group.label) === route.groupSlug) ?? null
@@ -428,12 +453,60 @@ export default function App() {
       gameModes={gameModes}
       groupQuizzes={groupQuizzes}
       onGoHome={goHome}
+      onOpenIdols={goToIdols}
+      onOpenCalendar={goToCalendar}
       onOpenModeHub={goToModeHub}
       onOpenMode={goToModePrototype}
       onOpenGroupQuiz={openGroupQuizFromNav}
       onResetApp={resetApp}
     />
   );
+
+  if (route.name === "calendar") {
+    return (
+      <>
+        {topNav}
+        <Suspense
+          fallback={
+            <div className="page-shell">
+              <main className="app-frame">
+                <section className="game-show-hero">
+                  <div>
+                    <h1>Loading calendar...</h1>
+                  </div>
+                </section>
+              </main>
+            </div>
+          }
+        >
+          <CalendarPage />
+        </Suspense>
+      </>
+    );
+  }
+
+  if (route.name === "idols") {
+    return (
+      <>
+        {topNav}
+        <Suspense
+          fallback={
+            <div className="page-shell">
+              <main className="app-frame">
+                <section className="game-show-hero">
+                  <div>
+                    <h1>Loading idols...</h1>
+                  </div>
+                </section>
+              </main>
+            </div>
+          }
+        >
+          <IdolsPage onGoHome={goHome} />
+        </Suspense>
+      </>
+    );
+  }
 
   if (route.name === "main-gameshow") {
     return (

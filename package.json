@@ -8,7 +8,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test",
-    "ingest": "node scripts/run-ingestion.mjs"
+    "ingest": "node scripts/run-ingestion.mjs",
+    "sync:idols": "node scripts/sync-idol-repository.mjs",
+    "sync:calendar": "node scripts/sync-calendar-feed.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

@@ -8,14 +8,14 @@ import AnimatedList from "./AnimatedList";
 import Carousel from "./Carousel";
 
 const backgroundImages = [
-  "/quiz-media/image1.jpg",
-  "/quiz-media/image10.jpg",
-  "/quiz-media/image18.png",
-  "/quiz-media/image31.jpg",
-  "/quiz-media/image45.jpg",
-  "/quiz-media/image53.jpg",
-  "/quiz-media/image67.jpg",
-  "/quiz-media/image75.jpg",
+  "/quiz-media/Chaewon.jpg",
+  "/quiz-media/Kyujin.jpg",
+  "/quiz-media/Manon.jpg",
+  "/quiz-media/Daniela.jpg",
+  "/quiz-media/Karina.jpg",
+  "/quiz-media/Soyeon.jpg",
+  "/quiz-media/Asa.jpg",
+  "/quiz-media/Jihyo.jpg",
 ];
 
 const floatingKpopTags = [
@@ -145,7 +145,6 @@ export default function HomeScreen({
   const previewMode = homeCarouselModeOptions[carouselModeIndex] ?? homeCarouselModeOptions[0];
   const activeMode =
     selectedModeIndex === null ? null : (homeCarouselModeOptions[selectedModeIndex] ?? null);
-  const activeSetupMode = activeMode ?? previewMode;
   const hasSelectedMode = selectedModeIndex !== null;
   const hasSelectedGroup = selectedLaunchTarget?.type === "group";
   const isAdvertisedGroupSelected = hasSelectedGroup && selectedLaunchTarget.id === selectedGroup.label;
@@ -153,9 +152,9 @@ export default function HomeScreen({
   const hasPlayableModeSelected = selectedLaunchTarget?.type === "mode" && canLaunchActiveMode;
   const canLaunchSelectedTarget = hasPlayableModeSelected || hasSelectedGroup;
   const isPreviewModeSelected = hasSelectedMode && previewMode?.id === activeMode?.id;
-  const showModeGroupFilter = Boolean(activeSetupMode?.id && modeSupportsGroupFocus(activeSetupMode.id));
-  const activeModeGroupFilter = activeSetupMode?.id
-    ? (modeGroupFilters?.[activeSetupMode.id] ?? "All groups")
+  const showModeGroupFilter = Boolean(activeMode?.id && modeSupportsGroupFocus(activeMode.id));
+  const activeModeGroupFilter = activeMode?.id
+    ? (modeGroupFilters?.[activeMode.id] ?? "All groups")
     : "All groups";
   const lineupPlayers = [hostProfile, ...players];
   const playerSlotCount = Math.max(7, lineupPlayers.length + 1);
@@ -199,6 +198,7 @@ export default function HomeScreen({
         : "Select a game or group";
   const currentPlayersLabel = `Current Players: ${lineupPlayers.length}`;
   const formatLabel = teamsEnabled ? `${teams.length} teams` : "Free-for-all";
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     const intervalId = window.setInterval(() => {
@@ -335,17 +335,17 @@ export default function HomeScreen({
             delay={0}
           >
             <section className="hero-card hero-card-banner">
-              <div className="hero-copy">
-                <div className="hero-brand" aria-label="Kpop Quiz Games">
-                  <span className="hero-brand-mark" aria-hidden="true">
-                    <span className="hero-brand-icon">🫰</span>
-                  </span>
-                  <div className="hero-brand-title">
-                    <h1>KQuiz Games</h1>
-                    <span className="hero-brand-byline">by Hunter</span>
-                  </div>
+              <div className="hero-brand" aria-label="Kpop Quiz Games">
+                <span className="hero-brand-mark" aria-hidden="true">
+                  <span className="hero-brand-icon">🫰</span>
+                </span>
+                <div className="hero-brand-title">
+                  <h1>KQuiz Games</h1>
+                  <span className="hero-brand-byline">by Hunter</span>
                 </div>
+              </div>
 
+              <div className="hero-copy">
                 <div className="hero-lineup-panel" id="party-lineup">
                   <div className="hero-lineup-header">
                     <div className="hero-lineup-title">
@@ -561,46 +561,6 @@ export default function HomeScreen({
                   </div>
                 </form>
 
-                {teamsEnabled ? (
-                  <div className="party-settings-grid is-team-naming">
-                    <div className="party-team-name-card">
-                      {activeEditorTeam ? (
-                        <>
-                          <label className="party-team-editor-picker">
-                            <select
-                              className="party-team-editor-select"
-                              value={activeEditorTeam.id}
-                              onChange={(event) => setActiveTeamEditorId(event.target.value)}
-                            >
-                              {displayedTeams.map((team) => (
-                                <option key={team.id} value={team.id}>
-                                  Team {team.id.replace("team-", "")}
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label
-                            className="party-team-name-field is-single-editor"
-                            style={{
-                              "--team-outline": getTeamAccent(activeEditorTeam.id).border,
-                              "--team-glow": getTeamAccent(activeEditorTeam.id).glow,
-                              "--team-wash": getTeamAccent(activeEditorTeam.id).wash,
-                            }}
-                          >
-                            <input
-                              className="player-text-input hero-team-name-input"
-                              type="text"
-                              value={activeEditorTeam.name}
-                              onChange={(event) => onTeamRename(activeEditorTeam.id, event.target.value)}
-                            />
-                          </label>
-                        </>
-                      ) : null}
-                    </div>
-                  </div>
-                ) : null}
-
                 <div className="party-controls-panel">
                   <div className="party-control-group">
                     <span className="panel-label">Team structure</span>
@@ -629,7 +589,7 @@ export default function HomeScreen({
                         className="player-select-input party-group-focus-select"
                         value={activeModeGroupFilter}
                         onChange={(event) =>
-                          onModeGroupFilterChange?.(activeSetupMode.id, event.target.value)
+                          onModeGroupFilterChange?.(activeMode.id, event.target.value)
                         }
                       >
                         <option value="All groups">All groups</option>
@@ -672,6 +632,42 @@ export default function HomeScreen({
                       </label>
                     </div>
                   </div>
+
+                  {teamsEnabled && activeEditorTeam ? (
+                    <div className="party-control-group">
+                      <div className="party-team-name-card">
+                        <label className="party-team-editor-picker">
+                          <select
+                            className="party-team-editor-select"
+                            value={activeEditorTeam.id}
+                            onChange={(event) => setActiveTeamEditorId(event.target.value)}
+                          >
+                            {displayedTeams.map((team) => (
+                              <option key={team.id} value={team.id}>
+                                Team {team.id.replace("team-", "")}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+
+                        <label
+                          className="party-team-name-field is-single-editor"
+                          style={{
+                            "--team-outline": getTeamAccent(activeEditorTeam.id).border,
+                            "--team-glow": getTeamAccent(activeEditorTeam.id).glow,
+                            "--team-wash": getTeamAccent(activeEditorTeam.id).wash,
+                          }}
+                        >
+                          <input
+                            className="player-text-input hero-team-name-input"
+                            type="text"
+                            value={activeEditorTeam.name}
+                            onChange={(event) => onTeamRename(activeEditorTeam.id, event.target.value)}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </aside>
             </section>
@@ -959,6 +955,47 @@ export default function HomeScreen({
               />
             </div>
           </section>
+        </AnimatedContent>
+
+        <AnimatedContent
+          distance={60}
+          direction="vertical"
+          reverse={false}
+          duration={0.8}
+          ease="cubic-bezier(0.22, 1, 0.36, 1)"
+          initialOpacity={0}
+          animateOpacity
+          scale={0.99}
+          threshold={0.1}
+          delay={0.18}
+        >
+          <footer className="site-legal-footer" aria-label="Legal information">
+            <div className="site-legal-grid">
+              <div className="site-legal-bubble">
+                <p className="panel-label">Project Status</p>
+                <strong>Unofficial fan-made website</strong>
+                <p>KQuiz Games is an independent entertainment project and is not affiliated with any artist, label, or rights holder.</p>
+              </div>
+
+              <div className="site-legal-bubble">
+                <p className="panel-label">Media & Rights</p>
+                <strong>Original rights stay with their owners</strong>
+                <p>Artist names, album art, logos, music references, and related materials belong to their respective owners and are credited through source-aware quiz data where available.</p>
+              </div>
+
+              <div className="site-legal-bubble">
+                <p className="panel-label">Review Requests</p>
+                <strong>Content can be reviewed or removed</strong>
+                <p>If a rights holder wants something reviewed, credited differently, or removed, this project is intended to support that request in good faith.</p>
+              </div>
+            </div>
+
+            <div className="site-legal-meta">
+              <span className="site-legal-meta-pill">© {currentYear} KQuiz Games</span>
+              <span className="site-legal-meta-pill">Built by Hunter</span>
+              <span className="site-legal-meta-pill">Quiz content for entertainment use</span>
+            </div>
+          </footer>
         </AnimatedContent>
       </main>
     </div>

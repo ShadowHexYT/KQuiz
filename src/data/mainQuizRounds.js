@@ -15,6 +15,26 @@ function slugify(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
+function getQuizMediaImage(name, groupName = "") {
+  if (groupName === "Hearts2Hearts" && name === "Jiwoo") {
+    return "/quiz-media/Jiwoo_h2h.jpg";
+  }
+
+  if (name === "Lara") {
+    return "/quiz-media/Lara.png";
+  }
+
+  if (name === "Ningning") {
+    return "/quiz-media/NingNing.jpg";
+  }
+
+  if (name === "Haneul") {
+    return "/quiz-media/Hanuel.jpg";
+  }
+
+  return `/quiz-media/${name}.jpg`;
+}
+
 const songMetaLibrary = {
   "IVE::Rebel Heart": {
     coverImage: "https://is1-ssl.mzstatic.com/image/thumb/Music221/v4/26/c5/38/26c5381f-2dcb-cc8f-c161-60009a3c4d97/199066086087.jpg/1000x1000bb.jpg",
@@ -861,11 +881,11 @@ const rounds = [
     groupName: "LE SSERAFIM",
     groupChoices: ["LE SSERAFIM", "IVE", "NewJeans", "aespa"],
     members: [
-      { name: "Chaewon", image: "/quiz-media/image24.jpg" },
-      { name: "Kazuha", image: "/quiz-media/image5.jpg" },
-      { name: "Yunjin", image: "/quiz-media/image11.jpg" },
-      { name: "Eunchae", image: "/quiz-media/image19.jpg" },
-      { name: "Sakura", image: "/quiz-media/image7.jpg" },
+      { name: "Chaewon", image: getQuizMediaImage("Chaewon", "LE SSERAFIM") },
+      { name: "Kazuha", image: getQuizMediaImage("Kazuha", "LE SSERAFIM") },
+      { name: "Yunjin", image: getQuizMediaImage("Yunjin", "LE SSERAFIM") },
+      { name: "Eunchae", image: getQuizMediaImage("Eunchae", "LE SSERAFIM") },
+      { name: "Sakura", image: getQuizMediaImage("Sakura", "LE SSERAFIM") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -916,12 +936,12 @@ const rounds = [
     groupName: "IVE",
     groupChoices: ["IVE", "ITZY", "STAYC", "NMIXX"],
     members: [
-      { name: "Leeseo", image: "/quiz-media/image20.jpg" },
-      { name: "Wonyoung", image: "/quiz-media/image9.jpg" },
-      { name: "Rei", image: "/quiz-media/image23.jpg" },
-      { name: "Yujin", image: "/quiz-media/image2.jpg" },
-      { name: "Liz", image: "/quiz-media/image3.jpg" },
-      { name: "Gaeul", image: "/quiz-media/image1.jpg" },
+      { name: "Leeseo", image: getQuizMediaImage("Leeseo", "IVE") },
+      { name: "Wonyoung", image: getQuizMediaImage("Wonyoung", "IVE") },
+      { name: "Rei", image: getQuizMediaImage("Rei", "IVE") },
+      { name: "Yujin", image: getQuizMediaImage("Yujin", "IVE") },
+      { name: "Liz", image: getQuizMediaImage("Liz", "IVE") },
+      { name: "Gaeul", image: getQuizMediaImage("Gaeul", "IVE") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -965,12 +985,12 @@ const rounds = [
     groupName: "NMIXX",
     groupChoices: ["NMIXX", "ITZY", "Kiss of Life", "STAYC"],
     members: [
-      { name: "Sullyoon", image: "/quiz-media/image4.jpg" },
-      { name: "Haewon", image: "/quiz-media/image27.jpg" },
-      { name: "Bae", image: "/quiz-media/image41.jpg" },
-      { name: "Lily", image: "/quiz-media/image6.jpg" },
-      { name: "Kyujin", image: "/quiz-media/image10.jpg" },
-      { name: "Jiwoo", image: "/quiz-media/image22.jpg" },
+      { name: "Sullyoon", image: getQuizMediaImage("Sullyoon", "NMIXX") },
+      { name: "Haewon", image: getQuizMediaImage("Haewon", "NMIXX") },
+      { name: "Bae", image: getQuizMediaImage("Bae", "NMIXX") },
+      { name: "Lily", image: getQuizMediaImage("Lily", "NMIXX") },
+      { name: "Kyujin", image: getQuizMediaImage("Kyujin", "NMIXX") },
+      { name: "Jiwoo", image: getQuizMediaImage("Jiwoo", "NMIXX") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1060,11 +1080,11 @@ const rounds = [
     groupName: "ITZY",
     groupChoices: ["ITZY", "TWICE", "IVE", "LE SSERAFIM"],
     members: [
-      { name: "Ryujin", image: "/quiz-media/image28.jpg" },
-      { name: "Chaeryeong", image: "/quiz-media/image26.jpg" },
-      { name: "Yuna", image: "/quiz-media/image14.jpg" },
-      { name: "Yeji", image: "/quiz-media/image12.jpg" },
-      { name: "Lia", image: "/quiz-media/image30.jpg" },
+      { name: "Ryujin", image: getQuizMediaImage("Ryujin", "ITZY") },
+      { name: "Chaeryeong", image: getQuizMediaImage("Chaeryeong", "ITZY") },
+      { name: "Yuna", image: getQuizMediaImage("Yuna", "ITZY") },
+      { name: "Yeji", image: getQuizMediaImage("Yeji", "ITZY") },
+      { name: "Lia", image: getQuizMediaImage("Lia", "ITZY") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1109,11 +1129,11 @@ const rounds = [
     groupName: "STAYC",
     groupChoices: ["STAYC", "IVE", "KATSEYE", "NMIXX"],
     members: [
-      { name: "J", image: "/quiz-media/image29.jpg" },
-      { name: "Seeun", image: "/quiz-media/image35.jpg" },
-      { name: "Sumin", image: "/quiz-media/image15.jpg" },
-      { name: "Isa", image: "/quiz-media/image40.jpg" },
-      { name: "Sieun", image: "/quiz-media/image13.jpg" },
+      { name: "J", image: getQuizMediaImage("J", "STAYC") },
+      { name: "Seeun", image: getQuizMediaImage("Seeun", "STAYC") },
+      { name: "Sumin", image: getQuizMediaImage("Sumin", "STAYC") },
+      { name: "Isa", image: getQuizMediaImage("Isa", "STAYC") },
+      { name: "Sieun", image: getQuizMediaImage("Sieun", "STAYC") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1157,12 +1177,12 @@ const rounds = [
     groupName: "KATSEYE",
     groupChoices: ["KATSEYE", "VIVIZ", "NewJeans", "BabyMonster"],
     members: [
-      { name: "Manon", image: "/quiz-media/image18.png" },
-      { name: "Sophia", image: "/quiz-media/image16.jpg" },
-      { name: "Yoonchae", image: "/quiz-media/image17.jpg" },
-      { name: "Lara", image: "/quiz-media/image33.jpg" },
-      { name: "Megan", image: "/quiz-media/image36.jpg" },
-      { name: "Daniela", image: "/quiz-media/image31.jpg" },
+      { name: "Manon", image: getQuizMediaImage("Manon", "KATSEYE") },
+      { name: "Sophia", image: getQuizMediaImage("Sophia", "KATSEYE") },
+      { name: "Yoonchae", image: getQuizMediaImage("Yoonchae", "KATSEYE") },
+      { name: "Lara", image: getQuizMediaImage("Lara", "KATSEYE") },
+      { name: "Megan", image: getQuizMediaImage("Megan", "KATSEYE") },
+      { name: "Daniela", image: getQuizMediaImage("Daniela", "KATSEYE") },
     ],
     extras: [
       {
@@ -1198,10 +1218,10 @@ const rounds = [
     groupName: "aespa",
     groupChoices: ["aespa", "IVE", "NewJeans", "ITZY"],
     members: [
-      { name: "Giselle", image: "/quiz-media/image42.jpg" },
-      { name: "Winter", image: "/quiz-media/image32.jpg" },
-      { name: "Karina", image: "/quiz-media/image45.jpg" },
-      { name: "Ningning", image: "/quiz-media/image25.jpg" },
+      { name: "Giselle", image: getQuizMediaImage("Giselle", "aespa") },
+      { name: "Winter", image: getQuizMediaImage("Winter", "aespa") },
+      { name: "Karina", image: getQuizMediaImage("Karina", "aespa") },
+      { name: "Ningning", image: getQuizMediaImage("Ningning", "aespa") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1245,11 +1265,11 @@ const rounds = [
     groupName: "NewJeans",
     groupChoices: ["NewJeans", "LE SSERAFIM", "aespa", "KATSEYE"],
     members: [
-      { name: "Hanni", image: "/quiz-media/image34.jpg" },
-      { name: "Danielle", image: "/quiz-media/image43.jpg" },
-      { name: "Minji", image: "/quiz-media/image37.jpg" },
-      { name: "Haerin", image: "/quiz-media/image56.jpg" },
-      { name: "Hyein", image: "/quiz-media/image55.jpg" },
+      { name: "Hanni", image: getQuizMediaImage("Hanni", "NewJeans") },
+      { name: "Danielle", image: getQuizMediaImage("Danielle", "NewJeans") },
+      { name: "Minji", image: getQuizMediaImage("Minji", "NewJeans") },
+      { name: "Haerin", image: getQuizMediaImage("Haerin", "NewJeans") },
+      { name: "Hyein", image: getQuizMediaImage("Hyein", "NewJeans") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1293,11 +1313,11 @@ const rounds = [
     groupName: "G-(I)DLE",
     groupChoices: ["G-(I)DLE", "Kiss of Life", "STAYC", "IVE"],
     members: [
-      { name: "Yuqi", image: "/quiz-media/image71.jpg" },
-      { name: "Miyeon", image: "/quiz-media/image57.jpg" },
-      { name: "Soyeon", image: "/quiz-media/image53.jpg" },
-      { name: "Minnie", image: "/quiz-media/image39.jpg" },
-      { name: "Shuhua", image: "/quiz-media/image59.jpg" },
+      { name: "Yuqi", image: getQuizMediaImage("Yuqi", "G-(I)DLE") },
+      { name: "Miyeon", image: getQuizMediaImage("Miyeon", "G-(I)DLE") },
+      { name: "Soyeon", image: getQuizMediaImage("Soyeon", "G-(I)DLE") },
+      { name: "Minnie", image: getQuizMediaImage("Minnie", "G-(I)DLE") },
+      { name: "Shuhua", image: getQuizMediaImage("Shuhua", "G-(I)DLE") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1341,10 +1361,10 @@ const rounds = [
     groupName: "Kiss of Life",
     groupChoices: ["Kiss of Life", "VIVIZ", "NMIXX", "STAYC"],
     members: [
-      { name: "Belle", image: "/quiz-media/image52.jpg" },
-      { name: "Natty", image: "/quiz-media/image66.jpg" },
-      { name: "Julie", image: "/quiz-media/image38.jpg" },
-      { name: "Haneul", image: "/quiz-media/image63.jpg" },
+      { name: "Belle", image: getQuizMediaImage("Belle", "Kiss of Life") },
+      { name: "Natty", image: getQuizMediaImage("Natty", "Kiss of Life") },
+      { name: "Julie", image: getQuizMediaImage("Julie", "Kiss of Life") },
+      { name: "Haneul", image: getQuizMediaImage("Haneul", "Kiss of Life") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1388,9 +1408,9 @@ const rounds = [
     groupName: "VIVIZ",
     groupChoices: ["VIVIZ", "KATSEYE", "BabyMonster", "aespa"],
     members: [
-      { name: "Umji", image: "/quiz-media/image70.jpg" },
-      { name: "Eunha", image: "/quiz-media/image47.jpg" },
-      { name: "SinB", image: "/quiz-media/image44.jpg" },
+      { name: "Umji", image: getQuizMediaImage("Umji", "VIVIZ") },
+      { name: "Eunha", image: getQuizMediaImage("Eunha", "VIVIZ") },
+      { name: "SinB", image: getQuizMediaImage("SinB", "VIVIZ") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1434,13 +1454,13 @@ const rounds = [
     groupName: "BabyMonster",
     groupChoices: ["BabyMonster", "KATSEYE", "Kiss of Life", "NewJeans"],
     members: [
-      { name: "Ahyeon", image: "/quiz-media/image58.jpg" },
-      { name: "Rami", image: "/quiz-media/image46.jpg" },
-      { name: "Rora", image: "/quiz-media/image48.jpg" },
-      { name: "Chiquita", image: "/quiz-media/image62.jpg" },
-      { name: "Ruka", image: "/quiz-media/image49.jpg" },
-      { name: "Pharita", image: "/quiz-media/image68.jpg" },
-      { name: "Asa", image: "/quiz-media/image67.jpg" },
+      { name: "Ahyeon", image: getQuizMediaImage("Ahyeon", "BabyMonster") },
+      { name: "Rami", image: getQuizMediaImage("Rami", "BabyMonster") },
+      { name: "Rora", image: getQuizMediaImage("Rora", "BabyMonster") },
+      { name: "Chiquita", image: getQuizMediaImage("Chiquita", "BabyMonster") },
+      { name: "Ruka", image: getQuizMediaImage("Ruka", "BabyMonster") },
+      { name: "Pharita", image: getQuizMediaImage("Pharita", "BabyMonster") },
+      { name: "Asa", image: getQuizMediaImage("Asa", "BabyMonster") },
     ],
     extras: [
       ...buildFavoriteSongExtras({
@@ -1484,15 +1504,15 @@ const rounds = [
     groupName: "TWICE",
     groupChoices: ["TWICE", "ITZY", "IVE", "STAYC"],
     members: [
-      { name: "Sana", image: "/quiz-media/image64.jpg" },
-      { name: "Jihyo", image: "/quiz-media/image75.jpg" },
-      { name: "Nayeon", image: "/quiz-media/image73.jpg" },
-      { name: "Momo", image: "/quiz-media/image50.jpg" },
-      { name: "Mina", image: "/quiz-media/image60.jpg" },
-      { name: "Dahyun", image: "/quiz-media/image51.jpg" },
-      { name: "Chaeyoung", image: "/quiz-media/image72.jpg" },
-      { name: "Jeongyeon", image: "/quiz-media/image54.jpg" },
-      { name: "Tzuyu", image: "/quiz-media/image74.jpg" },
+      { name: "Sana", image: getQuizMediaImage("Sana", "TWICE") },
+      { name: "Jihyo", image: getQuizMediaImage("Jihyo", "TWICE") },
+      { name: "Nayeon", image: getQuizMediaImage("Nayeon", "TWICE") },
+      { name: "Momo", image: getQuizMediaImage("Momo", "TWICE") },
+      { name: "Mina", image: getQuizMediaImage("Mina", "TWICE") },
+      { name: "Dahyun", image: getQuizMediaImage("Dahyun", "TWICE") },
+      { name: "Chaeyoung", image: getQuizMediaImage("Chaeyoung", "TWICE") },
+      { name: "Jeongyeon", image: getQuizMediaImage("Jeongyeon", "TWICE") },
+      { name: "Tzuyu", image: getQuizMediaImage("Tzuyu", "TWICE") },
     ],
     extras: [
       ...buildFavoriteSongExtras({

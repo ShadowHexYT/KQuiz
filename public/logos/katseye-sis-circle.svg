@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520" fill="none">
+  <defs>
+    <clipPath id="sisCircle">
+      <circle cx="260" cy="260" r="252" />
+    </clipPath>
+  </defs>
+  <g clip-path="url(#sisCircle)">
+    <image href="/logos/katseye-sis-cover.jpg" x="-240" y="-240" width="1000" height="1000" preserveAspectRatio="xMidYMid slice" />
+  </g>
+</svg>

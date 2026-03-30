@@ -20,8 +20,11 @@ export default function GroupQuizScreen({ routedGroup, ...mainGameProps }) {
       includeGroupGuess={false}
       heroEyebrow="Individual group quiz"
       heroTitle={`${routedGroup.label} Quiz`}
+      heroTitleClassName="group-quiz-title"
       heroText={routedGroup.description}
       roundNavTitle="Quiz"
+      showRoundNav={false}
+      showQuestionNav={false}
     />
   );
 }

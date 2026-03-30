@@ -25,6 +25,12 @@ const GROUP_LOGO_SOURCES = {
   IVE: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Ive%20logo%20%281%29.svg",
   aespa: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Logo%20of%20Aespa%20%28black%29.svg",
   NMIXX: "https://commons.wikimedia.org/wiki/Special:Redirect/file/NMIXX%20logo.svg",
+  STAYC: "https://commons.wikimedia.org/wiki/Special:Redirect/file/STAYC%20logo.png",
+  KATSEYE: "/logos/katseye-sis-circle.svg",
+  ITZY: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Itzy%20logo.svg",
+  "G-(I)DLE": "https://commons.wikimedia.org/wiki/Special:Redirect/file/I-dle%20logo.svg",
+  VIVIZ: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Viviz%20logo.svg",
+  BabyMonster: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Babymonster%20Logo.svg",
   ILLIT: "https://commons.wikimedia.org/wiki/Special:Redirect/file/Illit%20logo.svg",
   KiiiKiii: "https://www.generasia.com/wiki/Special:Redirect/file/KiiiKiii_logo.png",
   MEOVV: "https://commons.wikimedia.org/wiki/Special:Redirect/file/MEOVV.png",
@@ -58,6 +64,8 @@ function buildFallbackLogo(label) {
 export default function PillNav({
   activeKey = "home",
   onGoHome,
+  onOpenIdols,
+  onOpenCalendar,
   onOpenModeHub,
   onOpenMode,
   onOpenGroupQuiz,
@@ -96,7 +104,6 @@ export default function PillNav({
   const matchedGroups = normalizedSearch
     ? groupQuizzes.filter((group) => `${group.label} ${group.description}`.toLowerCase().includes(normalizedSearch))
     : [];
-
   useEffect(() => {
     function handleClickOutside(event) {
       if (!navRef.current?.contains(event.target)) {
@@ -226,6 +233,28 @@ export default function PillNav({
             </div>
           ) : null}
         </div>
+
+        <button
+          className={`pill-nav-item ${activeKey === "calendar" ? "is-active" : ""}`}
+          onClick={() => {
+            setOpenMenuKey(null);
+            onOpenCalendar?.();
+          }}
+          type="button"
+        >
+          Calendar
+        </button>
+
+        <button
+          className={`pill-nav-item ${activeKey === "idols" ? "is-active" : ""}`}
+          onClick={() => {
+            setOpenMenuKey(null);
+            onOpenIdols?.();
+          }}
+          type="button"
+        >
+          Idols
+        </button>
 
         <div className={`pill-nav-dropdown ${openMenuKey === "games" ? "is-open" : ""}`}>
           <button

@@ -144,7 +144,10 @@ export default function MainGameShow({
   heroEyebrow = "Headliner gameshow",
   heroTitle = "Are You Smarter Than a K-Popper?",
   heroText = "Each group now plays as a full round: group guess first, every member one by one, then the extra personal questions.",
+  heroTitleClassName = "",
   roundNavTitle = "Group",
+  showRoundNav = true,
+  showQuestionNav = true,
   onBackHome,
 }) {
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
@@ -223,6 +226,7 @@ export default function MainGameShow({
   const usesSongChoiceGallery = isFavoriteSongStep && (currentStep.songChoices?.length ?? 0) > 0;
   const usesAlbumCover = !usesSongChoiceGallery && Boolean(currentStep.coverImage);
   const currentRoundLabel = currentRound?.roundLabel ?? `Group ${currentRoundIndex + 1}`;
+  const questionProgressLabel = `${currentStepIndex + 1}/${currentSteps.length}`;
   const galleryImages = useMemo(() => {
     if (usesSongChoiceGallery) {
       const seenCovers = new Set();
@@ -1225,7 +1229,7 @@ export default function MainGameShow({
           <section className="game-show-hero">
             <div>
               <p className="eyebrow">{heroEyebrow}</p>
-              <h1>{heroTitle}</h1>
+              <h1 className={heroTitleClassName}>{heroTitle}</h1>
               <p className="hero-text">{heroText}</p>
             </div>
           </section>
@@ -1531,51 +1535,60 @@ export default function MainGameShow({
                     <div className="round-meta-top">
                       <p className="flow-section-label">Multiple Choice</p>
                       <div className="round-controls">
-                        <div className="round-nav-pill">
-                          <span className="round-nav-label">{roundNavTitle}</span>
-                          <button
-                            aria-label="Previous group"
-                            className="ghost-button round-nav-arrow"
-                            disabled={currentRoundIndex === 0}
-                            onClick={goToPreviousGroup}
-                            type="button"
-                          >
-                            &lt;
-                          </button>
-                          <button
-                            aria-label="Next group"
-                            className="ghost-button round-nav-arrow"
-                            disabled={currentRoundIndex === quizRounds.length - 1}
-                            onClick={goToNextGroup}
-                            type="button"
-                          >
-                            &gt;
-                          </button>
-                        </div>
-                        <div className="round-nav-pill">
-                          <span className="round-nav-label">Question</span>
-                          <button
-                            aria-label="Previous question"
-                            className="ghost-button round-nav-arrow"
-                            disabled={currentRoundIndex === 0 && currentStepIndex === 0}
-                            onClick={goToPrevious}
-                            type="button"
-                          >
-                            &lt;
-                          </button>
-                          <button
-                            aria-label="Next question"
-                            className="ghost-button round-nav-arrow"
-                            disabled={
-                              currentRoundIndex === quizRounds.length - 1 &&
-                              currentStepIndex === currentSteps.length - 1
-                            }
-                            onClick={goToNext}
-                            type="button"
-                          >
-                            &gt;
-                          </button>
-                        </div>
+                        {showRoundNav ? (
+                          <div className="round-nav-pill">
+                            <span className="round-nav-label">{roundNavTitle}</span>
+                            <button
+                              aria-label="Previous group"
+                              className="ghost-button round-nav-arrow"
+                              disabled={currentRoundIndex === 0}
+                              onClick={goToPreviousGroup}
+                              type="button"
+                            >
+                              &lt;
+                            </button>
+                            <button
+                              aria-label="Next group"
+                              className="ghost-button round-nav-arrow"
+                              disabled={currentRoundIndex === quizRounds.length - 1}
+                              onClick={goToNextGroup}
+                              type="button"
+                            >
+                              &gt;
+                            </button>
+                          </div>
+                        ) : null}
+                        {showQuestionNav ? (
+                          <div className="round-nav-pill">
+                            <span className="round-nav-label">Question</span>
+                            <button
+                              aria-label="Previous question"
+                              className="ghost-button round-nav-arrow"
+                              disabled={currentRoundIndex === 0 && currentStepIndex === 0}
+                              onClick={goToPrevious}
+                              type="button"
+                            >
+                              &lt;
+                            </button>
+                            <button
+                              aria-label="Next question"
+                              className="ghost-button round-nav-arrow"
+                              disabled={
+                                currentRoundIndex === quizRounds.length - 1 &&
+                                currentStepIndex === currentSteps.length - 1
+                              }
+                              onClick={goToNext}
+                              type="button"
+                            >
+                              &gt;
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="round-nav-pill">
+                            <span className="round-nav-label">Progress</span>
+                            <span className="round-nav-progress">{questionProgressLabel}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div

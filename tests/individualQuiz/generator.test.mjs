@@ -85,3 +85,39 @@ test("mixed individual quiz run actually blends difficulties instead of staying 
   assert.ok(mixedDifficulties.has("medium"));
   assert.ok(mixedDifficulties.has("hard"));
 });
+
+test("individual group quiz uses fuller answer pools so the correct option does not stand out", () => {
+  const quiz = buildIndividualQuizForGroup("TWICE");
+  const averageChoiceCount =
+    quiz.mixedQuestionPool.reduce((sum, question) => sum + question.choices.length, 0) /
+    quiz.mixedQuestionPool.length;
+
+  assert.ok(averageChoiceCount >= 5.5);
+  assert.ok(
+    quiz.mixedQuestionPool.filter((question) => question.choices.length >= 6).length >=
+      Math.floor(quiz.mixedQuestionPool.length * 0.75),
+  );
+});
+
+test("individual group quiz favors deeper fandom and member content over surface song matching", () => {
+  const quiz = buildIndividualQuizForGroup("NewJeans");
+  const categoryCounts = quiz.mixedQuestionPool.reduce((accumulator, question) => {
+    accumulator[question.category] = (accumulator[question.category] ?? 0) + 1;
+    return accumulator;
+  }, {});
+
+  const deeperContentCount =
+    (categoryCounts["fandom-knowledge"] ?? 0) +
+    (categoryCounts["variety-iconic-moments"] ?? 0) +
+    (categoryCounts["members"] ?? 0) +
+    (categoryCounts["clue-based"] ?? 0) +
+    (categoryCounts["true-vs-false"] ?? 0);
+  const surfaceSongCount =
+    (categoryCounts["discography"] ?? 0) +
+    (categoryCounts["match-based"] ?? 0) +
+    (categoryCounts["title-tracks"] ?? 0) +
+    (categoryCounts["album-covers"] ?? 0) +
+    (categoryCounts["lyrics"] ?? 0);
+
+  assert.ok(deeperContentCount > surfaceSongCount);
+});
